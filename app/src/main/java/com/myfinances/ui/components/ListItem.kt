@@ -20,17 +20,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.myfinances.R
+import com.myfinances.ui.theme.LightBlack
 
 @Composable
 fun ListItem(model: ListItemModel) {
-    val itemHeight = if (model.type == ItemType.TOTAL) 56.dp else 70.dp
-    val backgroundColor = if (model.type == ItemType.TOTAL) {
+    val isTotalType = model.type == ItemType.TOTAL
+    val itemHeight = if (isTotalType) 56.dp else 70.dp
+    val backgroundColor = if (isTotalType) {
         MaterialTheme.colorScheme.secondary
     } else {
         MaterialTheme.colorScheme.background
@@ -41,71 +42,79 @@ fun ListItem(model: ListItemModel) {
             .fillMaxWidth()
             .height(itemHeight)
             .background(backgroundColor)
-            .clickable(enabled = model.type != ItemType.TOTAL, onClick = model.onClick)
+            .clickable(enabled = !isTotalType, onClick = model.onClick)
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         model.leadingIcon?.let { icon ->
-            if (model.type == ItemType.TRANSACTION) {
-                Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.secondary),
-                    contentAlignment = Alignment.Center
-                ) {
-                    when (icon) {
-                        is LeadingIcon.Emoji -> Text(text = icon.char, fontSize = 16.sp)
-                        is LeadingIcon.Resource -> Icon(
-                            painterResource(id = icon.id),
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.width(16.dp))
+            val iconBackgroundColor = if (model.useWhiteIconBackground) {
+                MaterialTheme.colorScheme.background
+            } else {
+                MaterialTheme.colorScheme.secondary
             }
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(CircleShape)
+                    .background(iconBackgroundColor),
+                contentAlignment = Alignment.Center
+            ) {
+                when (icon) {
+                    is LeadingIcon.Emoji -> Text(text = icon.char, fontSize = 16.sp)
+                    is LeadingIcon.Resource -> Icon(
+                        painterResource(id = icon.id),
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(16.dp))
         }
 
         Column(modifier = Modifier.weight(1f)) {
-            val titleStyle = if (model.type == ItemType.TOTAL) {
-                MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal)
-            } else {
-                MaterialTheme.typography.bodyLarge
-            }
-            Text(text = model.title, style = titleStyle)
+            Text(
+                text = model.title,
+                style = MaterialTheme.typography.bodyLarge
+            )
             model.subtitle?.let {
-                Text(text = it, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = LightBlack
+                )
             }
         }
 
         model.trailingContent?.let { content ->
             Spacer(modifier = Modifier.width(16.dp))
-            val trailingTextStyle = MaterialTheme.typography.bodyLarge.copy(
-                fontWeight = if (model.type == ItemType.TOTAL) FontWeight.Bold else FontWeight.Normal
-            )
-            when (content) {
-                is TrailingContent.ArrowOnly -> Icon(
-                    painterResource(R.drawable.ic_list_item_arrow),
-                    contentDescription = null
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                val trailingTextStyle = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.Normal
                 )
-
-                is TrailingContent.TextOnly -> Text(text = content.text, style = trailingTextStyle)
-                is TrailingContent.TextWithArrow -> {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                when (content) {
+                    is TrailingContent.TextOnly -> {
                         Text(text = content.text, style = trailingTextStyle)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Icon(
-                            painterResource(R.drawable.ic_list_item_arrow),
-                            contentDescription = null
-                        )
                     }
+
+                    is TrailingContent.TextWithArrow -> {
+                        Text(text = content.text, style = trailingTextStyle)
+                    }
+
+                    is TrailingContent.Switch -> Switch(
+                        checked = content.isChecked,
+                        onCheckedChange = content.onToggle
+                    )
+
+                    is TrailingContent.ArrowOnly -> {}
                 }
 
-                is TrailingContent.Switch -> Switch(
-                    checked = content.isChecked,
-                    onCheckedChange = content.onToggle
-                )
+                if (model.showTrailingArrow) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(
+                        painter = painterResource(R.drawable.ic_list_item_arrow),
+                        contentDescription = null
+                    )
+                }
             }
         }
     }

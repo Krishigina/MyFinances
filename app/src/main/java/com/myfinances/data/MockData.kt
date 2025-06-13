@@ -1,5 +1,6 @@
 package com.myfinances.data
 
+import com.myfinances.domain.entity.Account
 import com.myfinances.domain.entity.Category
 import com.myfinances.domain.entity.Transaction
 
@@ -35,4 +36,12 @@ object MockData {
     fun findCategoryById(id: Int): Category? {
         return categories.find { it.id == id }
     }
+
+    val account = Account(
+        id = 1,
+        name = "Мой счет",
+        balance = -670000.0,
+        currency = "₽",
+        emoji = "💰"
+    )
 }
