@@ -25,6 +25,6 @@ data class Icon(
     val medium: Dp = 24.dp
 )
 
-val defaultDimens = Dimensions()
+val defaultDimensions = Dimensions()
 
-val LocalDimensions = staticCompositionLocalOf { defaultDimens }
+val LocalDimensions = staticCompositionLocalOf { defaultDimensions }

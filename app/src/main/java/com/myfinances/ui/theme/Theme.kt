@@ -17,10 +17,12 @@ private val DarkColorScheme = darkColorScheme(
     secondary = PastelGreen,
     onSecondary = BrightBlack,
     background = WhiteBackground,
-    tertiary = LightGrey,
-    onTertiary = LightBlack,
-    surface = ExtraLightGrey,
-    onSurface = LightBlack
+    surface = WhiteBackground,
+    onSurface = BrightBlack,
+    secondaryContainer = PastelGreen,
+    onSecondaryContainer = BrightGreen,
+    surfaceContainer = ExtraLightGrey,
+    onSurfaceVariant = LightBlack
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -29,17 +31,18 @@ private val LightColorScheme = lightColorScheme(
     secondary = PastelGreen,
     onSecondary = BrightBlack,
     background = WhiteBackground,
-    tertiary = LightGrey,
-    onTertiary = LightBlack,
-    surface = ExtraLightGrey,
-    onSurface = LightBlack
+    surface = WhiteBackground,
+    onSurface = BrightBlack,
+    secondaryContainer = PastelGreen,
+    onSecondaryContainer = BrightGreen,
+    surfaceContainer = ExtraLightGrey,
+    onSurfaceVariant = LightBlack
 )
 
 @Composable
 fun MyFinancesTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
-    dimensions: Dimensions = defaultDimens,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -51,6 +54,8 @@ fun MyFinancesTheme(
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
+
+    val dimensions = defaultDimensions
 
     CompositionLocalProvider(LocalDimensions provides dimensions) {
         MaterialTheme(

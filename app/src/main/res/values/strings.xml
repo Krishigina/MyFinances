@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">MyFinances</string>
+
+    <string name="botton_nav_label_expenses">Расходы</string>
+    <string name="botton_nav_label_income">Доходы</string>
+    <string name="botton_nav_label_score">Счёт</string>
+    <string name="botton_nav_label_articles">Статьи</string>
+    <string name="botton_nav_label_settings">Настройки</string>
 </resources>
