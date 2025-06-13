@@ -18,7 +18,7 @@ fun BottomNavigationBar(navController: NavHostController) {
     val destinations = listOf(
         Destination.Expenses,
         Destination.Income,
-        Destination.Score,
+        Destination.Account,
         Destination.Articles,
         Destination.Settings
     )

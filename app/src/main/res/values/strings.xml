@@ -3,7 +3,19 @@
 
     <string name="botton_nav_label_expenses">Расходы</string>
     <string name="botton_nav_label_income">Доходы</string>
-    <string name="botton_nav_label_score">Счёт</string>
+    <string name="botton_nav_label_account">Счёт</string>
     <string name="botton_nav_label_articles">Статьи</string>
     <string name="botton_nav_label_settings">Настройки</string>
+
+    <string name="top_bar_expenses_today_title">Расходы сегодня</string>
+    <string name="top_bar_income_today_title">Доходы сегодня</string>
+    <string name="top_bar_my_account_title">Мой счет</string>
+    <string name="top_bar_my_articles_title">Мои статьи</string>
+    <string name="top_bar_settings_title">Настройки</string>
+    <string name="top_bar_icon_edit">Изменить</string>
+    <string name="top_bar_icon_history">История</string>
+
+    <string name="floating_action_add">Добавить</string>
+
+
 </resources>

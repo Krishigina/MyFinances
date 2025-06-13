@@ -1,4 +1,4 @@
-package com.myfinances.ui.screens
+package com.myfinances.ui.screens.account
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -16,7 +16,7 @@ import com.myfinances.R
 
 @Preview
 @Composable
-fun ScoreScreen() {
+fun AccountScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -24,11 +24,10 @@ fun ScoreScreen() {
             .wrapContentSize(Alignment.Center)
     ) {
         Text(
-            text = stringResource(id = R.string.botton_nav_label_score),
+            text = stringResource(id = R.string.botton_nav_label_account),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.align(Alignment.CenterHorizontally),
             textAlign = TextAlign.Center,
         )
     }
 }
-

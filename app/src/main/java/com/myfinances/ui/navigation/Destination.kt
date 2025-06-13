@@ -21,10 +21,10 @@ sealed class Destination(
         icon = R.drawable.ic_bottom_nav_income
     )
 
-    data object Score : Destination(
-        route = "score",
-        title = R.string.botton_nav_label_score,
-        icon = R.drawable.ic_bottom_nav_score
+    data object Account : Destination(
+        route = "account",
+        title = R.string.botton_nav_label_account,
+        icon = R.drawable.ic_bottom_nav_account
     )
 
     data object Articles : Destination(

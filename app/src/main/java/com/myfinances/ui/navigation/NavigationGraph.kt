@@ -4,11 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.myfinances.ui.screens.ArticlesScreen
-import com.myfinances.ui.screens.ExpensesScreen
-import com.myfinances.ui.screens.IncomeScreen
-import com.myfinances.ui.screens.ScoreScreen
-import com.myfinances.ui.screens.SettingsScreen
+import com.myfinances.ui.screens.account.AccountScreen
+import com.myfinances.ui.screens.articles.ArticlesScreen
+import com.myfinances.ui.screens.expenses.ExpensesScreen
+import com.myfinances.ui.screens.income.IncomeScreen
+import com.myfinances.ui.screens.settings.SettingsScreen
 
 @Composable
 fun NavigationGraph(navController: NavHostController) {
@@ -19,8 +19,8 @@ fun NavigationGraph(navController: NavHostController) {
         composable(route = Destination.Income.route) {
             IncomeScreen()
         }
-        composable(route = Destination.Score.route) {
-            ScoreScreen()
+        composable(route = Destination.Account.route) {
+            AccountScreen()
         }
         composable(route = Destination.Articles.route) {
             ArticlesScreen()

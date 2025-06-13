@@ -1,4 +1,4 @@
-package com.myfinances.ui.screens
+package com.myfinances.ui.screens.articles
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -16,7 +16,7 @@ import com.myfinances.R
 
 @Preview
 @Composable
-fun ExpensesScreen() {
+fun ArticlesScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -24,7 +24,7 @@ fun ExpensesScreen() {
             .wrapContentSize(Alignment.Center)
     ) {
         Text(
-            text = stringResource(id = R.string.botton_nav_label_expenses),
+            text = stringResource(id = R.string.botton_nav_label_articles),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.align(Alignment.CenterHorizontally),
             textAlign = TextAlign.Center,

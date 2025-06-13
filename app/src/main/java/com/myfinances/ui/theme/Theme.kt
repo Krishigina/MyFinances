@@ -13,30 +13,36 @@ import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
     primary = BrightGreen,
-    onPrimary = BrightBlack,
     secondary = PastelGreen,
-    onSecondary = BrightBlack,
-    background = WhiteBackground,
-    surface = WhiteBackground,
-    onSurface = BrightBlack,
+    tertiary = LightGrey,
     secondaryContainer = PastelGreen,
     onSecondaryContainer = BrightGreen,
+    background = WhiteBackground,
+    surface = ExtraLightGrey,
     surfaceContainer = ExtraLightGrey,
-    onSurfaceVariant = LightBlack
+    onPrimary = BrightBlack,
+    onSecondary = BrightBlack,
+    onBackground = BrightBlack,
+    onSurface = BrightBlack,
+    onSurfaceVariant = LightBlack,
+    surfaceTint = ExtraLightGrey
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = BrightGreen,
-    onPrimary = BrightBlack,
     secondary = PastelGreen,
-    onSecondary = BrightBlack,
-    background = WhiteBackground,
-    surface = WhiteBackground,
-    onSurface = BrightBlack,
+    tertiary = LightGrey,
     secondaryContainer = PastelGreen,
     onSecondaryContainer = BrightGreen,
+    background = WhiteBackground,
+    surface = ExtraLightGrey,
     surfaceContainer = ExtraLightGrey,
-    onSurfaceVariant = LightBlack
+    onPrimary = BrightBlack,
+    onSecondary = BrightBlack,
+    onBackground = BrightBlack,
+    onSurface = BrightBlack,
+    onSurfaceVariant = LightBlack,
+    surfaceTint = ExtraLightGrey
 )
 
 @Composable

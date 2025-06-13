@@ -1,4 +1,4 @@
-package com.myfinances.ui.screens
+package com.myfinances.ui.screens.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -16,7 +16,7 @@ import com.myfinances.R
 
 @Preview
 @Composable
-fun IncomeScreen() {
+fun SettingsScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -24,7 +24,7 @@ fun IncomeScreen() {
             .wrapContentSize(Alignment.Center)
     ) {
         Text(
-            text = stringResource(id = R.string.botton_nav_label_income),
+            text = stringResource(id = R.string.botton_nav_label_settings),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.align(Alignment.CenterHorizontally),
             textAlign = TextAlign.Center,
