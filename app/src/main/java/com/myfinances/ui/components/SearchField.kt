@@ -15,14 +15,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.myfinances.R
+import com.myfinances.ui.theme.LocalDimensions
 
 @Composable
 fun SearchField(
     placeholderText: String
 ) {
+    val dimensions = LocalDimensions.current
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -30,9 +33,9 @@ fun SearchField(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .height(dimensions.listItem.heightTotal)
                 .background(MaterialTheme.colorScheme.tertiary)
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = dimensions.spacing.paddingLarge),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -41,10 +44,10 @@ fun SearchField(
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.weight(1f)
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(dimensions.spacing.paddingMedium))
             Icon(
                 painter = painterResource(id = R.drawable.ic_articles_search),
-                contentDescription = "Поиск",
+                contentDescription = stringResource(id = R.string.search),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -54,5 +57,5 @@ fun SearchField(
 @Preview
 @Composable
 fun SearchFieldPreview() {
-    SearchField(placeholderText = "Найти статью")
+    SearchField(placeholderText = stringResource(id = R.string.search_placeholder_text))
 }

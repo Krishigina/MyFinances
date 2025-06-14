@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.myfinances.R
 import com.myfinances.ui.components.ItemType
@@ -40,7 +41,7 @@ fun SettingsScreen() {
         ListItemModel(
             id = "dark_theme",
             type = ItemType.SETTING,
-            title = "Тёмная тема",
+            title = stringResource(id = R.string.dark_theme),
             trailingContent = TrailingContent.Switch(
                 isChecked = isDarkMode,
                 onToggle = { isDarkMode = it }
@@ -50,49 +51,49 @@ fun SettingsScreen() {
         ListItemModel(
             id = "primary_color",
             type = ItemType.SETTING,
-            title = "Основной цвет",
+            title = stringResource(id = R.string.primary_color),
             trailingContent = TrailingContent.ArrowOnly(customIconRes = R.drawable.ic_settings_arrow),
             showTrailingArrow = false
         ),
         ListItemModel(
             id = "sounds",
             type = ItemType.SETTING,
-            title = "Звуки",
+            title = stringResource(id = R.string.sounds),
             trailingContent = TrailingContent.ArrowOnly(customIconRes = R.drawable.ic_settings_arrow),
             showTrailingArrow = false
         ),
         ListItemModel(
             id = "haptics",
             type = ItemType.SETTING,
-            title = "Хаптики",
+            title = stringResource(id = R.string.haptics),
             trailingContent = TrailingContent.ArrowOnly(customIconRes = R.drawable.ic_settings_arrow),
             showTrailingArrow = false
         ),
         ListItemModel(
             id = "passcode",
             type = ItemType.SETTING,
-            title = "Код пароль",
+            title = stringResource(id = R.string.passcode),
             trailingContent = TrailingContent.ArrowOnly(customIconRes = R.drawable.ic_settings_arrow),
             showTrailingArrow = false
         ),
         ListItemModel(
             id = "sync",
             type = ItemType.SETTING,
-            title = "Синхронизация",
+            title = stringResource(id = R.string.sync),
             trailingContent = TrailingContent.ArrowOnly(customIconRes = R.drawable.ic_settings_arrow),
             showTrailingArrow = false
         ),
         ListItemModel(
             id = "language",
             type = ItemType.SETTING,
-            title = "Язык",
+            title = stringResource(id = R.string.language),
             trailingContent = TrailingContent.ArrowOnly(customIconRes = R.drawable.ic_settings_arrow),
             showTrailingArrow = false
         ),
         ListItemModel(
             id = "about",
             type = ItemType.SETTING,
-            title = "О программе",
+            title = stringResource(id = R.string.about),
             trailingContent = TrailingContent.ArrowOnly(customIconRes = R.drawable.ic_settings_arrow),
             showTrailingArrow = false
         )

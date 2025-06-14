@@ -22,19 +22,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.myfinances.R
 import com.myfinances.ui.theme.LightBlack
+import com.myfinances.ui.theme.LocalDimensions
 
 @Composable
 fun ListItem(model: ListItemModel) {
+    val dimensions = LocalDimensions.current
+
     val isTotalType = model.type == ItemType.TOTAL
     val isSettingType = model.type == ItemType.SETTING
+
     val itemHeight = when {
-        isTotalType -> 56.dp
-        isSettingType -> 56.dp
-        else -> 70.dp
+        isTotalType -> dimensions.listItem.heightTotal
+        isSettingType -> dimensions.listItem.heightTotal
+        else -> dimensions.listItem.heightTransaction
     }
     val backgroundColor = when {
         isTotalType -> MaterialTheme.colorScheme.secondary
@@ -47,7 +50,7 @@ fun ListItem(model: ListItemModel) {
             .height(itemHeight)
             .background(backgroundColor)
             .clickable(enabled = !isTotalType, onClick = model.onClick)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = dimensions.spacing.paddingLarge),
         verticalAlignment = Alignment.CenterVertically
     ) {
         model.leadingIcon?.let { icon ->
@@ -58,7 +61,7 @@ fun ListItem(model: ListItemModel) {
             }
             Box(
                 modifier = Modifier
-                    .size(24.dp)
+                    .size(dimensions.icon.medium)
                     .clip(CircleShape)
                     .background(iconBackgroundColor),
                 contentAlignment = Alignment.Center
@@ -68,11 +71,11 @@ fun ListItem(model: ListItemModel) {
                     is LeadingIcon.Resource -> Icon(
                         painterResource(id = icon.id),
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(dimensions.spacing.paddingLarge)
                     )
                 }
             }
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(dimensions.spacing.paddingLarge))
         }
 
         Column(modifier = Modifier.weight(1f)) {
@@ -90,7 +93,7 @@ fun ListItem(model: ListItemModel) {
         }
 
         model.trailingContent?.let { content ->
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(dimensions.spacing.paddingLarge))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 val trailingTextStyle = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.Normal
@@ -106,21 +109,17 @@ fun ListItem(model: ListItemModel) {
                     is TrailingContent.TextOnly -> {
                         Text(text = content.text, style = trailingTextStyle)
                     }
-
                     is TrailingContent.TextWithArrow -> {
                         Text(text = content.text, style = trailingTextStyle)
                     }
-
                     is TrailingContent.Switch -> Switch(
                         checked = content.isChecked,
                         onCheckedChange = content.onToggle
                     )
-
-                    is TrailingContent.ArrowOnly -> {}
                 }
 
                 if (model.showTrailingArrow) {
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(dimensions.spacing.paddingMedium))
                     Icon(
                         painter = painterResource(R.drawable.ic_list_item_arrow),
                         contentDescription = null

@@ -7,7 +7,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.myfinances.R
 import com.myfinances.data.MockData
 import com.myfinances.domain.entity.Category
 import com.myfinances.ui.components.ItemType
@@ -25,7 +27,7 @@ fun ArticlesScreenContent(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        SearchField(placeholderText = "Найти статью")
+        SearchField(placeholderText = stringResource(id = R.string.search_placeholder_text))
         Divider()
         LazyColumn {
             items(

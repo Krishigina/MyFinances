@@ -17,5 +17,21 @@
 
     <string name="floating_action_add">Добавить</string>
 
+    <string name="search_placeholder_text">Поиск</string>
+    <string name="search">Поиск</string>
+    <string name="balance">Баланс</string>
+    <string name="currency">Валюта</string>
+    <string name="total_amount_card">Всего</string>
+    <string name="unknown">Неизвестно</string>
+
+    <string name="dark_theme">Тёмная тема</string>
+    <string name="primary_color">Основной цвет</string>
+    <string name="sounds">Звуки</string>
+    <string name="haptics">Хаптики</string>
+    <string name="passcode">Код пароль</string>
+    <string name="sync">Синхронизация</string>
+    <string name="language">Язык</string>
+    <string name="about">О программе</string>
+
 
 </resources>

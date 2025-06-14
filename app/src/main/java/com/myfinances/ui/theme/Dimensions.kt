@@ -8,7 +8,8 @@ import androidx.compose.ui.unit.dp
 @Immutable
 data class Dimensions(
     val spacing: Spacing = Spacing(),
-    val icon: Icon = Icon()
+    val icon: Icon = Icon(),
+    val listItem: ListItem = ListItem()
 )
 
 @Immutable
@@ -23,6 +24,12 @@ data class Spacing(
 @Immutable
 data class Icon(
     val medium: Dp = 24.dp
+)
+
+@Immutable
+data class ListItem(
+    val heightTotal: Dp = 56.dp,
+    val heightTransaction: Dp = 70.dp
 )
 
 val defaultDimensions = Dimensions()

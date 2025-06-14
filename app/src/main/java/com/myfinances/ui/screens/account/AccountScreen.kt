@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.myfinances.R
 import com.myfinances.data.MockData
 import com.myfinances.domain.entity.Account
 import com.myfinances.ui.components.ItemType
@@ -24,7 +26,7 @@ fun AccountScreenContent(
         id = "balance_item",
         type = ItemType.TOTAL,
         leadingIcon = LeadingIcon.Emoji(account.emoji),
-        title = "Баланс",
+        title = stringResource(id = R.string.balance),
         trailingContent = TrailingContent.TextOnly(formatCurrency(account.balance)),
         useWhiteIconBackground = true,
         showTrailingArrow = true
@@ -34,7 +36,7 @@ fun AccountScreenContent(
         id = "currency_item",
         type = ItemType.TOTAL,
         leadingIcon = null,
-        title = "Валюта",
+        title = stringResource(id = R.string.currency),
         trailingContent = TrailingContent.TextOnly(account.currency),
         showTrailingArrow = true
     )

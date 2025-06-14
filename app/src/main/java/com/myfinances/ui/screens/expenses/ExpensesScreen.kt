@@ -6,7 +6,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.myfinances.R
 import com.myfinances.data.MockData
 import com.myfinances.domain.entity.Transaction
 import com.myfinances.ui.components.ItemType
@@ -25,7 +27,7 @@ fun ExpensesScreenContent(
 
     val totalAmountItem = ListItemModel(
         id = "total_amount_card",
-        title = "Всего",
+        title = stringResource(id = R.string.total_amount_card),
         type = ItemType.TOTAL,
         leadingIcon = null,
         trailingContent = TrailingContent.TextOnly(formatCurrency(totalAmount)),
@@ -35,7 +37,7 @@ fun ExpensesScreenContent(
     val transactionListItems = transactions.map { transaction ->
         val category = MockData.findCategoryById(transaction.categoryId)
         transaction.toListItemModel(
-            categoryName = category?.name ?: "Неизвестно",
+            categoryName = category?.name ?: stringResource(id = R.string.unknown),
             emoji = category?.emoji ?: "❓",
             type = ItemType.TRANSACTION
         )
