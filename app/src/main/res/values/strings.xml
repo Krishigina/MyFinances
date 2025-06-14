@@ -1,3 +1,38 @@
 <resources>
     <string name="app_name">MyFinances</string>
+
+    <string name="botton_nav_label_expenses">Расходы</string>
+    <string name="botton_nav_label_income">Доходы</string>
+    <string name="botton_nav_label_account">Счёт</string>
+    <string name="botton_nav_label_articles">Статьи</string>
+    <string name="botton_nav_label_settings">Настройки</string>
+    <string name="botton_nav_label_splash">Сплэш</string>
+
+    <string name="top_bar_expenses_today_title">Расходы сегодня</string>
+    <string name="top_bar_income_today_title">Доходы сегодня</string>
+    <string name="top_bar_my_account_title">Мой счет</string>
+    <string name="top_bar_my_articles_title">Мои статьи</string>
+    <string name="top_bar_settings_title">Настройки</string>
+    <string name="top_bar_icon_edit">Изменить</string>
+    <string name="top_bar_icon_history">История</string>
+
+    <string name="floating_action_add">Добавить</string>
+
+    <string name="search_placeholder_text">Поиск</string>
+    <string name="search">Поиск</string>
+    <string name="balance">Баланс</string>
+    <string name="currency">Валюта</string>
+    <string name="total_amount_card">Всего</string>
+    <string name="unknown">Неизвестно</string>
+
+    <string name="dark_theme">Тёмная тема</string>
+    <string name="primary_color">Основной цвет</string>
+    <string name="sounds">Звуки</string>
+    <string name="haptics">Хаптики</string>
+    <string name="passcode">Код пароль</string>
+    <string name="sync">Синхронизация</string>
+    <string name="language">Язык</string>
+    <string name="about">О программе</string>
+
+
 </resources>
