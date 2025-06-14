@@ -25,72 +25,82 @@ fun MainScreen() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    val showBars = currentRoute != Destination.Splash.route
+
     Scaffold(
         topBar = {
-            when (currentRoute) {
-                Destination.Expenses.route -> {
-                    MainTopBar(
-                        title = stringResource(id = R.string.top_bar_expenses_today_title),
-                        actions = {
-                            IconButton(onClick = { /*TODO*/ }) {
-                                Icon(
-                                    painterResource(R.drawable.ic_top_bar_history),
-                                    contentDescription = stringResource(id = R.string.top_bar_icon_history)
-                                )
+            if (showBars) {
+                when (currentRoute) {
+                    Destination.Expenses.route -> {
+                        MainTopBar(
+                            title = stringResource(id = R.string.top_bar_expenses_today_title),
+                            actions = {
+                                IconButton(onClick = { /*TODO*/ }) {
+                                    Icon(
+                                        painterResource(R.drawable.ic_top_bar_history),
+                                        contentDescription = stringResource(id = R.string.top_bar_icon_history)
+                                    )
+                                }
                             }
-                        }
-                    )
-                }
+                        )
+                    }
 
-                Destination.Income.route -> {
-                    MainTopBar(
-                        title = stringResource(id = R.string.top_bar_income_today_title),
-                        actions = {
-                            IconButton(onClick = { /*TODO*/ }) {
-                                Icon(
-                                    painterResource(R.drawable.ic_top_bar_history),
-                                    contentDescription = stringResource(id = R.string.top_bar_icon_history)
-                                )
+                    Destination.Income.route -> {
+                        MainTopBar(
+                            title = stringResource(id = R.string.top_bar_income_today_title),
+                            actions = {
+                                IconButton(onClick = { /*TODO*/ }) {
+                                    Icon(
+                                        painterResource(R.drawable.ic_top_bar_history),
+                                        contentDescription = stringResource(id = R.string.top_bar_icon_history)
+                                    )
+                                }
                             }
-                        }
-                    )
-                }
+                        )
+                    }
 
-                Destination.Account.route -> {
-                    MainTopBar(
-                        title = stringResource(id = R.string.top_bar_my_account_title),
-                        actions = {
-                            IconButton(onClick = { /*TODO*/ }) {
-                                Icon(
-                                    painterResource(R.drawable.ic_top_bar_edit),
-                                    contentDescription = stringResource(id = R.string.top_bar_icon_edit)
-                                )
+                    Destination.Account.route -> {
+                        MainTopBar(
+                            title = stringResource(id = R.string.top_bar_my_account_title),
+                            actions = {
+                                IconButton(onClick = { /*TODO*/ }) {
+                                    Icon(
+                                        painterResource(R.drawable.ic_top_bar_edit),
+                                        contentDescription = stringResource(id = R.string.top_bar_icon_edit)
+                                    )
+                                }
                             }
-                        }
-                    )
-                }
+                        )
+                    }
 
-                Destination.Articles.route -> {
-                    MainTopBar(
-                        title = stringResource(id = R.string.top_bar_my_articles_title)
-                    )
-                }
+                    Destination.Articles.route -> {
+                        MainTopBar(
+                            title = stringResource(id = R.string.top_bar_my_articles_title)
+                        )
+                    }
 
-                Destination.Settings.route -> {
-                    MainTopBar(
-                        title = stringResource(id = R.string.top_bar_settings_title)
-                    )
+                    Destination.Settings.route -> {
+                        MainTopBar(
+                            title = stringResource(id = R.string.top_bar_settings_title)
+                        )
+                    }
                 }
             }
         },
-        bottomBar = { BottomNavigationBar(navController) },
+        bottomBar = {
+            if (showBars) {
+                BottomNavigationBar(navController)
+            }
+        },
         floatingActionButton = {
-            when (currentRoute) {
-                Destination.Expenses.route,
-                Destination.Income.route,
-                Destination.Account.route -> {
-                    MainFloatingActionButton {
-                        // TODO
+            if (showBars) {
+                when (currentRoute) {
+                    Destination.Expenses.route,
+                    Destination.Income.route,
+                    Destination.Account.route -> {
+                        MainFloatingActionButton {
+                            // TODO
+                        }
                     }
                 }
             }

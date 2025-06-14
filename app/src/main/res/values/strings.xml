@@ -6,6 +6,7 @@
     <string name="botton_nav_label_account">Счёт</string>
     <string name="botton_nav_label_articles">Статьи</string>
     <string name="botton_nav_label_settings">Настройки</string>
+    <string name="botton_nav_label_splash">Сплэш</string>
 
     <string name="top_bar_expenses_today_title">Расходы сегодня</string>
     <string name="top_bar_income_today_title">Доходы сегодня</string>
