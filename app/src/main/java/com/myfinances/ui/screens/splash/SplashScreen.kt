@@ -32,7 +32,7 @@ fun SplashScreen(navController: NavHostController) {
 
     LaunchedEffect(progress) {
         if (progress == 1f) {
-            delay(500)
+            delay(200)
             navController.navigate(Destination.Expenses.route) {
                 popUpTo(Destination.Splash.route) {
                     inclusive = true
