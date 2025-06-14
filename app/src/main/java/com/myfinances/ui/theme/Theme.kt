@@ -42,7 +42,8 @@ private val LightColorScheme = lightColorScheme(
     onBackground = BrightBlack,
     onSurface = BrightBlack,
     onSurfaceVariant = LightBlack,
-    surfaceTint = ExtraLightGrey
+    surfaceTint = ExtraLightGrey,
+    onTertiary = LightBlack
 )
 
 @Composable

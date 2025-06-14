@@ -30,11 +30,15 @@ import com.myfinances.ui.theme.LightBlack
 @Composable
 fun ListItem(model: ListItemModel) {
     val isTotalType = model.type == ItemType.TOTAL
-    val itemHeight = if (isTotalType) 56.dp else 70.dp
-    val backgroundColor = if (isTotalType) {
-        MaterialTheme.colorScheme.secondary
-    } else {
-        MaterialTheme.colorScheme.background
+    val isSettingType = model.type == ItemType.SETTING
+    val itemHeight = when {
+        isTotalType -> 56.dp
+        isSettingType -> 56.dp
+        else -> 70.dp
+    }
+    val backgroundColor = when {
+        isTotalType -> MaterialTheme.colorScheme.secondary
+        else -> MaterialTheme.colorScheme.background
     }
 
     Row(
@@ -92,6 +96,13 @@ fun ListItem(model: ListItemModel) {
                     fontWeight = FontWeight.Normal
                 )
                 when (content) {
+                    is TrailingContent.ArrowOnly -> {
+                        val iconRes = content.customIconRes ?: R.drawable.ic_list_item_arrow
+                        Icon(
+                            painter = painterResource(iconRes),
+                            contentDescription = null
+                        )
+                    }
                     is TrailingContent.TextOnly -> {
                         Text(text = content.text, style = trailingTextStyle)
                     }

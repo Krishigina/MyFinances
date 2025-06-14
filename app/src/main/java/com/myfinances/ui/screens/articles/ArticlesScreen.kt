@@ -1,34 +1,63 @@
 package com.myfinances.ui.screens.articles
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import com.myfinances.R
+import com.myfinances.data.MockData
+import com.myfinances.domain.entity.Category
+import com.myfinances.ui.components.ItemType
+import com.myfinances.ui.components.LeadingIcon
+import com.myfinances.ui.components.ListItem
+import com.myfinances.ui.components.ListItemModel
+import com.myfinances.ui.components.SearchField
 
-@Preview
 @Composable
-fun ArticlesScreen() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .wrapContentSize(Alignment.Center)
-    ) {
-        Text(
-            text = stringResource(id = R.string.botton_nav_label_articles),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            textAlign = TextAlign.Center,
-        )
+fun ArticlesScreenContent(
+    categories: List<Category>
+) {
+    val listItems = categories.map { category ->
+        category.toListItemModel()
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        SearchField(placeholderText = "Найти статью")
+        Divider()
+        LazyColumn {
+            items(
+                items = listItems,
+                key = { it.id }
+            ) { model ->
+                ListItem(model = model)
+                Divider()
+            }
+        }
     }
 }
 
+private fun Category.toListItemModel(): ListItemModel {
+    return ListItemModel(
+        id = this.id.toString(),
+        type = ItemType.TRANSACTION,
+        leadingIcon = LeadingIcon.Emoji(this.emoji),
+        title = this.name,
+        trailingContent = null,
+        showTrailingArrow = false
+    )
+}
+
+@Composable
+fun ArticlesScreen() {
+    val expenseCategories = MockData.categories.filter { !it.isIncome }
+    ArticlesScreenContent(categories = expenseCategories)
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ArticlesScreenPreview() {
+    ArticlesScreen()
+}

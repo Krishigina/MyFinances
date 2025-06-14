@@ -49,9 +49,7 @@ fun IncomeScreenContent(
             key = { it.id }
         ) { model ->
             ListItem(model = model)
-            if (model.type == ItemType.TRANSACTION) {
-                Divider()
-            }
+            Divider()
         }
     }
 }
