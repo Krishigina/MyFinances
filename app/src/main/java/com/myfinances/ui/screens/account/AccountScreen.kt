@@ -45,7 +45,6 @@ fun AccountScreenContent(
         ListItem(model = balanceItem)
         Divider()
         ListItem(model = currencyItem)
-        Divider()
     }
 }
 

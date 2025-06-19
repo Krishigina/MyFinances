@@ -12,7 +12,6 @@ import com.myfinances.R
 import com.myfinances.data.MockData
 import com.myfinances.domain.entity.Transaction
 import com.myfinances.ui.components.ItemType
-import com.myfinances.ui.components.LeadingIcon
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.components.TrailingContent
@@ -38,7 +37,6 @@ fun IncomeScreenContent(
         val category = MockData.findCategoryById(transaction.categoryId)
         transaction.toListItemModel(
             categoryName = category?.name ?: stringResource(id = R.string.unknown),
-            emoji = category?.emoji ?: "❓",
             type = ItemType.TRANSACTION
         )
     }
@@ -64,14 +62,13 @@ private fun formatCurrency(amount: Double): String {
 
 private fun Transaction.toListItemModel(
     categoryName: String,
-    emoji: String,
     type: ItemType
 ): ListItemModel {
     return ListItemModel(
         id = this.id.toString(),
         title = categoryName,
         type = type,
-        leadingIcon = LeadingIcon.Emoji(emoji),
+        leadingIcon = null,
         subtitle = this.comment,
         trailingContent = TrailingContent.TextWithArrow(formatCurrency(this.amount.toDouble())),
         onClick = { }

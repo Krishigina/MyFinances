@@ -45,7 +45,7 @@ private fun Category.toListItemModel(): ListItemModel {
     return ListItemModel(
         id = this.id.toString(),
         type = ItemType.TRANSACTION,
-        leadingIcon = LeadingIcon.Emoji(this.emoji),
+        leadingIcon = this.emoji?.let { LeadingIcon.Emoji(it) },
         title = this.name,
         trailingContent = null,
         showTrailingArrow = false

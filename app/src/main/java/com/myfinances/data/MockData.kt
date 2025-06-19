@@ -15,8 +15,8 @@ object MockData {
         Category(id = 6, name = "Спортзал", emoji = "🏋️", isIncome = false),
         Category(id = 7, name = "Медицина", emoji = "💊", isIncome = false),
 
-        Category(id = 10, name = "Зарплата", emoji = "💰", isIncome = true),
-        Category(id = 11, name = "Подработка", emoji = "🎁", isIncome = true)
+        Category(id = 10, name = "Зарплата", isIncome = true),
+        Category(id = 11, name = "Подработка", isIncome = true)
     )
 
     val transactions = listOf(
