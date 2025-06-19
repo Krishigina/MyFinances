@@ -38,10 +38,4 @@ sealed class Destination(
         title = R.string.botton_nav_label_settings,
         icon = R.drawable.ic_bottom_nav_settings
     )
-
-    data object Splash : Destination(
-        route = "splash",
-        title = R.string.botton_nav_label_splash,
-        icon = R.drawable.ic_bottom_nav_splash
-    )
 }
