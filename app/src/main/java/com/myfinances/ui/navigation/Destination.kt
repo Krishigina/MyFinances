@@ -3,6 +3,7 @@ package com.myfinances.ui.navigation
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.myfinances.R
+import com.myfinances.domain.entity.TransactionTypeFilter
 
 sealed class Destination(
     val route: String,
@@ -38,5 +39,9 @@ sealed class Destination(
         icon = R.drawable.ic_bottom_nav_settings
     )
 
-    data object History : Destination(route = "history")
+    data object History : Destination(route = "history/{transactionType}/{parentRoute}") {
+        fun createRoute(filter: TransactionTypeFilter, parent: Destination): String {
+            return "history/${filter.name}/${parent.route}"
+        }
+    }
 }

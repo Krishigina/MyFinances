@@ -31,25 +31,25 @@ data class TransactionDto(
     )
 }
 
-fun TransactionDto.toDomainModel(): Transaction {
+fun TransactionDto.toDomainModel(): Transaction? {
     val finalCategoryId = this.category?.id ?: this.categoryId ?: -1
+    val parsedDate = parseDate(this.transactionDate) ?: return null
 
     return Transaction(
         id = this.id,
         categoryId = finalCategoryId,
-        amount = this.amount,
+        amount = this.amount.toDoubleOrNull() ?: 0.0,
         comment = this.comment,
-        date = parseDate(this.transactionDate)
+        date = parsedDate
     )
 }
 
-private fun parseDate(dateString: String): Date {
+private fun parseDate(dateString: String): Date? {
     val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
     format.timeZone = TimeZone.getTimeZone("UTC")
     return try {
-        format.parse(dateString) ?: Date()
+        format.parse(dateString)
     } catch (e: Exception) {
-        e.printStackTrace()
-        Date()
+        null
     }
 }

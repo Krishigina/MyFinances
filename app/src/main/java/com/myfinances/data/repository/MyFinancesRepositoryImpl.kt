@@ -29,7 +29,7 @@ class MyFinancesRepositoryImpl(
             )
 
             if (response.isSuccessful) {
-                val transactions = response.body()?.map { it.toDomainModel() } ?: emptyList()
+                val transactions = response.body()?.mapNotNull { it.toDomainModel() } ?: emptyList()
                 Result.Success(transactions)
             } else {
                 Result.Error(Exception("API Error: ${response.code()}"))

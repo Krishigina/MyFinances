@@ -14,6 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.myfinances.R
+import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.ui.components.BottomNavigationBar
 import com.myfinances.ui.components.MainFloatingActionButton
 import com.myfinances.ui.components.MainTopBar
@@ -26,8 +27,6 @@ fun MainScreen() {
     val navBackStackEntry by mainNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val topLevelRoute = navBackStackEntry?.destination?.parent?.route ?: currentRoute
-
     Scaffold(
         topBar = {
             when (currentRoute) {
@@ -35,7 +34,14 @@ fun MainScreen() {
                     MainTopBar(
                         title = stringResource(id = R.string.top_bar_expenses_today_title),
                         actions = {
-                            IconButton(onClick = { mainNavController.navigate(Destination.History.route) }) {
+                            IconButton(onClick = {
+                                mainNavController.navigate(
+                                    Destination.History.createRoute(
+                                        filter = TransactionTypeFilter.EXPENSE,
+                                        parent = Destination.Expenses
+                                    )
+                                )
+                            }) {
                                 Icon(
                                     painterResource(R.drawable.ic_top_bar_history),
                                     contentDescription = stringResource(id = R.string.top_bar_icon_history)
@@ -71,7 +77,14 @@ fun MainScreen() {
                     MainTopBar(
                         title = stringResource(id = R.string.top_bar_income_today_title),
                         actions = {
-                            IconButton(onClick = { /*TODO*/ }) {
+                            IconButton(onClick = {
+                                mainNavController.navigate(
+                                    Destination.History.createRoute(
+                                        filter = TransactionTypeFilter.INCOME,
+                                        parent = Destination.Income
+                                    )
+                                )
+                            }) {
                                 Icon(
                                     painterResource(R.drawable.ic_top_bar_history),
                                     contentDescription = stringResource(id = R.string.top_bar_icon_history)

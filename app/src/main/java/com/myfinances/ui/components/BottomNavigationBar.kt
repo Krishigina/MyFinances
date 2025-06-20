@@ -1,5 +1,3 @@
-// file: ui/components/BottomNavigationBar.kt
-
 package com.myfinances.ui.components
 
 import androidx.compose.material3.Icon
@@ -32,13 +30,19 @@ fun BottomNavigationBar(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    val parentRouteArg = navBackStackEntry?.arguments?.getString("parentRoute")
+
     NavigationBar(
         modifier = modifier
     ) {
         destinations.forEach { destination ->
             if (destination.title != null && destination.icon != null) {
-                val selected = navBackStackEntry?.destination?.parent?.route == destination.route ||
-                        currentRoute == destination.route
+                val selected = if (currentRoute == Destination.History.route) {
+                    parentRouteArg == destination.route
+                } else {
+                    navBackStackEntry?.destination?.parent?.route == destination.route ||
+                            currentRoute == destination.route
+                }
 
                 NavigationBarItem(
                     label = { Text(text = stringResource(id = destination.title)) },
@@ -55,7 +59,7 @@ fun BottomNavigationBar(
                                 saveState = true
                             }
                             launchSingleTop = true
-                            restoreState = !selected
+                            restoreState = true
                         }
                     }
                 )

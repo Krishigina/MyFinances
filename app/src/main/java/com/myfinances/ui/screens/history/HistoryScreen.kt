@@ -27,7 +27,7 @@ import com.myfinances.ui.components.LeadingIcon
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.components.TrailingContent
-import java.text.NumberFormat
+import com.myfinances.ui.util.formatCurrency
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -75,9 +75,11 @@ private fun HistoryScreenContent(
     endDate: Date
 ) {
     val categoryMap = categories.associateBy { it.id }
-    val totalSum = transactions.sumOf { it.amount.toDoubleOrNull() ?: 0.0 }
-    val dateFormat = SimpleDateFormat("d MMMM yyyy", Locale("ru"))
-    val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+    val totalSum = transactions.sumOf { it.amount }
+
+    val summaryDateFormat = SimpleDateFormat("d MMMM yyyy", Locale("ru"))
+
+    val itemDateTimeFormat = SimpleDateFormat("d MMMM · HH:mm", Locale("ru"))
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
@@ -86,14 +88,14 @@ private fun HistoryScreenContent(
                     id = "history_summary_start",
                     title = "Начало",
                     type = ItemType.TOTAL,
-                    trailingContent = TrailingContent.TextOnly(dateFormat.format(startDate)),
+                    trailingContent = TrailingContent.TextOnly(summaryDateFormat.format(startDate)),
                     showTrailingArrow = false
                 ),
                 ListItemModel(
                     id = "history_summary_end",
                     title = "Конец",
                     type = ItemType.TOTAL,
-                    trailingContent = TrailingContent.TextOnly(dateFormat.format(endDate)),
+                    trailingContent = TrailingContent.TextOnly(summaryDateFormat.format(endDate)),
                     showTrailingArrow = false
                 ),
                 ListItemModel(
@@ -117,7 +119,7 @@ private fun HistoryScreenContent(
             val model = transaction.toListItemModel(
                 categoryName = category?.name ?: stringResource(id = R.string.unknown),
                 emoji = category?.emoji ?: "❓",
-                time = timeFormat.format(transaction.date)
+                formattedDateTime = itemDateTimeFormat.format(transaction.date)
             )
             ListItem(model = model)
             Divider()
@@ -128,7 +130,7 @@ private fun HistoryScreenContent(
 private fun Transaction.toListItemModel(
     categoryName: String,
     emoji: String,
-    time: String
+    formattedDateTime: String
 ): ListItemModel {
     return ListItemModel(
         id = this.id.toString(),
@@ -137,15 +139,9 @@ private fun Transaction.toListItemModel(
         leadingIcon = LeadingIcon.Emoji(emoji),
         subtitle = this.comment,
         trailingContent = TrailingContent.TextWithArrow(
-            text = formatCurrency(this.amount.toDouble()),
-            secondaryText = time
+            text = formatCurrency(this.amount),
+            secondaryText = formattedDateTime
         ),
         showTrailingArrow = true
     )
-}
-
-private fun formatCurrency(amount: Double): String {
-    val format = NumberFormat.getCurrencyInstance(Locale("ru", "RU"))
-    format.maximumFractionDigits = 0
-    return format.format(amount).replace(" ", "\u00A0")
 }

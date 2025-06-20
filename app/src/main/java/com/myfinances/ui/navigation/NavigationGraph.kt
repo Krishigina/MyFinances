@@ -2,9 +2,12 @@ package com.myfinances.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
+import androidx.navigation.navArgument
+import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.ui.screens.account.AccountScreen
 import com.myfinances.ui.screens.articles.ArticlesScreen
 import com.myfinances.ui.screens.expenses.ExpensesScreen
@@ -23,9 +26,21 @@ fun NavigationGraph(navController: NavHostController) {
             composable(route = Destination.ExpensesList.route) {
                 ExpensesScreen(navController = navController)
             }
-            composable(route = Destination.History.route) {
-                HistoryScreen(navController = navController)
-            }
+        }
+
+        composable(
+            route = Destination.History.route,
+            arguments = listOf(
+                navArgument("transactionType") {
+                    type = NavType.EnumType(TransactionTypeFilter::class.java)
+                    defaultValue = TransactionTypeFilter.ALL
+                },
+                navArgument("parentRoute") {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            HistoryScreen(navController = navController)
         }
 
         composable(route = Destination.Income.route) {

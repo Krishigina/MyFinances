@@ -26,9 +26,7 @@ import com.myfinances.ui.components.LeadingIcon
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.components.TrailingContent
-import com.myfinances.ui.screens.common.TransactionsUiState
-import java.text.NumberFormat
-import java.util.Locale
+import com.myfinances.ui.util.formatCurrency
 
 @Composable
 fun ExpensesScreen(
@@ -39,18 +37,18 @@ fun ExpensesScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         when (val state = uiState) {
-            is TransactionsUiState.Loading -> {
+            is ExpensesUiState.Loading -> {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
 
-            is TransactionsUiState.Success -> {
+            is ExpensesUiState.Success -> {
                 ExpensesScreenContent(
                     transactions = state.transactions,
                     categories = state.categories
                 )
             }
 
-            is TransactionsUiState.Error -> {
+            is ExpensesUiState.Error -> {
                 Text(
                     text = state.message,
                     modifier = Modifier
@@ -69,7 +67,7 @@ private fun ExpensesScreenContent(
     categories: List<Category>
 ) {
     val categoryMap = categories.associateBy { it.id }
-    val totalAmount = transactions.sumOf { it.amount.toDoubleOrNull() ?: 0.0 }
+    val totalAmount = transactions.sumOf { it.amount }
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
@@ -104,14 +102,8 @@ private fun Transaction.toListItemModel(categoryName: String, emoji: String): Li
         leadingIcon = LeadingIcon.Emoji(emoji),
         subtitle = this.comment,
         trailingContent = TrailingContent.TextWithArrow(
-            text = formatCurrency(this.amount.toDouble())
+            text = formatCurrency(this.amount)
         ),
         showTrailingArrow = true
     )
-}
-
-private fun formatCurrency(amount: Double): String {
-    val format = NumberFormat.getCurrencyInstance(Locale("ru", "RU"))
-    format.maximumFractionDigits = 0
-    return format.format(amount).replace(" ", "\u00A0")
 }
