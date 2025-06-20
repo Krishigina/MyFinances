@@ -40,17 +40,24 @@ fun ExpensesScreen(
             is ExpensesUiState.Loading -> {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
-
             is ExpensesUiState.Success -> {
                 ExpensesScreenContent(
                     transactions = state.transactions,
                     categories = state.categories
                 )
             }
-
             is ExpensesUiState.Error -> {
                 Text(
                     text = state.message,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(16.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+            is ExpensesUiState.NoInternet -> {
+                Text(
+                    text = "Нет подключения к интернету. Проверьте соединение и попробуйте снова.",
                     modifier = Modifier
                         .align(Alignment.Center)
                         .padding(16.dp),
@@ -104,6 +111,7 @@ private fun Transaction.toListItemModel(categoryName: String, emoji: String): Li
         trailingContent = TrailingContent.TextWithArrow(
             text = formatCurrency(this.amount)
         ),
-        showTrailingArrow = true
+        showTrailingArrow = true,
+        onClick = {}
     )
 }

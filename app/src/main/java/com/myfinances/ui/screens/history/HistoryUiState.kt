@@ -12,6 +12,6 @@ sealed interface HistoryUiState {
         val startDate: Date,
         val endDate: Date
     ) : HistoryUiState
-
     data class Error(val message: String) : HistoryUiState
+    data object NoInternet : HistoryUiState
 }

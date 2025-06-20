@@ -9,6 +9,6 @@ sealed interface ExpensesUiState {
         val transactions: List<Transaction>,
         val categories: List<Category>
     ) : ExpensesUiState
-
     data class Error(val message: String) : ExpensesUiState
+    data object NoInternet : ExpensesUiState
 }

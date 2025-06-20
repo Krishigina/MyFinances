@@ -38,17 +38,24 @@ fun IncomeScreen(
             is IncomeUiState.Loading -> {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
-
             is IncomeUiState.Success -> {
                 IncomeScreenContent(
                     transactions = state.transactions,
                     categories = state.categories
                 )
             }
-
             is IncomeUiState.Error -> {
                 Text(
                     text = state.message,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(16.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+            is IncomeUiState.NoInternet -> {
+                Text(
+                    text = "Нет подключения к интернету. Проверьте соединение и попробуйте снова.",
                     modifier = Modifier
                         .align(Alignment.Center)
                         .padding(16.dp),
@@ -102,6 +109,7 @@ private fun Transaction.toListItemModel(categoryName: String, emoji: String): Li
         trailingContent = TrailingContent.TextWithArrow(
             text = formatCurrency(this.amount)
         ),
-        showTrailingArrow = true
+        showTrailingArrow = true,
+        onClick = {}
     )
 }

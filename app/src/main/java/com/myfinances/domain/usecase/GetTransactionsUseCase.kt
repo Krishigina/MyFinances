@@ -6,8 +6,9 @@ import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.domain.repository.MyFinancesRepository
 import com.myfinances.domain.util.Result
 import java.util.Date
+import javax.inject.Inject
 
-class GetTransactionsUseCase(
+class GetTransactionsUseCase @Inject constructor(
     private val repository: MyFinancesRepository
 ) {
     suspend operator fun invoke(
@@ -18,32 +19,35 @@ class GetTransactionsUseCase(
     ): Result<Pair<List<Transaction>, List<Category>>> {
 
         val transactionsResult = repository.getTransactions(accountId, startDate, endDate)
+
+        if (transactionsResult !is Result.Success) {
+            @Suppress("UNCHECKED_CAST")
+            return transactionsResult as Result<Nothing>
+        }
+
         val categoriesResult = repository.getCategories()
 
-        return when {
-            transactionsResult is Result.Error -> transactionsResult
-            categoriesResult is Result.Error -> categoriesResult
-            transactionsResult is Result.Success && categoriesResult is Result.Success -> {
-                val allTransactions = transactionsResult.data
-                val categories = categoriesResult.data
-                val categoryMap = categories.associateBy { it.id }
+        if (categoriesResult !is Result.Success) {
+            @Suppress("UNCHECKED_CAST")
+            return categoriesResult as Result<Nothing>
+        }
 
-                val filteredTransactions = when (filter) {
-                    TransactionTypeFilter.INCOME -> allTransactions.filter {
-                        categoryMap[it.categoryId]?.isIncome == true
-                    }
+        val allTransactions = transactionsResult.data
+        val categories = categoriesResult.data
+        val categoryMap = categories.associateBy { it.id }
 
-                    TransactionTypeFilter.EXPENSE -> allTransactions.filter {
-                        categoryMap[it.categoryId]?.isIncome == false
-                    }
-
-                    TransactionTypeFilter.ALL -> allTransactions
-                }
-
-                Result.Success(Pair(filteredTransactions, categories))
+        val filteredTransactions = when (filter) {
+            TransactionTypeFilter.INCOME -> allTransactions.filter {
+                categoryMap[it.categoryId]?.isIncome == true
             }
 
-            else -> Result.Error(IllegalStateException("Unknown state during transaction fetching"))
+            TransactionTypeFilter.EXPENSE -> allTransactions.filter {
+                categoryMap[it.categoryId]?.isIncome == false
+            }
+
+            TransactionTypeFilter.ALL -> allTransactions
         }
+
+        return Result.Success(Pair(filteredTransactions, categories))
     }
 }

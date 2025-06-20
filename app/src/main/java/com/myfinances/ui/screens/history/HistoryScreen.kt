@@ -105,7 +105,6 @@ private fun DatePickerDialogButtons(
     }
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
@@ -122,7 +121,6 @@ fun HistoryScreen(
             is HistoryUiState.Loading -> {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
-
             is HistoryUiState.Success -> {
                 HistoryScreenContent(
                     transactions = state.transactions,
@@ -133,10 +131,18 @@ fun HistoryScreen(
                     onEndDateClick = { showEndDatePicker = true }
                 )
             }
-
             is HistoryUiState.Error -> {
                 Text(
                     text = state.message,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(16.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+            is HistoryUiState.NoInternet -> {
+                Text(
+                    text = "Нет подключения к интернету. Проверьте соединение и попробуйте снова.",
                     modifier = Modifier
                         .align(Alignment.Center)
                         .padding(16.dp),
@@ -203,7 +209,6 @@ fun HistoryScreen(
         }
     }
 }
-
 
 @Composable
 private fun HistoryScreenContent(
