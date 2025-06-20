@@ -24,6 +24,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.myfinances.R
+import com.myfinances.ui.theme.BrightBlack
 import com.myfinances.ui.theme.LightBlack
 import com.myfinances.ui.theme.LocalDimensions
 
@@ -110,7 +111,16 @@ fun ListItem(model: ListItemModel) {
                         Text(text = content.text, style = trailingTextStyle)
                     }
                     is TrailingContent.TextWithArrow -> {
-                        Text(text = content.text, style = trailingTextStyle)
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(text = content.text, style = trailingTextStyle)
+                            content.secondaryText?.let {
+                                Text(
+                                    text = it,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = BrightBlack
+                                )
+                            }
+                        }
                     }
                     is TrailingContent.Switch -> Switch(
                         checked = content.isChecked,

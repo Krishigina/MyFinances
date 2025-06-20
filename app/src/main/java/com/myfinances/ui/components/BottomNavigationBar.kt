@@ -1,3 +1,5 @@
+// file: ui/components/BottomNavigationBar.kt
+
 package com.myfinances.ui.components
 
 import androidx.compose.material3.Icon
@@ -6,6 +8,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -14,7 +17,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.myfinances.ui.navigation.Destination
 
 @Composable
-fun BottomNavigationBar(navController: NavHostController) {
+fun BottomNavigationBar(
+    navController: NavHostController,
+    modifier: Modifier = Modifier
+) {
     val destinations = listOf(
         Destination.Expenses,
         Destination.Income,
@@ -26,27 +32,34 @@ fun BottomNavigationBar(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    NavigationBar {
+    NavigationBar(
+        modifier = modifier
+    ) {
         destinations.forEach { destination ->
-            NavigationBarItem(
-                label = { Text(text = stringResource(id = destination.title)) },
-                icon = {
-                    Icon(
-                        painterResource(id = destination.icon),
-                        contentDescription = stringResource(id = destination.title)
-                    )
-                },
-                selected = currentRoute == destination.route,
-                onClick = {
-                    navController.navigate(destination.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
+            if (destination.title != null && destination.icon != null) {
+                val selected = navBackStackEntry?.destination?.parent?.route == destination.route ||
+                        currentRoute == destination.route
+
+                NavigationBarItem(
+                    label = { Text(text = stringResource(id = destination.title)) },
+                    icon = {
+                        Icon(
+                            painterResource(id = destination.icon),
+                            contentDescription = stringResource(id = destination.title)
+                        )
+                    },
+                    selected = selected,
+                    onClick = {
+                        navController.navigate(destination.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = !selected
                         }
-                        launchSingleTop = true
-                        restoreState = true
                     }
-                }
-            )
+                )
+            }
         }
     }
 }

@@ -1,93 +1,117 @@
 package com.myfinances.ui.screens.expenses
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
 import com.myfinances.R
-import com.myfinances.data.MockData
+import com.myfinances.domain.entity.Category
 import com.myfinances.domain.entity.Transaction
 import com.myfinances.ui.components.ItemType
 import com.myfinances.ui.components.LeadingIcon
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.components.TrailingContent
+import com.myfinances.ui.screens.common.TransactionsUiState
 import java.text.NumberFormat
 import java.util.Locale
 
 @Composable
-fun ExpensesScreenContent(
-    transactions: List<Transaction>
+fun ExpensesScreen(
+    navController: NavHostController,
+    viewModel: ExpensesViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        when (val state = uiState) {
+            is TransactionsUiState.Loading -> {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            }
+
+            is TransactionsUiState.Success -> {
+                ExpensesScreenContent(
+                    transactions = state.transactions,
+                    categories = state.categories
+                )
+            }
+
+            is TransactionsUiState.Error -> {
+                Text(
+                    text = state.message,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(16.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExpensesScreenContent(
+    transactions: List<Transaction>,
+    categories: List<Category>
+) {
+    val categoryMap = categories.associateBy { it.id }
     val totalAmount = transactions.sumOf { it.amount.toDoubleOrNull() ?: 0.0 }
 
-    val totalAmountItem = ListItemModel(
-        id = "total_amount_card",
-        title = stringResource(id = R.string.total_amount_card),
-        type = ItemType.TOTAL,
-        leadingIcon = null,
-        trailingContent = TrailingContent.TextOnly(formatCurrency(totalAmount)),
-        onClick = {}
-    )
-
-    val transactionListItems = transactions.map { transaction ->
-        val category = MockData.findCategoryById(transaction.categoryId)
-        transaction.toListItemModel(
-            categoryName = category?.name ?: stringResource(id = R.string.unknown),
-            emoji = category?.emoji ?: "❓",
-            type = ItemType.TRANSACTION
-        )
-    }
-
-    val allItems = listOf(totalAmountItem) + transactionListItems
-
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(
-            items = allItems,
-            key = { it.id }
-        ) { model ->
+        item {
+            val totalAmountItem = ListItemModel(
+                id = "total_amount_card_expenses",
+                title = stringResource(id = R.string.total_amount_card),
+                type = ItemType.TOTAL,
+                trailingContent = TrailingContent.TextOnly(formatCurrency(totalAmount)),
+                showTrailingArrow = false
+            )
+            ListItem(model = totalAmountItem)
+            Divider()
+        }
+
+        items(items = transactions, key = { it.id }) { transaction ->
+            val category = categoryMap[transaction.categoryId]
+            val model = transaction.toListItemModel(
+                categoryName = category?.name ?: stringResource(id = R.string.unknown),
+                emoji = category?.emoji ?: "❓"
+            )
             ListItem(model = model)
             Divider()
         }
     }
 }
 
+private fun Transaction.toListItemModel(categoryName: String, emoji: String): ListItemModel {
+    return ListItemModel(
+        id = this.id.toString(),
+        title = categoryName,
+        type = ItemType.TRANSACTION,
+        leadingIcon = LeadingIcon.Emoji(emoji),
+        subtitle = this.comment,
+        trailingContent = TrailingContent.TextWithArrow(
+            text = formatCurrency(this.amount.toDouble())
+        ),
+        showTrailingArrow = true
+    )
+}
+
 private fun formatCurrency(amount: Double): String {
     val format = NumberFormat.getCurrencyInstance(Locale("ru", "RU"))
     format.maximumFractionDigits = 0
     return format.format(amount).replace(" ", "\u00A0")
-}
-
-private fun Transaction.toListItemModel(
-    categoryName: String,
-    emoji: String,
-    type: ItemType
-): ListItemModel {
-    return ListItemModel(
-        id = this.id.toString(),
-        title = categoryName,
-        type = type,
-        leadingIcon = LeadingIcon.Emoji(emoji),
-        subtitle = this.comment,
-        trailingContent = TrailingContent.TextWithArrow(formatCurrency(this.amount.toDouble())),
-        onClick = { }
-    )
-}
-
-@Composable
-fun ExpensesScreen() {
-    val expenseTransactions = MockData.transactions.filter {
-        MockData.findCategoryById(it.categoryId)?.isIncome == false
-    }
-    ExpensesScreenContent(transactions = expenseTransactions)
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ExpensesScreenPreview() {
-    ExpensesScreen()
 }

@@ -1,6 +1,7 @@
 package com.myfinances.ui.screens
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,21 +23,44 @@ import com.myfinances.ui.navigation.NavigationGraph
 @Composable
 fun MainScreen() {
     val mainNavController = rememberNavController()
-
     val navBackStackEntry by mainNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    val topLevelRoute = navBackStackEntry?.destination?.parent?.route ?: currentRoute
 
     Scaffold(
         topBar = {
             when (currentRoute) {
-                Destination.Expenses.route -> {
+                Destination.ExpensesList.route -> {
                     MainTopBar(
                         title = stringResource(id = R.string.top_bar_expenses_today_title),
                         actions = {
-                            IconButton(onClick = { /*TODO*/ }) {
+                            IconButton(onClick = { mainNavController.navigate(Destination.History.route) }) {
                                 Icon(
                                     painterResource(R.drawable.ic_top_bar_history),
                                     contentDescription = stringResource(id = R.string.top_bar_icon_history)
+                                )
+                            }
+                        }
+                    )
+                }
+
+                Destination.History.route -> {
+                    MainTopBar(
+                        title = "Моя история",
+                        navigationIcon = {
+                            IconButton(onClick = { mainNavController.popBackStack() }) {
+                                Icon(
+                                    painterResource(R.drawable.ic_history_arrow_left),
+                                    contentDescription = "Назад"
+                                )
+                            }
+                        },
+                        actions = {
+                            IconButton(onClick = { /* TODO: Open calendar */ }) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_history_analysis),
+                                    contentDescription = "Календарь"
                                 )
                             }
                         }
@@ -85,11 +109,14 @@ fun MainScreen() {
             }
         },
         bottomBar = {
-            BottomNavigationBar(navController = mainNavController)
+            BottomNavigationBar(
+                navController = mainNavController,
+                modifier = Modifier.navigationBarsPadding()
+            )
         },
         floatingActionButton = {
             when (currentRoute) {
-                Destination.Expenses.route,
+                Destination.ExpensesList.route,
                 Destination.Income.route,
                 Destination.Account.route -> {
                     MainFloatingActionButton {
