@@ -9,5 +9,5 @@ data class ListItemModel(
     val trailingContent: TrailingContent? = null,
     val useWhiteIconBackground: Boolean = false,
     val showTrailingArrow: Boolean = true,
-    val onClick: () -> Unit = {}
+    val onClick: (() -> Unit)? = null
 )

@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -28,20 +29,18 @@ fun BottomNavigationBar(
     )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-
-    val parentRouteArg = navBackStackEntry?.arguments?.getString("parentRoute")
+    val currentDestination = navBackStackEntry?.destination
 
     NavigationBar(
         modifier = modifier
     ) {
         destinations.forEach { destination ->
             if (destination.title != null && destination.icon != null) {
-                val selected = if (currentRoute == Destination.History.route) {
+                val selected = if (currentDestination?.route?.startsWith("history") == true) {
+                    val parentRouteArg = navBackStackEntry?.arguments?.getString("parentRoute")
                     parentRouteArg == destination.route
                 } else {
-                    navBackStackEntry?.destination?.parent?.route == destination.route ||
-                            currentRoute == destination.route
+                    currentDestination?.hierarchy?.any { it.route == destination.route } == true
                 }
 
                 NavigationBarItem(
@@ -54,6 +53,10 @@ fun BottomNavigationBar(
                     },
                     selected = selected,
                     onClick = {
+                        if (currentDestination?.route?.startsWith("history") == true && !selected) {
+                            navController.popBackStack()
+                        }
+
                         navController.navigate(destination.route) {
                             popUpTo(navController.graph.findStartDestination().id) {
                                 saveState = true

@@ -50,7 +50,7 @@ fun ListItem(model: ListItemModel) {
             .fillMaxWidth()
             .height(itemHeight)
             .background(backgroundColor)
-            .clickable(enabled = !isTotalType, onClick = model.onClick)
+            .clickable(enabled = model.onClick != null, onClick = { model.onClick?.invoke() })
             .padding(horizontal = dimensions.spacing.paddingLarge),
         verticalAlignment = Alignment.CenterVertically
     ) {
