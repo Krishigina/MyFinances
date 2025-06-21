@@ -1,93 +1,115 @@
 package com.myfinances.ui.screens.income
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.myfinances.R
-import com.myfinances.data.MockData
+import com.myfinances.domain.entity.Category
 import com.myfinances.domain.entity.Transaction
 import com.myfinances.ui.components.ItemType
 import com.myfinances.ui.components.LeadingIcon
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.components.TrailingContent
-import java.text.NumberFormat
-import java.util.Locale
+import com.myfinances.ui.util.formatCurrency
 
 @Composable
-fun IncomeScreenContent(
-    transactions: List<Transaction>
+fun IncomeScreen(
+    viewModel: IncomeViewModel = hiltViewModel()
 ) {
-    val totalAmount = transactions.sumOf { it.amount.toDoubleOrNull() ?: 0.0 }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val totalAmountItem = ListItemModel(
-        id = "total_amount_card",
-        title = stringResource(id = R.string.total_amount_card),
-        type = ItemType.TOTAL,
-        leadingIcon = null,
-        trailingContent = TrailingContent.TextOnly(formatCurrency(totalAmount)),
-        onClick = {}
-    )
-
-    val transactionListItems = transactions.map { transaction ->
-        val category = MockData.findCategoryById(transaction.categoryId)
-        transaction.toListItemModel(
-            categoryName = category?.name ?: stringResource(id = R.string.unknown),
-            emoji = category?.emoji ?: "❓",
-            type = ItemType.TRANSACTION
-        )
+    Box(modifier = Modifier.fillMaxSize()) {
+        when (val state = uiState) {
+            is IncomeUiState.Loading -> {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            }
+            is IncomeUiState.Success -> {
+                IncomeScreenContent(
+                    transactions = state.transactions,
+                    categories = state.categories
+                )
+            }
+            is IncomeUiState.Error -> {
+                Text(
+                    text = state.message,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(16.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+            is IncomeUiState.NoInternet -> {
+                Text(
+                    text = "Нет подключения к интернету. Проверьте соединение и попробуйте снова.",
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(16.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
     }
+}
 
-    val allItems = listOf(totalAmountItem) + transactionListItems
+@Composable
+private fun IncomeScreenContent(
+    transactions: List<Transaction>,
+    categories: List<Category>
+) {
+    val categoryMap = categories.associateBy { it.id }
+    val totalAmount = transactions.sumOf { it.amount }
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(
-            items = allItems,
-            key = { it.id }
-        ) { model ->
+        item {
+            val totalAmountItem = ListItemModel(
+                id = "total_amount_card_income",
+                title = stringResource(id = R.string.total_amount_card),
+                type = ItemType.TOTAL,
+                trailingContent = TrailingContent.TextOnly(formatCurrency(totalAmount)),
+                showTrailingArrow = false
+            )
+            ListItem(model = totalAmountItem)
+            Divider()
+        }
+
+        items(items = transactions, key = { it.id }) { transaction ->
+            val category = categoryMap[transaction.categoryId]
+            val model = transaction.toListItemModel(
+                categoryName = category?.name ?: stringResource(id = R.string.unknown),
+                emoji = category?.emoji ?: "❓"
+            )
             ListItem(model = model)
             Divider()
         }
     }
 }
 
-private fun formatCurrency(amount: Double): String {
-    val format = NumberFormat.getCurrencyInstance(Locale("ru", "RU"))
-    format.maximumFractionDigits = 0
-    return format.format(amount).replace(" ", "\u00A0")
-}
-
-private fun Transaction.toListItemModel(
-    categoryName: String,
-    emoji: String,
-    type: ItemType
-): ListItemModel {
+private fun Transaction.toListItemModel(categoryName: String, emoji: String): ListItemModel {
     return ListItemModel(
         id = this.id.toString(),
         title = categoryName,
-        type = type,
+        type = ItemType.TRANSACTION,
         leadingIcon = LeadingIcon.Emoji(emoji),
         subtitle = this.comment,
-        trailingContent = TrailingContent.TextWithArrow(formatCurrency(this.amount.toDouble())),
-        onClick = { }
+        trailingContent = TrailingContent.TextWithArrow(
+            text = formatCurrency(this.amount)
+        ),
+        showTrailingArrow = true,
+        onClick = {}
     )
-}
-
-@Composable
-fun IncomeScreen() {
-    val incomeTransactions = MockData.transactions.filter {
-        MockData.findCategoryById(it.categoryId)?.isIncome == true
-    }
-    IncomeScreenContent(transactions = incomeTransactions)
-}
-
-@Preview(showBackground = true)
-@Composable
-fun IncomeScreenPreview() {
-    IncomeScreen()
 }

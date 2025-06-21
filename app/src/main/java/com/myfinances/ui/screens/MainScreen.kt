@@ -1,6 +1,7 @@
 package com.myfinances.ui.screens
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -13,6 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.myfinances.R
+import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.ui.components.BottomNavigationBar
 import com.myfinances.ui.components.MainFloatingActionButton
 import com.myfinances.ui.components.MainTopBar
@@ -21,87 +23,121 @@ import com.myfinances.ui.navigation.NavigationGraph
 
 @Composable
 fun MainScreen() {
-    val navController = rememberNavController()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val mainNavController = rememberNavController()
+    val navBackStackEntry by mainNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-
-    val showBars = currentRoute != Destination.Splash.route
 
     Scaffold(
         topBar = {
-            if (showBars) {
-                when (currentRoute) {
-                    Destination.Expenses.route -> {
-                        MainTopBar(
-                            title = stringResource(id = R.string.top_bar_expenses_today_title),
-                            actions = {
-                                IconButton(onClick = { /*TODO*/ }) {
-                                    Icon(
-                                        painterResource(R.drawable.ic_top_bar_history),
-                                        contentDescription = stringResource(id = R.string.top_bar_icon_history)
+            when (currentRoute) {
+                Destination.ExpensesList.route -> {
+                    MainTopBar(
+                        title = stringResource(id = R.string.top_bar_expenses_today_title),
+                        actions = {
+                            IconButton(onClick = {
+                                mainNavController.navigate(
+                                    Destination.History.createRoute(
+                                        filter = TransactionTypeFilter.EXPENSE,
+                                        parent = Destination.Expenses
                                     )
-                                }
+                                )
+                            }) {
+                                Icon(
+                                    painterResource(R.drawable.ic_top_bar_history),
+                                    contentDescription = stringResource(id = R.string.top_bar_icon_history)
+                                )
                             }
-                        )
-                    }
+                        }
+                    )
+                }
 
-                    Destination.Income.route -> {
-                        MainTopBar(
-                            title = stringResource(id = R.string.top_bar_income_today_title),
-                            actions = {
-                                IconButton(onClick = { /*TODO*/ }) {
-                                    Icon(
-                                        painterResource(R.drawable.ic_top_bar_history),
-                                        contentDescription = stringResource(id = R.string.top_bar_icon_history)
+                Destination.History.route -> {
+                    MainTopBar(
+                        title = "Моя история",
+                        navigationIcon = {
+                            IconButton(onClick = { mainNavController.popBackStack() }) {
+                                Icon(
+                                    painterResource(R.drawable.ic_history_arrow_left),
+                                    contentDescription = "Назад"
+                                )
+                            }
+                        },
+                        actions = {
+                            IconButton(onClick = { /* TODO: Open calendar */ }) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_history_analysis),
+                                    contentDescription = "Календарь"
+                                )
+                            }
+                        }
+                    )
+                }
+
+                Destination.Income.route -> {
+                    MainTopBar(
+                        title = stringResource(id = R.string.top_bar_income_today_title),
+                        actions = {
+                            IconButton(onClick = {
+                                mainNavController.navigate(
+                                    Destination.History.createRoute(
+                                        filter = TransactionTypeFilter.INCOME,
+                                        parent = Destination.Income
                                     )
-                                }
+                                )
+                            }) {
+                                Icon(
+                                    painterResource(R.drawable.ic_top_bar_history),
+                                    contentDescription = stringResource(id = R.string.top_bar_icon_history)
+                                )
                             }
-                        )
-                    }
+                        }
+                    )
+                }
 
-                    Destination.Account.route -> {
-                        MainTopBar(
-                            title = stringResource(id = R.string.top_bar_my_account_title),
-                            actions = {
-                                IconButton(onClick = { /*TODO*/ }) {
-                                    Icon(
-                                        painterResource(R.drawable.ic_top_bar_edit),
-                                        contentDescription = stringResource(id = R.string.top_bar_icon_edit)
-                                    )
-                                }
+                Destination.Account.route -> {
+                    MainTopBar(
+                        title = stringResource(id = R.string.top_bar_my_account_title),
+                        actions = {
+                            IconButton(onClick = { /*TODO*/ }) {
+                                Icon(
+                                    painterResource(R.drawable.ic_top_bar_edit),
+                                    contentDescription = stringResource(id = R.string.top_bar_icon_edit)
+                                )
                             }
-                        )
-                    }
+                        }
+                    )
+                }
 
-                    Destination.Articles.route -> {
-                        MainTopBar(
-                            title = stringResource(id = R.string.top_bar_my_articles_title)
-                        )
-                    }
+                Destination.Articles.route -> {
+                    MainTopBar(
+                        title = stringResource(id = R.string.top_bar_my_articles_title)
+                    )
+                }
 
-                    Destination.Settings.route -> {
-                        MainTopBar(
-                            title = stringResource(id = R.string.top_bar_settings_title)
-                        )
-                    }
+                Destination.Settings.route -> {
+                    MainTopBar(
+                        title = stringResource(id = R.string.top_bar_settings_title)
+                    )
                 }
             }
         },
         bottomBar = {
-            if (showBars) {
-                BottomNavigationBar(navController)
-            }
+            BottomNavigationBar(
+                navController = mainNavController,
+                modifier = Modifier.navigationBarsPadding()
+            )
         },
         floatingActionButton = {
-            if (showBars) {
-                when (currentRoute) {
-                    Destination.Expenses.route,
-                    Destination.Income.route,
-                    Destination.Account.route -> {
-                        MainFloatingActionButton {
-                            // TODO
-                        }
+            when (currentRoute) {
+                Destination.ExpensesList.route,
+                Destination.Income.route,
+                Destination.Account.route -> {
+                    MainFloatingActionButton {
+                        // TODO
                     }
+                }
+
+                else -> {
                 }
             }
         }
@@ -109,7 +145,7 @@ fun MainScreen() {
         Box(
             modifier = Modifier.padding(padding)
         ) {
-            NavigationGraph(navController)
+            NavigationGraph(navController = mainNavController)
         }
     }
 }

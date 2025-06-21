@@ -9,17 +9,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavHostController
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.myfinances.R
-import com.myfinances.ui.navigation.Destination
 import kotlinx.coroutines.delay
 
 @Composable
-fun SplashScreen(navController: NavHostController) {
+fun SplashScreen(onSplashFinished: () -> Unit) {
     val composition by rememberLottieComposition(
         spec = LottieCompositionSpec.RawRes(R.raw.splash_animation)
     )
@@ -33,13 +31,10 @@ fun SplashScreen(navController: NavHostController) {
     LaunchedEffect(progress) {
         if (progress == 1f) {
             delay(200)
-            navController.navigate(Destination.Expenses.route) {
-                popUpTo(Destination.Splash.route) {
-                    inclusive = true
-                }
-            }
+            onSplashFinished()
         }
     }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
