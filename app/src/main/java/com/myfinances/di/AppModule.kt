@@ -6,6 +6,8 @@ import com.myfinances.data.network.ConnectivityManagerSource
 import com.myfinances.data.network.NetworkConnectivityManager
 import com.myfinances.data.network.RetryInterceptor
 import com.myfinances.data.repository.MyFinancesRepositoryImpl
+import com.myfinances.data.store.SessionStore
+import com.myfinances.data.store.UserSessionStore
 import com.myfinances.domain.repository.MyFinancesRepository
 import dagger.Binds
 import dagger.Module
@@ -26,6 +28,16 @@ abstract class ConnectivityModule {
     abstract fun bindConnectivityManager(
         networkConnectivityManager: NetworkConnectivityManager
     ): ConnectivityManagerSource
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class StoreModule {
+    @Binds
+    @Singleton
+    abstract fun bindSessionStore(
+        userSessionStore: UserSessionStore
+    ): SessionStore
 }
 
 @Module

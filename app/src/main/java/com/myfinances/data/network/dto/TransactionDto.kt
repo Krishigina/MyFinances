@@ -2,6 +2,7 @@ package com.myfinances.data.network.dto
 
 import com.google.gson.annotations.SerializedName
 import com.myfinances.domain.entity.Transaction
+import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -45,11 +46,17 @@ fun TransactionDto.toDomainModel(): Transaction? {
 }
 
 private fun parseDate(dateString: String): Date? {
-    val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-    format.timeZone = TimeZone.getTimeZone("UTC")
-    return try {
-        format.parse(dateString)
-    } catch (e: Exception) {
-        null
+    val formats = listOf(
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()),
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
+    )
+
+    for (format in formats) {
+        try {
+            format.timeZone = TimeZone.getTimeZone("UTC")
+            return format.parse(dateString)
+        } catch (e: ParseException) {
+        }
     }
+    return null
 }

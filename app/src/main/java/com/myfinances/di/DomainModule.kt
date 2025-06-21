@@ -1,6 +1,9 @@
 package com.myfinances.di
 
+import com.myfinances.data.store.SessionStore
 import com.myfinances.domain.repository.MyFinancesRepository
+import com.myfinances.domain.usecase.GetAccountsUseCase
+import com.myfinances.domain.usecase.GetActiveAccountIdUseCase
 import com.myfinances.domain.usecase.GetCategoriesUseCase
 import com.myfinances.domain.usecase.GetExpenseTransactionsUseCase
 import com.myfinances.domain.usecase.GetIncomeTransactionsUseCase
@@ -37,5 +40,20 @@ object DomainModule {
     @ViewModelScoped
     fun provideGetIncomeTransactionsUseCase(repository: MyFinancesRepository): GetIncomeTransactionsUseCase {
         return GetIncomeTransactionsUseCase(repository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideGetActiveAccountIdUseCase(
+        repository: MyFinancesRepository,
+        sessionStore: SessionStore
+    ): GetActiveAccountIdUseCase {
+        return GetActiveAccountIdUseCase(repository, sessionStore)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideGetAccountsUseCase(repository: MyFinancesRepository): GetAccountsUseCase {
+        return GetAccountsUseCase(repository)
     }
 }
