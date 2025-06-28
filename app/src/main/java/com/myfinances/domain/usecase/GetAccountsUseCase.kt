@@ -1,12 +1,12 @@
 package com.myfinances.domain.usecase
 
 import com.myfinances.domain.entity.Account
-import com.myfinances.domain.repository.MyFinancesRepository
+import com.myfinances.domain.repository.AccountsRepository
 import com.myfinances.domain.util.Result
 import javax.inject.Inject
 
 class GetAccountsUseCase @Inject constructor(
-    private val repository: MyFinancesRepository
+    private val repository: AccountsRepository
 ) {
     suspend operator fun invoke(): Result<Account> {
         return when (val result = repository.getAccounts()) {

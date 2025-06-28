@@ -1,12 +1,12 @@
 package com.myfinances.domain.usecase
 
 import com.myfinances.data.store.SessionStore
-import com.myfinances.domain.repository.MyFinancesRepository
+import com.myfinances.domain.repository.AccountsRepository
 import com.myfinances.domain.util.Result
 import javax.inject.Inject
 
 class GetActiveAccountIdUseCase @Inject constructor(
-    private val repository: MyFinancesRepository,
+    private val repository: AccountsRepository,
     private val sessionStore: SessionStore
 ) {
     suspend operator fun invoke(): Result<Int> {
