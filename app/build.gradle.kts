@@ -8,6 +8,7 @@ plugins {
 
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
+    id("io.gitlab.arturbosch.detekt")
 }
 
 val localProperties = Properties()
@@ -97,4 +98,26 @@ dependencies {
     implementation(libs.logging.interceptor)
 
     implementation(libs.okhttp3.logging.interceptor)
+}
+
+detekt {
+    toolVersion = "1.23.6"
+
+    source.setFrom(
+        files(
+            "src/main/java",
+            "src/main/kotlin",
+            "src/test/java",
+            "src/test/kotlin",
+            "src/androidTest/java",
+            "src/androidTest/kotlin"
+        )
+    )
+
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+
+    autoCorrect = false
+
+    parallel = true
+
 }
