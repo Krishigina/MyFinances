@@ -5,10 +5,14 @@ import com.myfinances.data.network.ApiService
 import com.myfinances.data.network.ConnectivityManagerSource
 import com.myfinances.data.network.NetworkConnectivityManager
 import com.myfinances.data.network.RetryInterceptor
-import com.myfinances.data.repository.MyFinancesRepositoryImpl
+import com.myfinances.data.repository.AccountsRepositoryImpl
+import com.myfinances.data.repository.CategoriesRepositoryImpl
+import com.myfinances.data.repository.TransactionsRepositoryImpl
 import com.myfinances.data.store.SessionStore
 import com.myfinances.data.store.UserSessionStore
-import com.myfinances.domain.repository.MyFinancesRepository
+import com.myfinances.domain.repository.AccountsRepository
+import com.myfinances.domain.repository.CategoriesRepository
+import com.myfinances.domain.repository.TransactionsRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -20,6 +24,11 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
+/**
+ * Hilt-модуль, который связывает интерфейс [ConnectivityManagerSource]
+ * с его конкретной реализацией [NetworkConnectivityManager].
+ * Зависимость предоставляется как Singleton.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ConnectivityModule {
@@ -30,6 +39,10 @@ abstract class ConnectivityModule {
     ): ConnectivityManagerSource
 }
 
+/**
+ * Hilt-модуль для предоставления зависимостей, связанных с хранилищем сессии.
+ * Связывает интерфейс [SessionStore] с реализацией [UserSessionStore].
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class StoreModule {
@@ -40,6 +53,36 @@ abstract class StoreModule {
     ): SessionStore
 }
 
+/**
+ * Hilt-модуль, который связывает интерфейсы репозиториев из доменного слоя
+ * с их конкретными реализациями из слоя данных.
+ * Использование `@Binds` более эффективно, чем `@Provides`, когда реализация
+ * просто передается в конструктор без дополнительной логики.
+ */
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class RepositoryModule {
+    @Binds
+    @Singleton
+    abstract fun bindAccountsRepository(impl: AccountsRepositoryImpl): AccountsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCategoriesRepository(impl: CategoriesRepositoryImpl): CategoriesRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTransactionsRepository(impl: TransactionsRepositoryImpl): TransactionsRepository
+}
+
+
+/**
+ * Основной Hilt-модуль приложения.
+ * Отвечает за предоставление глобальных зависимостей, таких как OkHttpClient, Retrofit,
+ * ApiService и различные перехватчики (interceptors).
+ * Все зависимости объявлены как Singleton, чтобы существовать в единственном экземпляре
+ * на протяжении всей жизни приложения.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
@@ -94,14 +137,5 @@ object AppModule {
     @Singleton
     fun provideApiService(retrofit: Retrofit): ApiService {
         return retrofit.create(ApiService::class.java)
-    }
-
-    @Provides
-    @Singleton
-    fun provideMyFinancesRepository(
-        api: ApiService,
-        connectivityManager: ConnectivityManagerSource
-    ): MyFinancesRepository {
-        return MyFinancesRepositoryImpl(api, connectivityManager)
     }
 }

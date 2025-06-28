@@ -2,40 +2,32 @@ package com.myfinances.domain.usecase
 
 import com.myfinances.domain.entity.Category
 import com.myfinances.domain.entity.Transaction
-import com.myfinances.domain.repository.MyFinancesRepository
+import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.domain.util.Result
+import com.myfinances.domain.util.withTimeAtEndOfDay
+import com.myfinances.domain.util.withTimeAtStartOfDay
 import java.util.Calendar
 import javax.inject.Inject
 
+/**
+ * Use-case для получения списка транзакций расходов **только за сегодня**.
+ * Инкапсулирует бизнес-правило "сегодняшний день" и использует более общий
+ * [GetTransactionsUseCase] для выполнения основной работы.
+ */
 class GetExpenseTransactionsUseCase @Inject constructor(
-    private val repository: MyFinancesRepository
+    private val getTransactionsUseCase: GetTransactionsUseCase
 ) {
     suspend operator fun invoke(accountId: Int): Result<Pair<List<Transaction>, List<Category>>> {
         val calendar = Calendar.getInstance()
-        val endDate = calendar.time
-        calendar.set(Calendar.DAY_OF_MONTH, 1)
-        val startDate = calendar.time
 
-        val transactionsResult = repository.getTransactions(accountId, startDate, endDate)
-        if (transactionsResult !is Result.Success) {
-            @Suppress("UNCHECKED_CAST")
-            return transactionsResult as Result<Nothing>
-        }
+        val endDate = calendar.withTimeAtEndOfDay().time
+        val startDate = calendar.withTimeAtStartOfDay().time
 
-        val categoriesResult = repository.getCategories()
-        if (categoriesResult !is Result.Success) {
-            @Suppress("UNCHECKED_CAST")
-            return categoriesResult as Result<Nothing>
-        }
-
-        val allTransactions = transactionsResult.data
-        val categories = categoriesResult.data
-        val categoryMap = categories.associateBy { it.id }
-
-        val expenseTransactions = allTransactions
-            .filter { categoryMap[it.categoryId]?.isIncome == false }
-            .sortedByDescending { it.date }
-
-        return Result.Success(Pair(expenseTransactions, categories))
+        return getTransactionsUseCase(
+            accountId = accountId,
+            startDate = startDate,
+            endDate = endDate,
+            filter = TransactionTypeFilter.EXPENSE
+        )
     }
 }

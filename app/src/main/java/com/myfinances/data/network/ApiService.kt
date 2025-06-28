@@ -11,6 +11,10 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 
+/**
+ * Определяет эндпоинты REST API для взаимодействия с бэкендом.
+ * Используется Retrofit для создания сетевых запросов.
+ */
 interface ApiService {
 
     @GET("accounts")

@@ -28,6 +28,11 @@ import com.myfinances.ui.theme.BrightBlack
 import com.myfinances.ui.theme.LightBlack
 import com.myfinances.ui.theme.LocalDimensions
 
+/**
+ * Универсальный компонент для отображения элемента списка.
+ * Адаптирует свой внешний вид в зависимости от типа, определенного в [ListItemModel].
+ * Может содержать иконку, заголовок, подзаголовок и различное содержимое в конце.
+ */
 @Composable
 fun ListItem(model: ListItemModel) {
     val dimensions = LocalDimensions.current
