@@ -1,13 +1,15 @@
 package com.myfinances.data.network
 
 import android.util.Log
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 import java.io.IOException
 import javax.inject.Inject
 
+/**
+ * Перехватывает и автоматически повторяет сетевые запросы в случае возникновения
+ * серверных ошибок (коды 5xx) или проблем с подключением.
+ */
 class RetryInterceptor @Inject constructor() : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -26,14 +28,14 @@ class RetryInterceptor @Inject constructor() : Interceptor {
                 if (response.code >= 500) {
                     tryCount++
                     if (tryCount < MAX_RETRIES) {
-                        runBlocking { delay(RETRY_DELAY_MS) }
+                        Thread.sleep(RETRY_DELAY_MS)
                     }
                 }
             } catch (e: IOException) {
                 exception = e
                 tryCount++
                 if (tryCount < MAX_RETRIES) {
-                    runBlocking { delay(RETRY_DELAY_MS) }
+                    Thread.sleep(RETRY_DELAY_MS)
                 }
             }
         }
