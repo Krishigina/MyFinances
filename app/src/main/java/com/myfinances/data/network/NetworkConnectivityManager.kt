@@ -14,6 +14,14 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Конкретная реализация интерфейса [ConnectivityManagerSource], использующая системный сервис
+ * Android `ConnectivityManager`. Отслеживает доступность интернет-соединения в реальном времени
+ * с помощью `NetworkCallback` и предоставляет статус в виде [Flow].
+ *
+ * Поток автоматически отфильтровывает последовательные одинаковые значения для
+ * предотвращения лишних срабатываний.
+ */
 @Singleton
 class NetworkConnectivityManager @Inject constructor(
     @ApplicationContext private val context: Context

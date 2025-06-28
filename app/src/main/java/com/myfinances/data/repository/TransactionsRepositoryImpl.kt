@@ -11,6 +11,11 @@ import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 
+/**
+ * Реализация интерфейса [TransactionsRepository] из доменного слоя.
+ * Отвечает за получение списка транзакций для конкретного счета за заданный
+ * временной период из удаленного API.
+ */
 class TransactionsRepositoryImpl @Inject constructor(
     private val apiService: ApiService,
     connectivityManager: ConnectivityManagerSource

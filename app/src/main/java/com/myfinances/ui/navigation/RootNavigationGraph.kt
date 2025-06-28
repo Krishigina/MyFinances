@@ -7,6 +7,11 @@ import androidx.navigation.compose.rememberNavController
 import com.myfinances.ui.screens.MainScreen
 import com.myfinances.ui.screens.splash.SplashScreen
 
+/**
+ * Корневой навигационный граф приложения.
+ * Отвечает за навигацию самого верхнего уровня, в данном случае,
+ * между экраном-заставкой (SplashScreen) и основным экраном приложения (MainScreen).
+ */
 @Composable
 fun RootNavigationGraph() {
     val navController = rememberNavController()

@@ -1,28 +1,35 @@
 package com.myfinances.ui.screens.history
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myfinances.data.network.ConnectivityManagerSource
 import com.myfinances.domain.entity.TransactionTypeFilter
+import com.myfinances.domain.usecase.GetActiveAccountIdUseCase
 import com.myfinances.domain.usecase.GetTransactionsUseCase
 import com.myfinances.domain.util.Result
+import com.myfinances.domain.util.withTimeAtEndOfDay
+import com.myfinances.domain.util.withTimeAtStartOfDay
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
 import javax.inject.Inject
 
+/**
+ * ViewModel для экрана "История".
+ * Отвечает за загрузку истории транзакций за выбранный период, управление состоянием
+ * экрана и обработку пользовательских событий (выбор даты).
+ */
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val getTransactionsUseCase: GetTransactionsUseCase,
+    private val getActiveAccountIdUseCase: GetActiveAccountIdUseCase,
     private val connectivityManager: ConnectivityManagerSource
 ) : ViewModel() {
 
@@ -34,16 +41,10 @@ class HistoryViewModel @Inject constructor(
 
     init {
         val calendar = Calendar.getInstance()
-        calendar.set(Calendar.HOUR_OF_DAY, 23)
-        calendar.set(Calendar.MINUTE, 59)
-        calendar.set(Calendar.SECOND, 59)
-        endDate = calendar.time
+        endDate = calendar.withTimeAtEndOfDay().time
 
         calendar.set(Calendar.DAY_OF_MONTH, 1)
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        startDate = calendar.time
+        startDate = calendar.withTimeAtStartOfDay().time
 
         observeNetworkStatus()
         loadData()
@@ -62,21 +63,13 @@ class HistoryViewModel @Inject constructor(
     fun onEvent(event: HistoryEvent) {
         when (event) {
             is HistoryEvent.StartDateSelected -> {
-                val calendar = Calendar.getInstance()
-                calendar.timeInMillis = event.timestampMillis
-                calendar.set(Calendar.HOUR_OF_DAY, 0)
-                calendar.set(Calendar.MINUTE, 0)
-                calendar.set(Calendar.SECOND, 0)
-                startDate = calendar.time
+                val calendar = Calendar.getInstance().apply { timeInMillis = event.timestampMillis }
+                startDate = calendar.withTimeAtStartOfDay().time
                 loadData()
             }
             is HistoryEvent.EndDateSelected -> {
-                val calendar = Calendar.getInstance()
-                calendar.timeInMillis = event.timestampMillis
-                calendar.set(Calendar.HOUR_OF_DAY, 23)
-                calendar.set(Calendar.MINUTE, 59)
-                calendar.set(Calendar.SECOND, 59)
-                endDate = calendar.time
+                val calendar = Calendar.getInstance().apply { timeInMillis = event.timestampMillis }
+                endDate = calendar.withTimeAtEndOfDay().time
                 loadData()
             }
         }
@@ -84,44 +77,53 @@ class HistoryViewModel @Inject constructor(
 
     private fun loadData() {
         viewModelScope.launch {
-            try {
-                _uiState.value = HistoryUiState.Loading
-            } finally {
-                if (isActive) {
-                    Log.d("TaskCancellation", "Coroutine for History finished successfully")
-                } else {
-                    Log.d("TaskCancellation", "Coroutine for History was cancelled")
-                }
-            }
+            _uiState.value = HistoryUiState.Loading
 
-            val filterType = savedStateHandle.get<TransactionTypeFilter>("transactionType")
-                ?: TransactionTypeFilter.ALL
-
-            when (
-                val result = getTransactionsUseCase(
-                    accountId = 1,
-                    startDate = startDate,
-                    endDate = endDate,
-                    filter = filterType
-                )
-            ) {
+            when (val accountIdResult = getActiveAccountIdUseCase()) {
                 is Result.Success -> {
-                    _uiState.value = HistoryUiState.Success(
-                        transactions = result.data.first.sortedByDescending { it.date },
-                        categories = result.data.second,
-                        startDate = startDate,
-                        endDate = endDate
-                    )
+                    loadTransactionsForAccount(accountIdResult.data)
                 }
+
                 is Result.Error -> {
                     _uiState.value = HistoryUiState.Error(
-                        result.exception.message ?: "Failed to load transactions"
+                        accountIdResult.exception.message ?: "Не удалось получить активный счет"
                     )
                 }
 
                 is Result.NetworkError -> {
                     _uiState.value = HistoryUiState.NoInternet
                 }
+            }
+        }
+    }
+
+    private suspend fun loadTransactionsForAccount(accountId: Int) {
+        val filterType = savedStateHandle.get<TransactionTypeFilter>("transactionType")
+            ?: TransactionTypeFilter.ALL
+
+        when (val result = getTransactionsUseCase(
+            accountId = accountId,
+            startDate = startDate,
+            endDate = endDate,
+            filter = filterType
+        )) {
+            is Result.Success -> {
+                _uiState.value = HistoryUiState.Success(
+                    transactions = result.data.first.sortedByDescending { it.date },
+                    categories = result.data.second,
+                    startDate = startDate,
+                    endDate = endDate
+                )
+            }
+
+            is Result.Error -> {
+                _uiState.value = HistoryUiState.Error(
+                    result.exception.message ?: "Не удалось загрузить транзакции"
+                )
+            }
+
+            is Result.NetworkError -> {
+                _uiState.value = HistoryUiState.NoInternet
             }
         }
     }

@@ -3,6 +3,12 @@ package com.myfinances.data.network.dto
 import com.google.gson.annotations.SerializedName
 import com.myfinances.domain.entity.Account
 
+/**
+ * Data Transfer Object для сущности "Счет".
+ * Этот класс является точным представлением JSON-объекта, получаемого от API.
+ * Его основная задача — служить контейнером для данных при десериализации
+ * ответа сервера с помощью библиотеки Gson.
+ */
 data class AccountDto(
     @SerializedName("id") val id: Int,
     @SerializedName("userId") val userId: Int,

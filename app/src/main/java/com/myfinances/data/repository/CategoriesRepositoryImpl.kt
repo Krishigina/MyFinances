@@ -8,6 +8,10 @@ import com.myfinances.domain.repository.CategoriesRepository
 import com.myfinances.domain.util.Result
 import javax.inject.Inject
 
+/**
+ * Реализация интерфейса [CategoriesRepository] из доменного слоя.
+ * Класс отвечает за получение списка категорий транзакций из удаленного API.
+ */
 class CategoriesRepositoryImpl @Inject constructor(
     private val apiService: ApiService,
     connectivityManager: ConnectivityManagerSource

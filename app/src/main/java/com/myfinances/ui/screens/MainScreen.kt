@@ -21,6 +21,11 @@ import com.myfinances.ui.components.MainTopBar
 import com.myfinances.ui.navigation.Destination
 import com.myfinances.ui.navigation.NavigationGraph
 
+/**
+ * Главный экран приложения, который служит контейнером для всех основных экранов.
+ * Содержит `Scaffold`, который управляет `TopBar`, `BottomNavigationBar`
+ * и `FloatingActionButton`, а также вложенный `NavigationGraph`.
+ */
 @Composable
 fun MainScreen() {
     val mainNavController = rememberNavController()

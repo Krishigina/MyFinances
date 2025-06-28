@@ -8,6 +8,12 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
+/**
+ * Data Transfer Object для сущности "Транзакция".
+ * Отражает сложную структуру JSON-объекта транзакции от API, включая
+ * вложенные объекты с информацией о счете и категории. Предназначен
+ * исключительно для передачи данных из сетевого слоя.
+ */
 data class TransactionDto(
     @SerializedName("id") val id: Int,
     @SerializedName("account") val account: AccountInfo?,
@@ -20,11 +26,17 @@ data class TransactionDto(
     @SerializedName("createdAt") val createdAt: String?,
     @SerializedName("updatedAt") val updatedAt: String?
 ) {
+    /**
+     * Вложенный DTO с краткой информацией о счете.
+     */
     data class AccountInfo(
         @SerializedName("id") val id: Int,
         @SerializedName("name") val name: String
     )
 
+    /**
+     * Вложенный DTO с краткой информацией о категории.
+     */
     data class CategoryInfo(
         @SerializedName("id") val id: Int,
         @SerializedName("name") val name: String,
@@ -50,12 +62,13 @@ private fun parseDate(dateString: String): Date? {
         SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()),
         SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
     )
+    formats.forEach { it.timeZone = TimeZone.getTimeZone("UTC") }
 
     for (format in formats) {
         try {
-            format.timeZone = TimeZone.getTimeZone("UTC")
             return format.parse(dateString)
         } catch (e: ParseException) {
+            // Игнорируем ошибку и пробуем следующий формат
         }
     }
     return null

@@ -24,6 +24,11 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
+/**
+ * Hilt-модуль, который связывает интерфейс [ConnectivityManagerSource]
+ * с его конкретной реализацией [NetworkConnectivityManager].
+ * Зависимость предоставляется как Singleton.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ConnectivityModule {
@@ -34,6 +39,10 @@ abstract class ConnectivityModule {
     ): ConnectivityManagerSource
 }
 
+/**
+ * Hilt-модуль для предоставления зависимостей, связанных с хранилищем сессии.
+ * Связывает интерфейс [SessionStore] с реализацией [UserSessionStore].
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class StoreModule {
@@ -44,6 +53,12 @@ abstract class StoreModule {
     ): SessionStore
 }
 
+/**
+ * Hilt-модуль, который связывает интерфейсы репозиториев из доменного слоя
+ * с их конкретными реализациями из слоя данных.
+ * Использование `@Binds` более эффективно, чем `@Provides`, когда реализация
+ * просто передается в конструктор без дополнительной логики.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
@@ -61,6 +76,13 @@ abstract class RepositoryModule {
 }
 
 
+/**
+ * Основной Hilt-модуль приложения.
+ * Отвечает за предоставление глобальных зависимостей, таких как OkHttpClient, Retrofit,
+ * ApiService и различные перехватчики (interceptors).
+ * Все зависимости объявлены как Singleton, чтобы существовать в единственном экземпляре
+ * на протяжении всей жизни приложения.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {

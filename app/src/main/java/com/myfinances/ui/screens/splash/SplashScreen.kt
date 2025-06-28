@@ -16,6 +16,13 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.myfinances.R
 import kotlinx.coroutines.delay
 
+/**
+ * Экран-заставка (Splash Screen).
+ * Отображает Lottie-анимацию при запуске приложения и по ее завершении
+ * вызывает коллбэк для перехода на основной экран.
+ *
+ * @param onSplashFinished Коллбэк, который будет вызван по окончании анимации.
+ */
 @Composable
 fun SplashScreen(onSplashFinished: () -> Unit) {
     val composition by rememberLottieComposition(

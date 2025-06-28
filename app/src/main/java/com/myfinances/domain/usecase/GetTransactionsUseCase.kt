@@ -9,6 +9,15 @@ import com.myfinances.domain.util.Result
 import java.util.Date
 import javax.inject.Inject
 
+/**
+ * Универсальный use-case для получения списка транзакций.
+ * Инкапсулирует логику:
+ * 1. Получение транзакций за указанный период.
+ * 2. Получение всех категорий.
+ * 3. Фильтрация транзакций по типу (доходы, расходы, все).
+ * 4. Возврат пары из отфильтрованного списка транзакций и полного списка категорий,
+ *    чтобы UI мог легко сопоставить транзакцию с ее категорией.
+ */
 class GetTransactionsUseCase @Inject constructor(
     private val transactionsRepository: TransactionsRepository,
     private val categoriesRepository: CategoriesRepository

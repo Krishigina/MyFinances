@@ -1,9 +1,9 @@
 package com.myfinances.ui.screens.expenses
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myfinances.data.network.ConnectivityManagerSource
+import com.myfinances.domain.usecase.GetActiveAccountIdUseCase
 import com.myfinances.domain.usecase.GetExpenseTransactionsUseCase
 import com.myfinances.domain.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -11,13 +11,18 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel для экрана "Расходы".
+ * Отвечает за загрузку транзакций расходов за текущий месяц, управление состоянием
+ * экрана и взаимодействие с бизнес-логикой (UseCases).
+ */
 @HiltViewModel
 class ExpensesViewModel @Inject constructor(
     private val getExpenseTransactionsUseCase: GetExpenseTransactionsUseCase,
+    private val getActiveAccountIdUseCase: GetActiveAccountIdUseCase,
     private val connectivityManager: ConnectivityManagerSource
 ) : ViewModel() {
 
@@ -41,28 +46,37 @@ class ExpensesViewModel @Inject constructor(
 
     fun loadData() {
         viewModelScope.launch {
-            try {
-                _uiState.value = ExpensesUiState.Loading
-            } finally {
-                if (isActive) {
-                    Log.d("TaskCancellation", "Coroutine for Expenses finished successfully")
-                } else {
-                    Log.d("TaskCancellation", "Coroutine for Expenses was cancelled")
-                }
-            }
+            _uiState.value = ExpensesUiState.Loading
 
-            when (val result = getExpenseTransactionsUseCase(accountId = 1)) {
+            when (val accountIdResult = getActiveAccountIdUseCase()) {
                 is Result.Success -> {
-                    _uiState.value = ExpensesUiState.Success(
-                        transactions = result.data.first,
-                        categories = result.data.second
+                    val accountId = accountIdResult.data
+                    when (val result = getExpenseTransactionsUseCase(accountId)) {
+                        is Result.Success -> {
+                            _uiState.value = ExpensesUiState.Success(
+                                transactions = result.data.first,
+                                categories = result.data.second
+                            )
+                        }
+
+                        is Result.Error -> {
+                            _uiState.value =
+                                ExpensesUiState.Error(
+                                    result.exception.message ?: "Неизвестная ошибка"
+                                )
+                        }
+
+                        is Result.NetworkError -> {
+                            _uiState.value = ExpensesUiState.NoInternet
+                        }
+                    }
+                }
+
+                is Result.Error -> {
+                    _uiState.value = ExpensesUiState.Error(
+                        accountIdResult.exception.message ?: "Не удалось получить активный счет"
                     )
                 }
-                is Result.Error -> {
-                    _uiState.value =
-                        ExpensesUiState.Error(result.exception.message ?: "Unknown error")
-                }
-
                 is Result.NetworkError -> {
                     _uiState.value = ExpensesUiState.NoInternet
                 }
