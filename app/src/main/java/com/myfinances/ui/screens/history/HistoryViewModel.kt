@@ -10,6 +10,7 @@ import com.myfinances.domain.usecase.GetTransactionsUseCase
 import com.myfinances.domain.util.Result
 import com.myfinances.domain.util.withTimeAtEndOfDay
 import com.myfinances.domain.util.withTimeAtStartOfDay
+import com.myfinances.ui.mappers.toHistoryListItemModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -108,9 +109,18 @@ class HistoryViewModel @Inject constructor(
             filter = filterType
         )) {
             is Result.Success -> {
+                val transactions = result.data.first.sortedByDescending { it.date }
+                val categories = result.data.second
+                val categoryMap = categories.associateBy { it.id }
+
+                val transactionItems = transactions.map { transaction ->
+                    transaction.toHistoryListItemModel(categoryMap[transaction.categoryId])
+                }
+                val totalAmount = transactions.sumOf { it.amount }
+
                 _uiState.value = HistoryUiState.Success(
-                    transactions = result.data.first.sortedByDescending { it.date },
-                    categories = result.data.second,
+                    transactionItems = transactionItems,
+                    totalAmount = totalAmount,
                     startDate = startDate,
                     endDate = endDate
                 )

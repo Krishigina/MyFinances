@@ -54,7 +54,7 @@ fun AccountScreen(
 
             is AccountUiState.NoInternet -> {
                 Text(
-                    text = "Нет подключения к интернету. Проверьте соединение и попробуйте снова.",
+                    text = stringResource(id = R.string.no_internet_connection),
                     modifier = Modifier
                         .align(Alignment.Center)
                         .padding(16.dp),

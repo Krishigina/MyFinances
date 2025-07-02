@@ -33,6 +33,10 @@ class AccountViewModel @Inject constructor(
         loadAccount()
     }
 
+    /**
+     * Подписывается на изменения статуса сети. При восстановлении соединения,
+     * если текущее состояние было "нет интернета", инициирует перезагрузку данных.
+     */
     private fun observeNetworkStatus() {
         connectivityManager.isNetworkAvailable
             .onEach { isAvailable ->
@@ -43,12 +47,15 @@ class AccountViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    fun loadAccount() {
+    /**
+     * Инициирует загрузку данных о счете пользователя.
+     * Управляет состоянием UI, переключая его между Loading, Success, Error и NoInternet.
+     */
+    private fun loadAccount() {
         viewModelScope.launch {
             _uiState.value = AccountUiState.Loading
             when (val result = getAccountUseCase()) {
                 is Result.Success -> {
-                    // Сразу получаем один счет
                     _uiState.value = AccountUiState.Success(result.data)
                 }
                 is Result.Error -> {

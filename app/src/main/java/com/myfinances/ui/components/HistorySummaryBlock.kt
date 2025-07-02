@@ -1,12 +1,10 @@
-package com.myfinances.ui.screens.history
+package com.myfinances.ui.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
-import com.myfinances.ui.components.ItemType
-import com.myfinances.ui.components.ListItem
-import com.myfinances.ui.components.ListItemModel
-import com.myfinances.ui.components.TrailingContent
+import androidx.compose.ui.res.stringResource
+import com.myfinances.R
 import com.myfinances.ui.util.formatCurrency
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -34,7 +32,7 @@ fun HistorySummaryBlock(
     val summaryItems = listOf(
         ListItemModel(
             id = "history_summary_start",
-            title = "Начало",
+            title = stringResource(id = R.string.period_start_date),
             type = ItemType.TOTAL,
             trailingContent = TrailingContent.TextOnly(summaryDateFormat.format(startDate)),
             showTrailingArrow = false,
@@ -42,7 +40,7 @@ fun HistorySummaryBlock(
         ),
         ListItemModel(
             id = "history_summary_end",
-            title = "Конец",
+            title = stringResource(id = R.string.period_end_date),
             type = ItemType.TOTAL,
             trailingContent = TrailingContent.TextOnly(summaryDateFormat.format(endDate)),
             showTrailingArrow = false,
@@ -50,7 +48,7 @@ fun HistorySummaryBlock(
         ),
         ListItemModel(
             id = "history_summary_total",
-            title = "Сумма",
+            title = stringResource(id = R.string.period_total_amount),
             type = ItemType.TOTAL,
             trailingContent = TrailingContent.TextOnly(formatCurrency(totalAmount)),
             showTrailingArrow = false

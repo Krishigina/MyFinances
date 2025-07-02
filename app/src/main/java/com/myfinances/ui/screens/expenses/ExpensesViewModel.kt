@@ -6,6 +6,7 @@ import com.myfinances.data.network.ConnectivityManagerSource
 import com.myfinances.domain.usecase.GetActiveAccountIdUseCase
 import com.myfinances.domain.usecase.GetExpenseTransactionsUseCase
 import com.myfinances.domain.util.Result
+import com.myfinances.ui.mappers.toSimpleListItemModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +17,7 @@ import javax.inject.Inject
 
 /**
  * ViewModel для экрана "Расходы".
- * Отвечает за загрузку транзакций расходов за текущий месяц, управление состоянием
+ * Отвечает за загрузку транзакций расходов, управление состоянием
  * экрана и взаимодействие с бизнес-логикой (UseCases).
  */
 @HiltViewModel
@@ -44,7 +45,7 @@ class ExpensesViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    fun loadData() {
+    private fun loadData() {
         viewModelScope.launch {
             _uiState.value = ExpensesUiState.Loading
 
@@ -53,25 +54,31 @@ class ExpensesViewModel @Inject constructor(
                     val accountId = accountIdResult.data
                     when (val result = getExpenseTransactionsUseCase(accountId)) {
                         is Result.Success -> {
+                            val transactions = result.data.first
+                            val categories = result.data.second
+                            val categoryMap = categories.associateBy { it.id }
+
+                            val transactionItems = transactions.map { transaction ->
+                                transaction.toSimpleListItemModel(categoryMap[transaction.categoryId])
+                            }
+                            val totalAmount = transactions.sumOf { it.amount }
+
                             _uiState.value = ExpensesUiState.Success(
-                                transactions = result.data.first,
-                                categories = result.data.second
+                                transactionItems = transactionItems,
+                                totalAmount = totalAmount
                             )
                         }
-
                         is Result.Error -> {
                             _uiState.value =
                                 ExpensesUiState.Error(
                                     result.exception.message ?: "Неизвестная ошибка"
                                 )
                         }
-
                         is Result.NetworkError -> {
                             _uiState.value = ExpensesUiState.NoInternet
                         }
                     }
                 }
-
                 is Result.Error -> {
                     _uiState.value = ExpensesUiState.Error(
                         accountIdResult.exception.message ?: "Не удалось получить активный счет"

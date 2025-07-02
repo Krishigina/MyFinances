@@ -8,8 +8,8 @@ import com.myfinances.data.network.RetryInterceptor
 import com.myfinances.data.repository.AccountsRepositoryImpl
 import com.myfinances.data.repository.CategoriesRepositoryImpl
 import com.myfinances.data.repository.TransactionsRepositoryImpl
+import com.myfinances.data.store.PersistentSessionStore
 import com.myfinances.data.store.SessionStore
-import com.myfinances.data.store.UserSessionStore
 import com.myfinances.domain.repository.AccountsRepository
 import com.myfinances.domain.repository.CategoriesRepository
 import com.myfinances.domain.repository.TransactionsRepository
@@ -41,7 +41,7 @@ abstract class ConnectivityModule {
 
 /**
  * Hilt-модуль для предоставления зависимостей, связанных с хранилищем сессии.
- * Связывает интерфейс [SessionStore] с реализацией [UserSessionStore].
+ * Связывает интерфейс [SessionStore] с реализацией [PersistentSessionStore].
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -49,7 +49,7 @@ abstract class StoreModule {
     @Binds
     @Singleton
     abstract fun bindSessionStore(
-        userSessionStore: UserSessionStore
+        persistentSessionStore: PersistentSessionStore
     ): SessionStore
 }
 
