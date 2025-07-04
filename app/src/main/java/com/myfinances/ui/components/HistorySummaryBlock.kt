@@ -1,12 +1,10 @@
-package com.myfinances.ui.screens.history
+package com.myfinances.ui.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
-import com.myfinances.ui.components.ItemType
-import com.myfinances.ui.components.ListItem
-import com.myfinances.ui.components.ListItemModel
-import com.myfinances.ui.components.TrailingContent
+import androidx.compose.ui.res.stringResource
+import com.myfinances.R
 import com.myfinances.ui.util.formatCurrency
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -18,6 +16,7 @@ import java.util.Locale
  * @param startDate Начальная дата периода.
  * @param endDate Конечная дата периода.
  * @param totalAmount Общая сумма транзакций за период.
+ * @param currencyCode Код валюты для форматирования итоговой суммы.
  * @param onStartDateClick Коллбэк для открытия диалога выбора начальной даты.
  * @param onEndDateClick Коллбэк для открытия диалога выбора конечной даты.
  */
@@ -26,6 +25,7 @@ fun HistorySummaryBlock(
     startDate: Date,
     endDate: Date,
     totalAmount: Double,
+    currencyCode: String,
     onStartDateClick: () -> Unit,
     onEndDateClick: () -> Unit
 ) {
@@ -34,7 +34,7 @@ fun HistorySummaryBlock(
     val summaryItems = listOf(
         ListItemModel(
             id = "history_summary_start",
-            title = "Начало",
+            title = stringResource(id = R.string.period_start_date),
             type = ItemType.TOTAL,
             trailingContent = TrailingContent.TextOnly(summaryDateFormat.format(startDate)),
             showTrailingArrow = false,
@@ -42,7 +42,7 @@ fun HistorySummaryBlock(
         ),
         ListItemModel(
             id = "history_summary_end",
-            title = "Конец",
+            title = stringResource(id = R.string.period_end_date),
             type = ItemType.TOTAL,
             trailingContent = TrailingContent.TextOnly(summaryDateFormat.format(endDate)),
             showTrailingArrow = false,
@@ -50,9 +50,9 @@ fun HistorySummaryBlock(
         ),
         ListItemModel(
             id = "history_summary_total",
-            title = "Сумма",
+            title = stringResource(id = R.string.period_total_amount),
             type = ItemType.TOTAL,
-            trailingContent = TrailingContent.TextOnly(formatCurrency(totalAmount)),
+            trailingContent = TrailingContent.TextOnly(formatCurrency(totalAmount, currencyCode)),
             showTrailingArrow = false
         )
     )

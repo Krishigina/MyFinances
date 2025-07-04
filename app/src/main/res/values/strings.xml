@@ -1,39 +1,62 @@
 <resources>
     <string name="app_name">MyFinances</string>
 
+    <!-- Общие -->
+    <string name="no_internet_connection">Нет подключения к интернету. Проверьте соединение и попробуйте снова.</string>
+    <string name="unknown">Неизвестно</string>
+    <string name="balance">Баланс</string>
+    <string name="currency">Валюта</string>
+    <string name="search">Поиск</string>
+    <string name="total_amount_card">Сумма за сегодня</string>
+    <string name="floating_action_add">Добавить транзакцию</string>
+    <string name="action_save">Сохранить</string>
+    <string name="account_name_label">Название счёта</string>
+    <string name="select_currency">Выберите валюту</string>
+    <string name="account_name_placeholder">Здесь пишу название счета</string>
+
+    <!-- Действия -->
+    <string name="action_back">Назад</string>
+    <string name="action_analysis">Анализ</string>
+
+    <!-- Нижняя навигация -->
     <string name="botton_nav_label_expenses">Расходы</string>
     <string name="botton_nav_label_income">Доходы</string>
     <string name="botton_nav_label_account">Счёт</string>
     <string name="botton_nav_label_articles">Статьи</string>
     <string name="botton_nav_label_settings">Настройки</string>
-    <string name="botton_nav_label_splash">Сплэш</string>
 
+    <!-- Top Bar -->
     <string name="top_bar_expenses_today_title">Расходы сегодня</string>
     <string name="top_bar_income_today_title">Доходы сегодня</string>
     <string name="top_bar_my_account_title">Мой счет</string>
     <string name="top_bar_my_articles_title">Мои статьи</string>
     <string name="top_bar_settings_title">Настройки</string>
-    <string name="top_bar_icon_edit">Изменить</string>
+    <string name="top_bar_history_title">Моя история</string>
     <string name="top_bar_icon_history">История</string>
+    <string name="top_bar_icon_edit">Редактировать</string>
 
-    <string name="floating_action_add">Добавить</string>
+    <!-- Экран Статей -->
+    <string name="search_placeholder_text">Поиск по названию</string>
+    <string name="no_articles_found">Статьи расходов не найдены</string>
 
-    <string name="search_placeholder_text">Поиск</string>
-    <string name="search">Поиск</string>
-    <string name="balance">Баланс</string>
-    <string name="currency">Валюта</string>
-    <string name="total_amount_card">Всего</string>
-    <string name="unknown">Неизвестно</string>
-
-    <string name="dark_theme">Тёмная тема</string>
+    <!-- Настройки -->
+    <string name="dark_theme">Темная тема</string>
     <string name="primary_color">Основной цвет</string>
     <string name="sounds">Звуки</string>
-    <string name="haptics">Хаптики</string>
-    <string name="passcode">Код пароль</string>
+    <string name="haptics">Виброотклик</string>
+    <string name="passcode">Код-пароль</string>
     <string name="sync">Синхронизация</string>
     <string name="language">Язык</string>
-    <string name="about">О программе</string>
-    <string name="no_internet_connection">Нет интернета. Проверьте подключение</string>
+    <string name="about">О приложении</string>
 
+    <!-- Диалог выбора даты -->
+    <string name="action_clear">Очистить</string>
+    <string name="action_cancel">Отмена</string>
+    <string name="action_ok">ОК</string>
+
+    <!-- Блок итогов в Истории -->
+    <string name="period_start_date">Начало</string>
+    <string name="period_end_date">Конец</string>
+    <string name="period_total_amount">Сумма</string>
 
 </resources>

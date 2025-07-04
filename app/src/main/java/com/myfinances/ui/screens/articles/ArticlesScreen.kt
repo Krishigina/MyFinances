@@ -1,65 +1,137 @@
 package com.myfinances.ui.screens.articles
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.myfinances.R
-import com.myfinances.data.MockData
-import com.myfinances.domain.entity.Category
-import com.myfinances.ui.components.ItemType
-import com.myfinances.ui.components.LeadingIcon
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
-import com.myfinances.ui.components.SearchField
 
+/**
+ * Composable-функция экрана "Статьи".
+ *
+ * Отображает список категорий расходов и поле для их локального поиска.
+ * Состояние экрана полностью управляется [ArticlesViewModel].
+ *
+ * @param viewModel ViewModel, предоставляемая Hilt.
+ */
 @Composable
-fun ArticlesScreenContent(
-    categories: List<Category>
+fun ArticlesScreen(
+    viewModel: ArticlesViewModel = hiltViewModel()
 ) {
-    val listItems = categories.map { category ->
-        category.toListItemModel()
-    }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        SearchField(placeholderText = stringResource(id = R.string.search_placeholder_text))
-        Divider()
-        LazyColumn {
-            items(
-                items = listItems,
-                key = { it.id }
-            ) { model ->
-                ListItem(model = model)
-                Divider()
+    Box(modifier = Modifier.fillMaxSize()) {
+        when (val state = uiState) {
+            is ArticlesUiState.Loading -> {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            }
+            is ArticlesUiState.Success -> {
+                ArticlesScreenContent(
+                    query = state.query,
+                    onQueryChange = viewModel::onSearchQueryChanged,
+                    categoryItems = state.categoryItems
+                )
+            }
+            is ArticlesUiState.Error -> {
+                Text(
+                    text = state.message,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(16.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+            is ArticlesUiState.NoInternet -> {
+                Text(
+                    text = stringResource(id = R.string.no_internet_connection),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(16.dp),
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
 }
 
-private fun Category.toListItemModel(): ListItemModel {
-    return ListItemModel(
-        id = this.id.toString(),
-        type = ItemType.TRANSACTION,
-        leadingIcon = this.emoji?.let { LeadingIcon.Emoji(it) },
-        title = this.name,
-        trailingContent = null,
-        showTrailingArrow = false
-    )
-}
-
+/**
+ * Компонент, отвечающий за отрисовку контента экрана "Статьи" (поле поиска и список).
+ *
+ * @param query Текущий поисковый запрос.
+ * @param onQueryChange Коллбэк для обновления запроса в ViewModel.
+ * @param categoryItems Список моделей для отображения.
+ */
 @Composable
-fun ArticlesScreen() {
-    val expenseCategories = MockData.categories.filter { !it.isIncome }
-    ArticlesScreenContent(categories = expenseCategories)
-}
+private fun ArticlesScreenContent(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    categoryItems: List<ListItemModel>
+) {
+    val focusManager = LocalFocusManager.current
 
-@Preview(showBackground = true)
-@Composable
-fun ArticlesScreenPreview() {
-    ArticlesScreen()
+    Column(modifier = Modifier.fillMaxSize()) {
+        TextField(
+            value = query,
+            onValueChange = onQueryChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text(stringResource(id = R.string.search_placeholder_text)) },
+            trailingIcon = {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_articles_search),
+                    contentDescription = stringResource(id = R.string.search)
+                )
+            },
+            singleLine = true,
+            keyboardActions = KeyboardActions(
+                onDone = { focusManager.clearFocus() }
+            ),
+            colors = TextFieldDefaults.colors(
+                cursorColor = MaterialTheme.colorScheme.onSurface,
+                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                unfocusedIndicatorColor = MaterialTheme.colorScheme.outlineVariant,
+                unfocusedContainerColor = MaterialTheme.colorScheme.tertiary,
+                focusedContainerColor = MaterialTheme.colorScheme.background
+            )
+        )
+        if (categoryItems.isEmpty() && query.isNotEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(
+                    text = stringResource(R.string.no_articles_found),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+        } else {
+            LazyColumn {
+                items(items = categoryItems, key = { it.id }) { model ->
+                    ListItem(model = model)
+                    Divider()
+                }
+            }
+        }
+    }
 }

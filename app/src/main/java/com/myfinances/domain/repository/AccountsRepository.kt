@@ -8,4 +8,11 @@ import com.myfinances.domain.util.Result
  */
 interface AccountsRepository {
     suspend fun getAccounts(): Result<List<Account>>
+
+    suspend fun updateAccount(
+        accountId: Int,
+        name: String,
+        balance: Double,
+        currency: String
+    ): Result<Account>
 }

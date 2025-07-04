@@ -98,6 +98,8 @@ dependencies {
     implementation(libs.logging.interceptor)
 
     implementation(libs.okhttp3.logging.interceptor)
+
+    implementation(libs.androidx.datastore.preferences)
 }
 
 detekt {

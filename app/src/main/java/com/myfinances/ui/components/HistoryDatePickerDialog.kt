@@ -1,4 +1,4 @@
-package com.myfinances.ui.screens.history
+package com.myfinances.ui.components
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,7 +16,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.myfinances.R
 import com.myfinances.ui.theme.BrightBlack
 import com.myfinances.ui.theme.BrightGreen
 import com.myfinances.ui.theme.PastelGreen
@@ -94,7 +96,7 @@ private fun DatePickerDialogButtons(
             onClick = onClear,
             colors = ButtonDefaults.textButtonColors(contentColor = BrightBlack)
         ) {
-            Text("Clear")
+            Text(stringResource(id = R.string.action_clear))
         }
         Spacer(modifier = Modifier.weight(1f))
         Row {
@@ -102,13 +104,13 @@ private fun DatePickerDialogButtons(
                 onClick = onDismiss,
                 colors = ButtonDefaults.textButtonColors(contentColor = BrightBlack)
             ) {
-                Text("Cancel")
+                Text(stringResource(id = R.string.action_cancel))
             }
             TextButton(
                 onClick = onConfirm,
                 colors = ButtonDefaults.textButtonColors(contentColor = BrightBlack)
             ) {
-                Text("OK")
+                Text(stringResource(id = R.string.action_ok))
             }
         }
     }

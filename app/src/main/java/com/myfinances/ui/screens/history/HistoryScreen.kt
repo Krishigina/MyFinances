@@ -22,29 +22,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
 import com.myfinances.R
-import com.myfinances.domain.entity.Category
-import com.myfinances.domain.entity.Transaction
-import com.myfinances.ui.components.ItemType
-import com.myfinances.ui.components.LeadingIcon
+import com.myfinances.ui.components.HistoryDatePickerDialog
+import com.myfinances.ui.components.HistorySummaryBlock
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
-import com.myfinances.ui.components.TrailingContent
-import com.myfinances.ui.util.formatCurrency
-import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 
-/**
- * Главный Composable-компонент экрана "История".
- * Отвечает за отображение состояния (загрузка, ошибка, успех) и управление
- * видимостью диалоговых окон выбора даты.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
-    navController: NavHostController,
     viewModel: HistoryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -59,12 +46,13 @@ fun HistoryScreen(
             }
             is HistoryUiState.Success -> {
                 HistoryScreenContent(
-                    transactions = state.transactions,
-                    categories = state.categories,
+                    transactionItems = state.transactionItems,
+                    totalAmount = state.totalAmount,
                     startDate = state.startDate,
                     endDate = state.endDate,
                     onStartDateClick = { showStartDatePicker = true },
-                    onEndDateClick = { showEndDatePicker = true }
+                    onEndDateClick = { showEndDatePicker = true },
+                    state = state
                 )
             }
             is HistoryUiState.Error -> {
@@ -115,61 +103,31 @@ fun HistoryScreen(
     }
 }
 
-/**
- * Компонент, отвечающий за отрисовку контента экрана "История" при успешной загрузке данных.
- */
 @Composable
 private fun HistoryScreenContent(
-    transactions: List<Transaction>,
-    categories: List<Category>,
+    transactionItems: List<ListItemModel>,
+    totalAmount: Double,
     startDate: Date,
     endDate: Date,
     onStartDateClick: () -> Unit,
-    onEndDateClick: () -> Unit
+    onEndDateClick: () -> Unit,
+    state: HistoryUiState.Success
 ) {
-    val categoryMap = categories.associateBy { it.id }
-    val totalSum = transactions.sumOf { it.amount }
-    val itemDateTimeFormat = SimpleDateFormat("d MMMM · HH:mm", Locale("ru"))
-
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
             HistorySummaryBlock(
                 startDate = startDate,
                 endDate = endDate,
-                totalAmount = totalSum,
+                totalAmount = totalAmount,
+                currencyCode = state.currency,
                 onStartDateClick = onStartDateClick,
                 onEndDateClick = onEndDateClick
             )
         }
 
-        items(items = transactions, key = { it.id }) { transaction ->
-            val category = categoryMap[transaction.categoryId]
-            val model = transaction.toListItemModel(
-                categoryName = category?.name ?: stringResource(id = R.string.unknown),
-                emoji = category?.emoji ?: "❓",
-                formattedDateTime = itemDateTimeFormat.format(transaction.date)
-            )
+        items(items = transactionItems, key = { it.id }) { model ->
             ListItem(model = model)
             HorizontalDivider()
         }
     }
-}
-
-private fun Transaction.toListItemModel(
-    categoryName: String,
-    emoji: String,
-    formattedDateTime: String
-): ListItemModel {
-    return ListItemModel(
-        id = this.id.toString(),
-        title = categoryName,
-        type = ItemType.TRANSACTION,
-        leadingIcon = LeadingIcon.Emoji(emoji),
-        subtitle = this.comment,
-        trailingContent = TrailingContent.TextWithArrow(
-            text = formatCurrency(this.amount),
-            secondaryText = formattedDateTime
-        ),
-        showTrailingArrow = true
-    )
 }

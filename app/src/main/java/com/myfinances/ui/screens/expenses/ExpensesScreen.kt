@@ -17,12 +17,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
 import com.myfinances.R
-import com.myfinances.domain.entity.Category
-import com.myfinances.domain.entity.Transaction
 import com.myfinances.ui.components.ItemType
-import com.myfinances.ui.components.LeadingIcon
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.components.TrailingContent
@@ -30,7 +26,6 @@ import com.myfinances.ui.util.formatCurrency
 
 @Composable
 fun ExpensesScreen(
-    navController: NavHostController,
     viewModel: ExpensesViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -42,8 +37,9 @@ fun ExpensesScreen(
             }
             is ExpensesUiState.Success -> {
                 ExpensesScreenContent(
-                    transactions = state.transactions,
-                    categories = state.categories
+                    transactionItems = state.transactionItems,
+                    totalAmount = state.totalAmount,
+                    state = state
                 )
             }
             is ExpensesUiState.Error -> {
@@ -57,7 +53,7 @@ fun ExpensesScreen(
             }
             is ExpensesUiState.NoInternet -> {
                 Text(
-                    text = "Нет подключения к интернету. Проверьте соединение и попробуйте снова.",
+                    text = stringResource(id = R.string.no_internet_connection),
                     modifier = Modifier
                         .align(Alignment.Center)
                         .padding(16.dp),
@@ -70,48 +66,31 @@ fun ExpensesScreen(
 
 @Composable
 private fun ExpensesScreenContent(
-    transactions: List<Transaction>,
-    categories: List<Category>
+    transactionItems: List<ListItemModel>,
+    totalAmount: Double,
+    state: ExpensesUiState.Success
 ) {
-    val categoryMap = categories.associateBy { it.id }
-    val totalAmount = transactions.sumOf { it.amount }
-
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
             val totalAmountItem = ListItemModel(
                 id = "total_amount_card_expenses",
                 title = stringResource(id = R.string.total_amount_card),
                 type = ItemType.TOTAL,
-                trailingContent = TrailingContent.TextOnly(formatCurrency(totalAmount)),
+                trailingContent = TrailingContent.TextOnly(
+                    formatCurrency(
+                        totalAmount,
+                        state.currency
+                    )
+                ),
                 showTrailingArrow = false
             )
             ListItem(model = totalAmountItem)
             Divider()
         }
 
-        items(items = transactions, key = { it.id }) { transaction ->
-            val category = categoryMap[transaction.categoryId]
-            val model = transaction.toListItemModel(
-                categoryName = category?.name ?: stringResource(id = R.string.unknown),
-                emoji = category?.emoji ?: "❓"
-            )
+        items(items = transactionItems, key = { it.id }) { model ->
             ListItem(model = model)
             Divider()
         }
     }
-}
-
-private fun Transaction.toListItemModel(categoryName: String, emoji: String): ListItemModel {
-    return ListItemModel(
-        id = this.id.toString(),
-        title = categoryName,
-        type = ItemType.TRANSACTION,
-        leadingIcon = LeadingIcon.Emoji(emoji),
-        subtitle = this.comment,
-        trailingContent = TrailingContent.TextWithArrow(
-            text = formatCurrency(this.amount)
-        ),
-        showTrailingArrow = true,
-        onClick = {}
-    )
 }
