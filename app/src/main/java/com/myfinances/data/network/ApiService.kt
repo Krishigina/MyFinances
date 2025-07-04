@@ -4,10 +4,12 @@ import com.google.gson.annotations.SerializedName
 import com.myfinances.data.network.dto.AccountDto
 import com.myfinances.data.network.dto.CategoryDto
 import com.myfinances.data.network.dto.TransactionDto
+import com.myfinances.data.network.dto.UpdateAccountRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -22,6 +24,12 @@ interface ApiService {
 
     @GET("accounts/{id}")
     suspend fun getAccountById(@Path("id") accountId: Int): Response<AccountDto>
+
+    @PUT("accounts/{id}")
+    suspend fun updateAccount(
+        @Path("id") accountId: Int,
+        @Body request: UpdateAccountRequest
+    ): Response<AccountDto>
 
     @GET("categories")
     suspend fun getCategories(): Response<List<CategoryDto>>

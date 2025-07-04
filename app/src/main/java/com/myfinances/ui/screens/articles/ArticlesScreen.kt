@@ -3,32 +3,38 @@ package com.myfinances.ui.screens.articles
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.myfinances.R
-import com.myfinances.domain.entity.Category
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
-import com.myfinances.ui.components.SearchField
-import com.myfinances.ui.mappers.toListItemModel
 
 /**
- * Экран для отображения списка "статей" (категорий расходов).
- * Управляется [ArticlesViewModel] для получения данных и обработки состояний.
+ * Composable-функция экрана "Статьи".
+ *
+ * Отображает список категорий расходов и поле для их локального поиска.
+ * Состояние экрана полностью управляется [ArticlesViewModel].
+ *
+ * @param viewModel ViewModel, предоставляемая Hilt.
  */
 @Composable
 fun ArticlesScreen(
@@ -41,11 +47,13 @@ fun ArticlesScreen(
             is ArticlesUiState.Loading -> {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
-
             is ArticlesUiState.Success -> {
-                ArticlesScreenContent(categoryItems = state.categoryItems)
+                ArticlesScreenContent(
+                    query = state.query,
+                    onQueryChange = viewModel::onSearchQueryChanged,
+                    categoryItems = state.categoryItems
+                )
             }
-
             is ArticlesUiState.Error -> {
                 Text(
                     text = state.message,
@@ -55,7 +63,6 @@ fun ArticlesScreen(
                     textAlign = TextAlign.Center
                 )
             }
-
             is ArticlesUiState.NoInternet -> {
                 Text(
                     text = stringResource(id = R.string.no_internet_connection),
@@ -70,18 +77,40 @@ fun ArticlesScreen(
 }
 
 /**
- * Компонент, отвечающий за отрисовку контента экрана "Статьи"
- * при успешной загрузке данных.
+ * Компонент, отвечающий за отрисовку контента экрана "Статьи" (поле поиска и список).
  *
- * @param categoryItems Готовый к отображению список моделей UI.
+ * @param query Текущий поисковый запрос.
+ * @param onQueryChange Коллбэк для обновления запроса в ViewModel.
+ * @param categoryItems Список моделей для отображения.
  */
 @Composable
 private fun ArticlesScreenContent(
+    query: String,
+    onQueryChange: (String) -> Unit,
     categoryItems: List<ListItemModel>
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        SearchField(placeholderText = stringResource(id = R.string.search_placeholder_text))
+        TextField(
+            value = query,
+            onValueChange = onQueryChange,
+            modifier = Modifier
+                .fillMaxWidth(),
+            placeholder = { Text(stringResource(id = R.string.search_placeholder_text)) },
+            leadingIcon = {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_articles_search), // ИСПРАВЛЕНО
+                    contentDescription = stringResource(id = R.string.search)      // ИСПРАВЛЕНО
+                )
+            },
+            singleLine = true,
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                unfocusedIndicatorColor = MaterialTheme.colorScheme.outline
+            )
+        )
+
         Divider()
+
         if (categoryItems.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
@@ -92,25 +121,11 @@ private fun ArticlesScreenContent(
             }
         } else {
             LazyColumn {
-                items(
-                    items = categoryItems,
-                    key = { it.id }
-                ) { model ->
+                items(items = categoryItems, key = { it.id }) { model ->
                     ListItem(model = model)
                     Divider()
                 }
             }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ArticlesScreenPreview() {
-    val previewCategories = listOf(
-        Category(1, "Продукты", "🛒", false),
-        Category(2, "Транспорт", "🚗", false)
-    )
-    val previewItems = previewCategories.map { it.toListItemModel() }
-    ArticlesScreenContent(categoryItems = previewItems)
 }

@@ -17,7 +17,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
 import com.myfinances.R
 import com.myfinances.ui.components.ItemType
 import com.myfinances.ui.components.ListItem
@@ -27,7 +26,6 @@ import com.myfinances.ui.util.formatCurrency
 
 @Composable
 fun ExpensesScreen(
-    navController: NavHostController,
     viewModel: ExpensesViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

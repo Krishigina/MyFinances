@@ -1,11 +1,11 @@
 package com.myfinances.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.navigation
 import androidx.navigation.navArgument
 import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.ui.screens.account.AccountScreen
@@ -15,19 +15,38 @@ import com.myfinances.ui.screens.history.HistoryScreen
 import com.myfinances.ui.screens.income.IncomeScreen
 import com.myfinances.ui.screens.settings.SettingsScreen
 
+/**
+ * Определяет навигационный граф для основных экранов приложения,
+ * которые переключаются через BottomNavigationBar.
+ *
+ * @param navController Контроллер навигации, управляющий стеком экранов.
+ */
 @Composable
-fun NavigationGraph(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = Destination.Expenses.route) {
-
-        navigation(
-            route = Destination.Expenses.route,
-            startDestination = Destination.ExpensesList.route
-        ) {
-            composable(route = Destination.ExpensesList.route) {
-                ExpensesScreen(navController = navController)
-            }
+fun NavigationGraph(navController: NavHostController, modifier: Modifier = Modifier) {
+    NavHost(
+        navController = navController,
+        startDestination = Destination.Expenses.route,
+        modifier = modifier
+    ) {
+        composable(Destination.Expenses.route) {
+            ExpensesScreen()
         }
-
+        composable(Destination.Income.route) {
+            IncomeScreen()
+        }
+        composable(Destination.Account.route) {
+            AccountScreen(
+                onEditClick = {},
+                onSaveClick = {},
+                onCancelClick = {}
+            )
+        }
+        composable(Destination.Articles.route) {
+            ArticlesScreen()
+        }
+        composable(Destination.Settings.route) {
+            SettingsScreen()
+        }
         composable(
             route = Destination.History.route,
             arguments = listOf(
@@ -35,25 +54,10 @@ fun NavigationGraph(navController: NavHostController) {
                     type = NavType.EnumType(TransactionTypeFilter::class.java)
                     defaultValue = TransactionTypeFilter.ALL
                 },
-                navArgument("parentRoute") {
-                    type = NavType.StringType
-                }
+                navArgument("parentRoute") { type = NavType.StringType }
             )
         ) {
-            HistoryScreen(navController = navController)
-        }
-
-        composable(route = Destination.Income.route) {
-            IncomeScreen()
-        }
-        composable(route = Destination.Account.route) {
-            AccountScreen()
-        }
-        composable(route = Destination.Articles.route) {
-            ArticlesScreen()
-        }
-        composable(route = Destination.Settings.route) {
-            SettingsScreen()
+            HistoryScreen()
         }
     }
 }

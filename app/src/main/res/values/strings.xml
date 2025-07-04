@@ -9,6 +9,10 @@
     <string name="search">Поиск</string>
     <string name="total_amount_card">Сумма за сегодня</string>
     <string name="floating_action_add">Добавить транзакцию</string>
+    <string name="action_save">Сохранить</string>
+    <string name="account_name_label">Название счёта</string>
+    <string name="select_currency">Выберите валюту</string>
+    <string name="account_name_placeholder">Здесь пишу название счета</string>
 
     <!-- Действия -->
     <string name="action_back">Назад</string>

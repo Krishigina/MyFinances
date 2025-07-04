@@ -10,10 +10,11 @@ import com.myfinances.ui.util.formatCurrency
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-
 /**
  * Преобразует доменную сущность [Category] в UI-модель [ListItemModel]
  * для отображения на экране "Статьи".
+ *
+ * @return [ListItemModel] готовый для отображения в списке.
  */
 fun Category.toListItemModel(): ListItemModel {
     return ListItemModel(
@@ -31,9 +32,12 @@ fun Category.toListItemModel(): ListItemModel {
  * для отображения на экранах "Расходы" и "Доходы".
  *
  * @param category Соответствующая категория для транзакции, чтобы получить ее имя и иконку.
+ * @param currencyCode Код валюты для корректного форматирования суммы.
+ * @return [ListItemModel] готовый для отображения в списке.
  */
 fun Transaction.toSimpleListItemModel(
-    category: Category?
+    category: Category?,
+    currencyCode: String
 ): ListItemModel {
     return ListItemModel(
         id = this.id.toString(),
@@ -42,7 +46,7 @@ fun Transaction.toSimpleListItemModel(
         leadingIcon = LeadingIcon.Emoji(category?.emoji ?: "❓"),
         subtitle = this.comment,
         trailingContent = TrailingContent.TextWithArrow(
-            text = formatCurrency(this.amount)
+            text = formatCurrency(this.amount, currencyCode)
         ),
         showTrailingArrow = true,
         onClick = {}
@@ -55,9 +59,12 @@ fun Transaction.toSimpleListItemModel(
  * наличием даты и времени в `secondaryText`.
  *
  * @param category Соответствующая категория для транзакции, чтобы получить ее имя и иконку.
+ * @param currencyCode Код валюты для корректного форматирования суммы.
+ * @return [ListItemModel] готовый для отображения в списке.
  */
 fun Transaction.toHistoryListItemModel(
-    category: Category?
+    category: Category?,
+    currencyCode: String
 ): ListItemModel {
     val itemDateTimeFormat = SimpleDateFormat("d MMMM · HH:mm", Locale("ru"))
 
@@ -68,7 +75,7 @@ fun Transaction.toHistoryListItemModel(
         leadingIcon = LeadingIcon.Emoji(category?.emoji ?: "❓"),
         subtitle = this.comment,
         trailingContent = TrailingContent.TextWithArrow(
-            text = formatCurrency(this.amount),
+            text = formatCurrency(this.amount, currencyCode),
             secondaryText = itemDateTimeFormat.format(this.date)
         ),
         showTrailingArrow = true,
