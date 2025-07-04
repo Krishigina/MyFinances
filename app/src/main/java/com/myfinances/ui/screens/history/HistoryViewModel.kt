@@ -3,6 +3,7 @@ package com.myfinances.ui.screens.history
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.myfinances.data.manager.AccountUpdateManager
 import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.domain.usecase.GetAccountUseCase
 import com.myfinances.domain.usecase.GetActiveAccountIdUseCase
@@ -21,80 +22,77 @@ import java.util.Calendar
 import java.util.Date
 import javax.inject.Inject
 
-/**
- * ViewModel для экрана "История".
- *
- * Отвечает за:
- * - Загрузку истории транзакций за выбранный период.
- * - Получение информации о счете для отображения валюты.
- * - Управление состоянием экрана и обработку пользовательских событий (выбор даты).
- * - Получение типа фильтрации (`transactionType`) из `SavedStateHandle`,
- *   который передается при навигации.
- */
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
+    savedStateHandle: SavedStateHandle,
     private val getTransactionsUseCase: GetTransactionsUseCase,
     private val getActiveAccountIdUseCase: GetActiveAccountIdUseCase,
-    private val getAccountUseCase: GetAccountUseCase
+    private val getAccountUseCase: GetAccountUseCase,
+    private val accountUpdateManager: AccountUpdateManager
 ) : ViewModel() {
+
+    private val transactionType: TransactionTypeFilter =
+        savedStateHandle.get<TransactionTypeFilter>("transactionType") ?: TransactionTypeFilter.ALL
 
     private val _uiState = MutableStateFlow<HistoryUiState>(HistoryUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
-    private var startDate: Date
-    private var endDate: Date
-
     init {
         val calendar = Calendar.getInstance()
-        endDate = calendar.withTimeAtEndOfDay().time
-        calendar.set(Calendar.DAY_OF_MONTH, 1)
-        startDate = calendar.withTimeAtStartOfDay().time
-        loadData()
+        val endDate = calendar.withTimeAtEndOfDay().time
+        calendar.add(Calendar.MONTH, -1)
+        val startDate = calendar.withTimeAtStartOfDay().time
+
+        loadData(startDate, endDate)
+
+        viewModelScope.launch {
+            accountUpdateManager.accountUpdateFlow.collect {
+                val currentState = _uiState.value
+                if (currentState is HistoryUiState.Success) {
+                    loadData(currentState.startDate, currentState.endDate)
+                }
+            }
+        }
     }
 
     fun onEvent(event: HistoryEvent) {
+        val currentState = _uiState.value
+        if (currentState !is HistoryUiState.Success) return
+
         when (event) {
             is HistoryEvent.StartDateSelected -> {
-                val calendar = Calendar.getInstance().apply { timeInMillis = event.timestampMillis }
-                startDate = calendar.withTimeAtStartOfDay().time
-                loadData()
+                val newStartDate = Date(event.timestampMillis)
+                if (newStartDate.before(currentState.endDate)) {
+                    loadData(newStartDate, currentState.endDate)
+                }
             }
             is HistoryEvent.EndDateSelected -> {
-                val calendar = Calendar.getInstance().apply { timeInMillis = event.timestampMillis }
-                endDate = calendar.withTimeAtEndOfDay().time
-                loadData()
+                val newEndDate = Date(event.timestampMillis)
+                if (newEndDate.after(currentState.startDate)) {
+                    loadData(currentState.startDate, newEndDate)
+                }
             }
         }
     }
 
-    private fun loadData() {
+    private fun loadData(startDate: Date, endDate: Date) {
         viewModelScope.launch {
             _uiState.value = HistoryUiState.Loading
 
-            when (val accountIdResult = getActiveAccountIdUseCase()) {
-                is Result.Success -> loadTransactionsForAccount(accountIdResult.data)
-                is Result.Error -> _uiState.value = HistoryUiState.Error(
-                    accountIdResult.exception.message ?: "Не удалось получить активный счет"
-                )
-
-                is Result.NetworkError -> _uiState.value = HistoryUiState.NoInternet
+            val accountIdResult = getActiveAccountIdUseCase()
+            if (accountIdResult is Result.Success) {
+                loadDataForAccount(accountIdResult.data, startDate, endDate)
+            } else {
+                handleErrorResult(accountIdResult)
             }
         }
     }
 
-    private suspend fun loadTransactionsForAccount(accountId: Int) = coroutineScope {
-        val filterType = savedStateHandle.get<TransactionTypeFilter>("transactionType")
-            ?: TransactionTypeFilter.ALL
-
+    private suspend fun loadDataForAccount(accountId: Int, startDate: Date, endDate: Date) =
+        coroutineScope {
         val accountDeferred = async { getAccountUseCase() }
         val transactionsDeferred = async {
-            getTransactionsUseCase(
-                accountId = accountId,
-                startDate = startDate,
-                endDate = endDate,
-                filter = filterType
-            )
+            getTransactionsUseCase(accountId, startDate, endDate, transactionType)
         }
 
         val accountResult = accountDeferred.await()
@@ -102,36 +100,36 @@ class HistoryViewModel @Inject constructor(
 
         if (accountResult is Result.Success && transactionsResult is Result.Success) {
             val account = accountResult.data
-            val transactions = transactionsResult.data.first.sortedByDescending { it.date }
-            val categories = transactionsResult.data.second
+            val (transactions, categories) = transactionsResult.data
             val categoryMap = categories.associateBy { it.id }
 
-            val transactionItems = transactions.map { transaction ->
-                transaction.toHistoryListItemModel(
-                    category = categoryMap[transaction.categoryId],
-                    currencyCode = account.currency
+            val transactionItems = transactions.map {
+                it.toHistoryListItemModel(
+                    categoryMap[it.categoryId],
+                    account.currency
                 )
             }
             val totalAmount = transactions.sumOf { it.amount }
 
             _uiState.value = HistoryUiState.Success(
-                transactionItems = transactionItems,
-                totalAmount = totalAmount,
-                startDate = startDate,
-                endDate = endDate,
-                currency = account.currency
+                transactionItems,
+                totalAmount,
+                startDate,
+                endDate,
+                account.currency
             )
         } else {
-            val errorResult =
-                if (accountResult !is Result.Success) accountResult else transactionsResult
-            when (errorResult) {
-                is Result.Error -> _uiState.value = HistoryUiState.Error(
-                    errorResult.exception.message ?: "Не удалось загрузить транзакции"
-                )
+            handleErrorResult(if (accountResult !is Result.Success) accountResult else transactionsResult)
+        }
+        }
 
-                is Result.NetworkError -> _uiState.value = HistoryUiState.NoInternet
-                else -> {}
-            }
+    private fun handleErrorResult(result: Result<*>) {
+        when (result) {
+            is Result.Error -> _uiState.value =
+                HistoryUiState.Error(result.exception.message ?: "Неизвестная ошибка")
+
+            is Result.NetworkError -> _uiState.value = HistoryUiState.NoInternet
+            else -> {}
         }
     }
 }

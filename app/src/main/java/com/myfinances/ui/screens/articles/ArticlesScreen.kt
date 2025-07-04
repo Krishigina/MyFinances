@@ -98,8 +98,8 @@ private fun ArticlesScreenContent(
             placeholder = { Text(stringResource(id = R.string.search_placeholder_text)) },
             leadingIcon = {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_articles_search), // ИСПРАВЛЕНО
-                    contentDescription = stringResource(id = R.string.search)      // ИСПРАВЛЕНО
+                    painter = painterResource(id = R.drawable.ic_articles_search),
+                    contentDescription = stringResource(id = R.string.search)
                 )
             },
             singleLine = true,

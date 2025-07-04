@@ -1,6 +1,7 @@
 package com.myfinances.di
 
 import com.myfinances.BuildConfig
+import com.myfinances.data.manager.AccountUpdateManager
 import com.myfinances.data.network.ApiService
 import com.myfinances.data.network.ConnectivityManagerSource
 import com.myfinances.data.network.NetworkConnectivityManager
@@ -137,5 +138,11 @@ object AppModule {
     @Singleton
     fun provideApiService(retrofit: Retrofit): ApiService {
         return retrofit.create(ApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAccountUpdateManager(): AccountUpdateManager {
+        return AccountUpdateManager()
     }
 }

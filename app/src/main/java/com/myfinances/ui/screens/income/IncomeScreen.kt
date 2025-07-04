@@ -38,7 +38,8 @@ fun IncomeScreen(
             is IncomeUiState.Success -> {
                 IncomeScreenContent(
                     transactionItems = state.transactionItems,
-                    totalAmount = state.totalAmount
+                    totalAmount = state.totalAmount,
+                    state = state
                 )
             }
             is IncomeUiState.Error -> {
@@ -66,7 +67,8 @@ fun IncomeScreen(
 @Composable
 private fun IncomeScreenContent(
     transactionItems: List<ListItemModel>,
-    totalAmount: Double
+    totalAmount: Double,
+    state: IncomeUiState.Success
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
@@ -74,7 +76,12 @@ private fun IncomeScreenContent(
                 id = "total_amount_card_income",
                 title = stringResource(id = R.string.total_amount_card),
                 type = ItemType.TOTAL,
-                trailingContent = TrailingContent.TextOnly(formatCurrency(totalAmount)),
+                trailingContent = TrailingContent.TextOnly(
+                    formatCurrency(
+                        totalAmount,
+                        state.currency
+                    )
+                ),
                 showTrailingArrow = false
             )
             ListItem(model = totalAmountItem)

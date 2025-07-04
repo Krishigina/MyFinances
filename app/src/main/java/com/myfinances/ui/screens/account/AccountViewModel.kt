@@ -2,6 +2,7 @@ package com.myfinances.ui.screens.account
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.myfinances.data.manager.AccountUpdateManager
 import com.myfinances.domain.usecase.GetAccountUseCase
 import com.myfinances.domain.usecase.UpdateAccountUseCase
 import com.myfinances.domain.util.Result
@@ -29,7 +30,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AccountViewModel @Inject constructor(
     private val getAccountUseCase: GetAccountUseCase,
-    private val updateAccountUseCase: UpdateAccountUseCase
+    private val updateAccountUseCase: UpdateAccountUseCase,
+    private val accountUpdateManager: AccountUpdateManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AccountUiState>(AccountUiState.Loading)
@@ -40,9 +42,7 @@ class AccountViewModel @Inject constructor(
     private val availableCurrencies = listOf(
         CurrencyModel("RUB", "Российский рубль", "₽"),
         CurrencyModel("USD", "Американский доллар", "$"),
-        CurrencyModel("EUR", "Евро", "€"),
-        CurrencyModel("KZT", "Казахстанский тенге", "₸"),
-        CurrencyModel("BYN", "Белорусский рубль", "Br")
+        CurrencyModel("EUR", "Евро", "€")
     )
 
     init {
@@ -124,7 +124,10 @@ class AccountViewModel @Inject constructor(
             )
 
             when (result) {
-                is Result.Success -> loadAccount(forceReload = true)
+                is Result.Success -> {
+                    accountUpdateManager.notifyAccountUpdated()
+                    loadAccount(forceReload = true)
+                }
                 is Result.Error -> _uiState.update {
                     state.copy(
                         isSaving = false,

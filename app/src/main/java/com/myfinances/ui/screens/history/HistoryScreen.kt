@@ -51,7 +51,8 @@ fun HistoryScreen(
                     startDate = state.startDate,
                     endDate = state.endDate,
                     onStartDateClick = { showStartDatePicker = true },
-                    onEndDateClick = { showEndDatePicker = true }
+                    onEndDateClick = { showEndDatePicker = true },
+                    state = state
                 )
             }
             is HistoryUiState.Error -> {
@@ -109,7 +110,8 @@ private fun HistoryScreenContent(
     startDate: Date,
     endDate: Date,
     onStartDateClick: () -> Unit,
-    onEndDateClick: () -> Unit
+    onEndDateClick: () -> Unit,
+    state: HistoryUiState.Success
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
@@ -117,6 +119,7 @@ private fun HistoryScreenContent(
                 startDate = startDate,
                 endDate = endDate,
                 totalAmount = totalAmount,
+                currencyCode = state.currency,
                 onStartDateClick = onStartDateClick,
                 onEndDateClick = onEndDateClick
             )

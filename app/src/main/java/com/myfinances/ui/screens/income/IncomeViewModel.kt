@@ -2,6 +2,7 @@ package com.myfinances.ui.screens.income
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.myfinances.data.manager.AccountUpdateManager
 import com.myfinances.domain.usecase.GetAccountUseCase
 import com.myfinances.domain.usecase.GetActiveAccountIdUseCase
 import com.myfinances.domain.usecase.GetIncomeTransactionsUseCase
@@ -25,7 +26,8 @@ import javax.inject.Inject
 class IncomeViewModel @Inject constructor(
     private val getIncomeTransactionsUseCase: GetIncomeTransactionsUseCase,
     private val getActiveAccountIdUseCase: GetActiveAccountIdUseCase,
-    private val getAccountUseCase: GetAccountUseCase
+    private val getAccountUseCase: GetAccountUseCase,
+    private val accountUpdateManager: AccountUpdateManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<IncomeUiState>(IncomeUiState.Loading)
@@ -33,6 +35,11 @@ class IncomeViewModel @Inject constructor(
 
     init {
         loadData()
+        viewModelScope.launch {
+            accountUpdateManager.accountUpdateFlow.collect {
+                loadData()
+            }
+        }
     }
 
     private fun loadData() {
@@ -61,8 +68,7 @@ class IncomeViewModel @Inject constructor(
 
         if (accountResult is Result.Success && transactionsResult is Result.Success) {
             val account = accountResult.data
-            val transactions = transactionsResult.data.first
-            val categories = transactionsResult.data.second
+            val (transactions, categories) = transactionsResult.data
             val categoryMap = categories.associateBy { it.id }
 
             val transactionItems = transactions.map { transaction ->
@@ -81,13 +87,17 @@ class IncomeViewModel @Inject constructor(
         } else {
             val errorResult =
                 if (accountResult !is Result.Success) accountResult else transactionsResult
-            when (errorResult) {
-                is Result.Error -> _uiState.value =
-                    IncomeUiState.Error(errorResult.exception.message ?: "Неизвестная ошибка")
+            handleErrorResult(errorResult)
+        }
+    }
 
-                is Result.NetworkError -> _uiState.value = IncomeUiState.NoInternet
-                else -> {}
-            }
+    private fun handleErrorResult(result: Result<*>) {
+        when (result) {
+            is Result.Error -> _uiState.value =
+                IncomeUiState.Error(result.exception.message ?: "Неизвестная ошибка")
+
+            is Result.NetworkError -> _uiState.value = IncomeUiState.NoInternet
+            else -> {}
         }
     }
 }

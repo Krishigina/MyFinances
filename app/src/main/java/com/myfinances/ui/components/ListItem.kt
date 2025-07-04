@@ -79,6 +79,11 @@ fun ListItem(model: ListItemModel) {
                         contentDescription = null,
                         modifier = Modifier.size(dimensions.spacing.paddingLarge)
                     )
+                    is LeadingIcon.Vector -> Icon(
+                        imageVector = icon.imageVector,
+                        contentDescription = null,
+                        modifier = Modifier.size(dimensions.icon.medium)
+                    )
                 }
             }
             Spacer(modifier = Modifier.width(dimensions.spacing.paddingLarge))

@@ -2,6 +2,7 @@ package com.myfinances.ui.screens.expenses
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.myfinances.data.manager.AccountUpdateManager
 import com.myfinances.domain.usecase.GetAccountUseCase
 import com.myfinances.domain.usecase.GetActiveAccountIdUseCase
 import com.myfinances.domain.usecase.GetExpenseTransactionsUseCase
@@ -15,20 +16,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * ViewModel для экрана "Расходы".
- *
- * Отвечает за:
- * - Загрузку ID активного счета.
- * - Параллельную загрузку транзакций расходов и информации о счете (для получения валюты).
- * - Управление состоянием UI через [ExpensesUiState].
- * - Преобразование доменных моделей в UI-модели с помощью мапперов.
- */
 @HiltViewModel
 class ExpensesViewModel @Inject constructor(
     private val getExpenseTransactionsUseCase: GetExpenseTransactionsUseCase,
     private val getActiveAccountIdUseCase: GetActiveAccountIdUseCase,
-    private val getAccountUseCase: GetAccountUseCase
+    private val getAccountUseCase: GetAccountUseCase,
+    private val accountUpdateManager: AccountUpdateManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ExpensesUiState>(ExpensesUiState.Loading)
@@ -36,6 +29,11 @@ class ExpensesViewModel @Inject constructor(
 
     init {
         loadData()
+        viewModelScope.launch {
+            accountUpdateManager.accountUpdateFlow.collect {
+                loadData()
+            }
+        }
     }
 
     private fun loadData() {
@@ -49,7 +47,6 @@ class ExpensesViewModel @Inject constructor(
                         accountIdResult.exception.message ?: "Не удалось получить активный счет"
                     )
                 }
-
                 is Result.NetworkError -> _uiState.value = ExpensesUiState.NoInternet
             }
         }
@@ -64,8 +61,7 @@ class ExpensesViewModel @Inject constructor(
 
         if (accountResult is Result.Success && transactionsResult is Result.Success) {
             val account = accountResult.data
-            val transactions = transactionsResult.data.first
-            val categories = transactionsResult.data.second
+            val (transactions, categories) = transactionsResult.data
             val categoryMap = categories.associateBy { it.id }
 
             val transactionItems = transactions.map { transaction ->
@@ -84,13 +80,17 @@ class ExpensesViewModel @Inject constructor(
         } else {
             val errorResult =
                 if (accountResult !is Result.Success) accountResult else transactionsResult
-            when (errorResult) {
-                is Result.Error -> _uiState.value =
-                    ExpensesUiState.Error(errorResult.exception.message ?: "Неизвестная ошибка")
+            handleErrorResult(errorResult)
+        }
+    }
 
-                is Result.NetworkError -> _uiState.value = ExpensesUiState.NoInternet
-                else -> {}
-            }
+    private fun handleErrorResult(result: Result<*>) {
+        when (result) {
+            is Result.Error -> _uiState.value =
+                ExpensesUiState.Error(result.exception.message ?: "Неизвестная ошибка")
+
+            is Result.NetworkError -> _uiState.value = ExpensesUiState.NoInternet
+            else -> {}
         }
     }
 }

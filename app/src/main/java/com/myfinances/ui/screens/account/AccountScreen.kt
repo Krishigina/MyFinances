@@ -19,6 +19,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+//import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -30,7 +32,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -60,35 +61,19 @@ import com.myfinances.ui.util.formatCurrency
  * Главный Composable для экрана "Счет".
  *
  * Этот экран отображает информацию о счете пользователя и позволяет
- * редактировать ее
+ * редактировать ее.
  */
 @Composable
 fun AccountScreen(
-    viewModel: AccountViewModel = hiltViewModel(),
-    onEditClick: () -> Unit,
-    onSaveClick: () -> Unit,
-    onCancelClick: () -> Unit
+    viewModel: AccountViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    val currentState = uiState
-    if (currentState is AccountUiState.Success) {
-        LaunchedEffect(currentState.isEditMode) {
-            if (currentState.isEditMode) {
-                onSaveClick()
-                onCancelClick()
-            } else {
-                onEditClick()
-            }
-        }
-    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                if ((uiState as? AccountUiState.Success)?.isEditMode == true)
-                    MaterialTheme.colorScheme.background
+                if ((uiState as? AccountUiState.Success)?.isEditMode == true) MaterialTheme.colorScheme.background
                 else
                     Color(0xFFF3EDF7)
             )
@@ -149,7 +134,9 @@ private fun AccountViewContent(
                     type = ItemType.TOTAL,
                     leadingIcon = LeadingIcon.Emoji(state.account.emoji),
                     trailingContent = TrailingContent.TextWithArrow(
-                        text = formatCurrency(state.account.balance, state.account.currency)
+                        text = formatCurrency(
+                            state.account.balance, state.account.currency
+                        )
                     ),
                     onClick = { onEvent(AccountEvent.EditModeToggled) },
                     showTrailingArrow = true
@@ -196,7 +183,7 @@ private fun AccountEditContent(
                 id = "edit_name",
                 title = "",
                 type = ItemType.SETTING,
-                leadingIcon = LeadingIcon.Resource(R.drawable.ic_top_bar_edit),
+                leadingIcon = LeadingIcon.Vector(Icons.Default.AccountCircle),
             ),
             value = state.draftName,
             onValueChange = { onEvent(AccountEvent.NameChanged(it)) },
@@ -208,7 +195,8 @@ private fun AccountEditContent(
             model = ListItemModel(
                 id = "edit_balance",
                 title = stringResource(R.string.balance),
-                type = ItemType.SETTING
+                type = ItemType.SETTING,
+                leadingIcon = LeadingIcon.Vector(Icons.Default.AccountCircle)
             ),
             value = state.draftBalance,
             onValueChange = { onEvent(AccountEvent.BalanceChanged(it)) },
@@ -290,6 +278,12 @@ private fun EditableListItem(
                         painterResource(icon.id),
                         null,
                         modifier = Modifier.size(dimensions.spacing.paddingLarge)
+                    )
+
+                    is LeadingIcon.Vector -> Icon(
+                        imageVector = icon.imageVector,
+                        null,
+                        modifier = Modifier.size(dimensions.icon.medium)
                     )
                 }
             }

@@ -16,6 +16,7 @@ import java.util.Locale
  * @param startDate Начальная дата периода.
  * @param endDate Конечная дата периода.
  * @param totalAmount Общая сумма транзакций за период.
+ * @param currencyCode Код валюты для форматирования итоговой суммы.
  * @param onStartDateClick Коллбэк для открытия диалога выбора начальной даты.
  * @param onEndDateClick Коллбэк для открытия диалога выбора конечной даты.
  */
@@ -24,6 +25,7 @@ fun HistorySummaryBlock(
     startDate: Date,
     endDate: Date,
     totalAmount: Double,
+    currencyCode: String,
     onStartDateClick: () -> Unit,
     onEndDateClick: () -> Unit
 ) {
@@ -50,7 +52,7 @@ fun HistorySummaryBlock(
             id = "history_summary_total",
             title = stringResource(id = R.string.period_total_amount),
             type = ItemType.TOTAL,
-            trailingContent = TrailingContent.TextOnly(formatCurrency(totalAmount)),
+            trailingContent = TrailingContent.TextOnly(formatCurrency(totalAmount, currencyCode)),
             showTrailingArrow = false
         )
     )

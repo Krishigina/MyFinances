@@ -38,7 +38,8 @@ fun ExpensesScreen(
             is ExpensesUiState.Success -> {
                 ExpensesScreenContent(
                     transactionItems = state.transactionItems,
-                    totalAmount = state.totalAmount
+                    totalAmount = state.totalAmount,
+                    state = state
                 )
             }
             is ExpensesUiState.Error -> {
@@ -66,7 +67,8 @@ fun ExpensesScreen(
 @Composable
 private fun ExpensesScreenContent(
     transactionItems: List<ListItemModel>,
-    totalAmount: Double
+    totalAmount: Double,
+    state: ExpensesUiState.Success
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
@@ -74,7 +76,12 @@ private fun ExpensesScreenContent(
                 id = "total_amount_card_expenses",
                 title = stringResource(id = R.string.total_amount_card),
                 type = ItemType.TOTAL,
-                trailingContent = TrailingContent.TextOnly(formatCurrency(totalAmount)),
+                trailingContent = TrailingContent.TextOnly(
+                    formatCurrency(
+                        totalAmount,
+                        state.currency
+                    )
+                ),
                 showTrailingArrow = false
             )
             ListItem(model = totalAmountItem)

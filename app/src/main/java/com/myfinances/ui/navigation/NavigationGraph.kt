@@ -35,11 +35,7 @@ fun NavigationGraph(navController: NavHostController, modifier: Modifier = Modif
             IncomeScreen()
         }
         composable(Destination.Account.route) {
-            AccountScreen(
-                onEditClick = {},
-                onSaveClick = {},
-                onCancelClick = {}
-            )
+            AccountScreen()
         }
         composable(Destination.Articles.route) {
             ArticlesScreen()

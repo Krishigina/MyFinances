@@ -1,9 +1,5 @@
 package com.myfinances.ui.util
 
-import java.text.NumberFormat
-import java.util.Currency
-import java.util.Locale
-
 /**
  * Утилитарная функция для форматирования денежных сумм.
  *
@@ -17,17 +13,17 @@ import java.util.Locale
  * (например, "1 234,56 KZT"). Для корректного отображения стандартный пробел
  * заменяется на неразрывный (`\u00A0`).
  */
-fun formatCurrency(amount: Double, currencyCode: String): String {
-    return try {
-        val format = NumberFormat.getCurrencyInstance(Locale("ru", "RU"))
-        format.currency = Currency.getInstance(currencyCode.uppercase(Locale.ROOT))
-        format.format(amount).replace(" ", "\u00A0")
-    } catch (e: IllegalArgumentException) {
-        val numberFormat = NumberFormat.getNumberInstance(Locale("ru", "RU"))
-        numberFormat.minimumFractionDigits = 2
-        numberFormat.maximumFractionDigits = 2
-        "${
-            numberFormat.format(amount).replace(" ", "\u00A0")
-        } ${currencyCode.uppercase(Locale.ROOT)}"
-    }
-}
+//fun formatCurrency(amount: Double, currencyCode: String): String {
+//    return try {
+//        val format = NumberFormat.getCurrencyInstance(Locale("ru", "RU"))
+//        format.currency = Currency.getInstance(currencyCode.uppercase(Locale.ROOT))
+//        format.format(amount).replace(" ", "\u00A0")
+//    } catch (e: IllegalArgumentException) {
+//        val numberFormat = NumberFormat.getNumberInstance(Locale("ru", "RU"))
+//        numberFormat.minimumFractionDigits = 2
+//        numberFormat.maximumFractionDigits = 2
+//        "${
+//            numberFormat.format(amount).replace(" ", "\u00A0")
+//        } ${currencyCode.uppercase(Locale.ROOT)}"
+//    }
+//}
