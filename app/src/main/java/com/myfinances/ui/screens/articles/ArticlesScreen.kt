@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
@@ -18,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -89,29 +91,33 @@ private fun ArticlesScreenContent(
     onQueryChange: (String) -> Unit,
     categoryItems: List<ListItemModel>
 ) {
+    val focusManager = LocalFocusManager.current
+
     Column(modifier = Modifier.fillMaxSize()) {
         TextField(
             value = query,
             onValueChange = onQueryChange,
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             placeholder = { Text(stringResource(id = R.string.search_placeholder_text)) },
-            leadingIcon = {
+            trailingIcon = {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_articles_search),
                     contentDescription = stringResource(id = R.string.search)
                 )
             },
             singleLine = true,
+            keyboardActions = KeyboardActions(
+                onDone = { focusManager.clearFocus() }
+            ),
             colors = TextFieldDefaults.colors(
+                cursorColor = MaterialTheme.colorScheme.onSurface,
                 focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                unfocusedIndicatorColor = MaterialTheme.colorScheme.outline
+                unfocusedIndicatorColor = MaterialTheme.colorScheme.outlineVariant,
+                unfocusedContainerColor = MaterialTheme.colorScheme.tertiary,
+                focusedContainerColor = MaterialTheme.colorScheme.background
             )
         )
-
-        Divider()
-
-        if (categoryItems.isEmpty()) {
+        if (categoryItems.isEmpty() && query.isNotEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
                     text = stringResource(R.string.no_articles_found),

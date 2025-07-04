@@ -8,11 +8,11 @@ import com.myfinances.domain.util.Result
 import com.myfinances.ui.mappers.toListItemModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -20,15 +20,9 @@ import javax.inject.Inject
  * ViewModel для экрана "Статьи".
  *
  * Отвечает за:
- * - Загрузку полного списка категорий расходов с помощью [GetCategoriesUseCase].
+ * - Загрузку полного списка категорий с помощью [GetCategoriesUseCase].
  * - Реализацию логики локального поиска по названию категории.
  * - Управление состоянием UI через [ArticlesUiState].
- *
- * Для реализации поиска используется комбинация нескольких [StateFlow] и операторов `combine` и `debounce`.
- * `allCategories` хранит полный, нефильтрованный список.
- * `searchQuery` хранит текущий текст из поля поиска.
- * `combine` реагирует на изменения в любом из этих потоков и создает отфильтрованный список.
- * `debounce` используется для того, чтобы не выполнять фильтрацию на каждое нажатие клавиши.
  */
 @HiltViewModel
 class ArticlesViewModel @Inject constructor(
@@ -39,7 +33,8 @@ class ArticlesViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     private val searchQuery = MutableStateFlow("")
-    private val allCategories = MutableStateFlow<List<Category>>(emptyList())
+
+    private var allCategories: List<Category> = emptyList()
 
     init {
         loadCategories()
@@ -51,6 +46,13 @@ class ArticlesViewModel @Inject constructor(
      * @param query Новый текст из поля поиска.
      */
     fun onSearchQueryChanged(query: String) {
+        _uiState.update { currentState ->
+            if (currentState is ArticlesUiState.Success) {
+                currentState.copy(query = query)
+            } else {
+                currentState
+            }
+        }
         searchQuery.value = query
     }
 
@@ -59,11 +61,10 @@ class ArticlesViewModel @Inject constructor(
             _uiState.value = ArticlesUiState.Loading
             when (val result = getCategoriesUseCase()) {
                 is Result.Success -> {
-                    val expenseCategories = result.data.filter { !it.isIncome }
-                    allCategories.value = expenseCategories
+                    allCategories = result.data
                     _uiState.value = ArticlesUiState.Success(
                         query = "",
-                        categoryItems = expenseCategories.map { it.toListItemModel() }
+                        categoryItems = allCategories.map { it.toListItemModel() }
                     )
                 }
 
@@ -76,25 +77,24 @@ class ArticlesViewModel @Inject constructor(
     }
 
     private fun observeSearchQuery() {
-        viewModelScope.launch {
-            searchQuery
-                .debounce(300L)
-                .combine(allCategories) { query, categories ->
-                    val filteredList = if (query.isBlank()) {
-                        categories
-                    } else {
-                        categories.filter {
-                            it.name.contains(query, ignoreCase = true)
-                        }
-                    }
-                    if (_uiState.value is ArticlesUiState.Success) {
-                        _uiState.value = ArticlesUiState.Success(
-                            query = query,
-                            categoryItems = filteredList.map { it.toListItemModel() }
-                        )
+        searchQuery
+            .debounce(300L)
+            .onEach { query ->
+                val filteredList = if (query.isBlank()) {
+                    allCategories
+                } else {
+                    allCategories.filter {
+                        it.name.contains(query, ignoreCase = true)
                     }
                 }
-                .collect()
-        }
+                _uiState.update { currentState ->
+                    if (currentState is ArticlesUiState.Success) {
+                        currentState.copy(categoryItems = filteredList.map { it.toListItemModel() })
+                    } else {
+                        currentState
+                    }
+                }
+            }
+            .launchIn(viewModelScope)
     }
 }

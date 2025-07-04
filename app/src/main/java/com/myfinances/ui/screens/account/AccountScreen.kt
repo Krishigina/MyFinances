@@ -120,7 +120,7 @@ private fun AccountViewContent(
                     showTrailingArrow = true
                 )
             )
-            Divider(modifier = Modifier.padding(horizontal = 16.dp))
+            Divider()
             ListItem(
                 model = ListItemModel(
                     id = "currency_view",

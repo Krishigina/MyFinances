@@ -40,9 +40,8 @@ class HistoryViewModel @Inject constructor(
     init {
         val calendar = Calendar.getInstance()
         val endDate = calendar.withTimeAtEndOfDay().time
-        calendar.add(Calendar.MONTH, -1)
+        calendar.set(Calendar.DAY_OF_MONTH, 1)
         val startDate = calendar.withTimeAtStartOfDay().time
-
         loadData(startDate, endDate)
 
         viewModelScope.launch {
