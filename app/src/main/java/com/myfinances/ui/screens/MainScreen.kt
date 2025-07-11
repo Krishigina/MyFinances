@@ -14,13 +14,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -34,15 +33,8 @@ import com.myfinances.ui.navigation.NavigationGraph
 import com.myfinances.ui.screens.account.AccountEvent
 import com.myfinances.ui.screens.account.AccountUiState
 import com.myfinances.ui.screens.account.AccountViewModel
+import com.myfinances.ui.viewmodel.getViewModelFactory
 
-/**
- * Главный экран приложения, который служит контейнером для всех основных экранов.
- *
- * Содержит `Scaffold`, который управляет `TopBar`, `BottomNavigationBar`
- * и `FloatingActionButton`, а также вложенный `NavigationGraph`.
- * Он отслеживает текущий маршрут навигации для корректного отображения
- * заголовков и кнопок в TopBar.
- */
 @Composable
 fun MainScreen() {
     val mainNavController = rememberNavController()
@@ -74,12 +66,6 @@ fun MainScreen() {
     }
 }
 
-
-/**
- * Composable-функция, которая динамически создает TopBar в зависимости от текущего экрана.
- * @param currentRoute Текущий маршрут в графе навигации.
- * @param navController Контроллер навигации для выполнения переходов.
- */
 @Composable
 private fun MainScreenTopBar(
     currentRoute: String?,
@@ -113,7 +99,7 @@ private fun MainScreenTopBar(
         }
 
         Destination.Account.route -> {
-            AccountTopBar(navController = navController)
+            AccountTopBar()
         }
 
         Destination.Articles.route -> {
@@ -139,19 +125,9 @@ private fun MainScreenTopBar(
     }
 }
 
-/**
- * Специализированный TopBar для экрана "Счет".
- * Он получает доступ к [AccountViewModel] для отображения правильных кнопок
- * (Редактировать/Сохранить/Отмена) и отправки событий при нажатии на них.
- */
 @Composable
-private fun AccountTopBar(navController: NavHostController) {
-    // Получаем экземпляр ViewModel, привязанный к графу навигации.
-    // Это позволяет TopBar'у и самому экрану использовать одну и ту же ViewModel.
-    val backStackEntry = remember(navController.currentBackStackEntry) {
-        navController.getBackStackEntry(Destination.Account.route)
-    }
-    val accountViewModel: AccountViewModel = hiltViewModel(backStackEntry)
+private fun AccountTopBar() {
+    val accountViewModel: AccountViewModel = viewModel(factory = getViewModelFactory())
     val state by accountViewModel.uiState.collectAsStateWithLifecycle()
 
     val isEditMode = (state as? AccountUiState.Success)?.isEditMode == true
@@ -201,9 +177,6 @@ private fun AccountTopBar(navController: NavHostController) {
     )
 }
 
-/**
- * Вспомогательный компонент для кнопки "История" в TopBar.
- */
 @Composable
 private fun TopBarHistoryAction(
     navController: NavHostController,

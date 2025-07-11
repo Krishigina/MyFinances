@@ -9,6 +9,7 @@ import javax.inject.Inject
  * Use-case для получения полного списка всех доступных категорий транзакций.
  * Является простой оберткой над соответствующим методом репозитория.
  */
+
 class GetCategoriesUseCase @Inject constructor(
     private val repository: CategoriesRepository
 ) {

@@ -1,217 +1,195 @@
-package com.myfinances.ui.screens.account
+package com.myfinances.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.myfinances.R
-import com.myfinances.ui.components.CurrencyPickerBottomSheet
-import com.myfinances.ui.components.EditableListItem
-import com.myfinances.ui.components.ErrorMessage
-import com.myfinances.ui.components.ItemType
-import com.myfinances.ui.components.LeadingIcon
-import com.myfinances.ui.components.ListItem
-import com.myfinances.ui.components.ListItemModel
-import com.myfinances.ui.components.TrailingContent
-import com.myfinances.ui.util.formatCurrency
+import com.myfinances.domain.entity.TransactionTypeFilter
+import com.myfinances.ui.components.BottomNavigationBar
+import com.myfinances.ui.components.MainFloatingActionButton
+import com.myfinances.ui.components.MainTopBar
+import com.myfinances.ui.navigation.Destination
+import com.myfinances.ui.navigation.NavigationGraph
+import com.myfinances.ui.screens.account.AccountEvent
+import com.myfinances.ui.screens.account.AccountUiState
+import com.myfinances.ui.screens.account.AccountViewModel
+import com.myfinances.ui.viewmodel.getViewModelFactory
 
-/**
- * Главный Composable для экрана "Счет".
- *
- * Этот экран отображает информацию о счете пользователя и позволяет
- * редактировать ее.
- */
 @Composable
-fun AccountScreen(
-    viewModel: AccountViewModel = hiltViewModel()
-) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+fun MainScreen() {
+    val mainNavController = rememberNavController()
+    val navBackStackEntry by mainNavController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                if ((uiState as? AccountUiState.Success)?.isEditMode == true) MaterialTheme.colorScheme.background
-                else
-                    Color(0xFFF3EDF7)
+    Scaffold(
+        topBar = {
+            MainScreenTopBar(
+                currentRoute = currentRoute,
+                navController = mainNavController
             )
-    ) {
-        when (val state = uiState) {
-            is AccountUiState.Loading -> CircularProgressIndicator(
-                modifier = Modifier.align(
-                    Alignment.Center
-                )
+        },
+        bottomBar = {
+            BottomNavigationBar(
+                navController = mainNavController,
+                modifier = Modifier.navigationBarsPadding()
             )
-            is AccountUiState.Success -> {
-                if (state.isEditMode) {
-                    AccountEditContent(state = state, onEvent = viewModel::onEvent)
-                } else {
-                    AccountViewContent(state = state, onEvent = viewModel::onEvent)
+        },
+        floatingActionButton = {
+            if (currentRoute == Destination.Expenses.route || currentRoute == Destination.Income.route) {
+                MainFloatingActionButton { /* TODO: Navigate to Add Transaction */ }
+            }
+        }
+    ) { padding ->
+        Box(modifier = Modifier.padding(padding)) {
+            NavigationGraph(navController = mainNavController)
+        }
+    }
+}
+
+@Composable
+private fun MainScreenTopBar(
+    currentRoute: String?,
+    navController: NavHostController
+) {
+    when (currentRoute) {
+        Destination.Expenses.route -> {
+            MainTopBar(
+                title = stringResource(id = R.string.top_bar_expenses_today_title),
+                actions = {
+                    TopBarHistoryAction(
+                        navController,
+                        TransactionTypeFilter.EXPENSE,
+                        Destination.Expenses
+                    )
+                }
+            )
+        }
+
+        Destination.Income.route -> {
+            MainTopBar(
+                title = stringResource(id = R.string.top_bar_income_today_title),
+                actions = {
+                    TopBarHistoryAction(
+                        navController,
+                        TransactionTypeFilter.INCOME,
+                        Destination.Income
+                    )
+                }
+            )
+        }
+
+        Destination.Account.route -> {
+            AccountTopBar()
+        }
+
+        Destination.Articles.route -> {
+            MainTopBar(title = stringResource(id = R.string.top_bar_my_articles_title))
+        }
+
+        Destination.Settings.route -> {
+            MainTopBar(title = stringResource(id = R.string.top_bar_settings_title))
+        }
+
+        Destination.History.route -> {
+            MainTopBar(
+                title = stringResource(id = R.string.top_bar_history_title),
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = stringResource(id = R.string.action_back)
+                        )
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun AccountTopBar() {
+    val accountViewModel: AccountViewModel = viewModel(factory = getViewModelFactory())
+    val state by accountViewModel.uiState.collectAsStateWithLifecycle()
+
+    val isEditMode = (state as? AccountUiState.Success)?.isEditMode == true
+
+    MainTopBar(
+        title = stringResource(id = R.string.top_bar_my_account_title),
+        navigationIcon = {
+            if (isEditMode) {
+                IconButton(onClick = { accountViewModel.onEvent(AccountEvent.EditModeToggled) }) {
+                    Icon(
+                        Icons.Default.ArrowBack,
+                        contentDescription = stringResource(R.string.action_cancel)
+                    )
                 }
             }
-
-            is AccountUiState.Error -> ErrorMessage(
-                message = state.message,
-                modifier = Modifier.align(Alignment.Center)
-            )
-
-            is AccountUiState.NoInternet -> ErrorMessage(
-                message = stringResource(id = R.string.no_internet_connection),
-                modifier = Modifier.align(Alignment.Center)
-            )
-        }
-    }
-}
-
-/**
- * UI-компонент для режима ПРОСМОТРА счета.
- */
-@Composable
-private fun AccountViewContent(
-    state: AccountUiState.Success,
-    onEvent: (AccountEvent) -> Unit
-) {
-    val currencyMap = remember(state.availableCurrencies) {
-        state.availableCurrencies.associateBy { it.code }
-    }
-    val currencySymbol = currencyMap[state.account.currency]?.symbol ?: state.account.currency
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .background(
-                    MaterialTheme.colorScheme.secondary,
-                    shape = MaterialTheme.shapes.medium
-                )
-                .clip(MaterialTheme.shapes.medium)
-        ) {
-            ListItem(
-                model = ListItemModel(
-                    id = "balance_view",
-                    title = stringResource(R.string.balance),
-                    type = ItemType.TOTAL,
-                    leadingIcon = LeadingIcon.Emoji(state.account.emoji),
-                    useWhiteIconBackground = true,
-                    trailingContent = TrailingContent.TextWithArrow(
-                        text = formatCurrency(
-                            state.account.balance, state.account.currency
+        },
+        actions = {
+            if (state is AccountUiState.Success) {
+                val isSaving = (state as AccountUiState.Success).isSaving
+                IconButton(
+                    onClick = {
+                        val event =
+                            if (isEditMode) AccountEvent.SaveChanges else AccountEvent.EditModeToggled
+                        accountViewModel.onEvent(event)
+                    },
+                    enabled = !isSaving
+                ) {
+                    when {
+                        isSaving -> CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
                         )
-                    ),
-                    onClick = { onEvent(AccountEvent.EditModeToggled) },
-                    showTrailingArrow = true
-                )
-            )
-            Divider()
-            ListItem(
-                model = ListItemModel(
-                    id = "currency_view",
-                    title = stringResource(R.string.currency),
-                    type = ItemType.TOTAL,
-                    trailingContent = TrailingContent.TextWithArrow(text = currencySymbol),
-                    onClick = { onEvent(AccountEvent.EditModeToggled) },
-                    showTrailingArrow = true
-                )
-            )
+
+                        isEditMode -> Icon(
+                            Icons.Default.Check,
+                            contentDescription = stringResource(R.string.action_save)
+                        )
+
+                        else -> Icon(
+                            Icons.Default.Edit,
+                            contentDescription = stringResource(R.string.top_bar_icon_edit)
+                        )
+                    }
+                }
+            }
         }
-    }
+    )
 }
 
-/**
- * UI-компонент для режима РЕДАКТИРОВАНИЯ счета
- */
 @Composable
-private fun AccountEditContent(
-    state: AccountUiState.Success,
-    onEvent: (AccountEvent) -> Unit
+private fun TopBarHistoryAction(
+    navController: NavHostController,
+    filter: TransactionTypeFilter,
+    parent: Destination
 ) {
-    val currencyMap = remember(state.availableCurrencies) {
-        state.availableCurrencies.associateBy { it.code }
-    }
-
-    if (state.showCurrencyPicker) {
-        CurrencyPickerBottomSheet(
-            availableCurrencies = state.availableCurrencies,
-            onCurrencySelected = { onEvent(AccountEvent.CurrencySelected(it.code)) },
-            onDismiss = { onEvent(AccountEvent.CurrencyPickerToggled) }
+    IconButton(onClick = {
+        navController.navigate(Destination.History.createRoute(filter = filter, parent = parent))
+    }) {
+        Icon(
+            painterResource(R.drawable.ic_top_bar_history),
+            contentDescription = stringResource(id = R.string.top_bar_icon_history)
         )
-    }
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        EditableListItem(
-            model = ListItemModel(
-                id = "edit_name",
-                title = "",
-                type = ItemType.SETTING,
-                leadingIcon = LeadingIcon.Resource(R.drawable.ic_account),
-            ),
-            value = state.draftName,
-            onValueChange = { onEvent(AccountEvent.NameChanged(it)) },
-            placeholder = stringResource(R.string.account_name_placeholder)
-        )
-        Divider()
-
-        EditableListItem(
-            model = ListItemModel(
-                id = "edit_balance",
-                title = stringResource(R.string.balance),
-                type = ItemType.SETTING
-            ),
-            value = state.draftBalance,
-            onValueChange = { onEvent(AccountEvent.BalanceChanged(it)) },
-            keyboardType = KeyboardType.Decimal,
-            textAlign = TextAlign.End
-        )
-        Divider()
-
-        ListItem(
-            model = ListItemModel(
-                id = "edit_currency",
-                title = stringResource(R.string.currency),
-                type = ItemType.SETTING,
-                trailingContent = TrailingContent.TextWithArrow(
-                    text = currencyMap[state.draftCurrency]?.symbol ?: state.draftCurrency
-                ),
-                onClick = { onEvent(AccountEvent.CurrencyPickerToggled) }
-            )
-        )
-        Divider()
-
-        if (state.isSaving) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(16.dp)
-            )
-        }
-
-        state.saveError?.let {
-            Text(
-                text = it,
-                color = MaterialTheme.colorScheme.error,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            )
-        }
     }
 }
