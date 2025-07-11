@@ -1,24 +1,18 @@
 package com.myfinances.domain.usecase
 
-import com.myfinances.data.store.SessionStore
 import com.myfinances.domain.entity.Account
 import com.myfinances.domain.repository.AccountsRepository
+import com.myfinances.domain.repository.SessionRepository
 import com.myfinances.domain.util.Result
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
-/**
- * Use-case для получения основного (единственного) счета пользователя.
- * Инкапсулирует бизнес-логику по извлечению первого счета из списка,
- * полученного от репозитория.
- */
-
 class GetAccountUseCase @Inject constructor(
     private val repository: AccountsRepository,
-    private val sessionStore: SessionStore
+    private val sessionRepository: SessionRepository
 ) {
     suspend operator fun invoke(): Result<Account> {
-        val activeAccountId = sessionStore.activeAccountId.first()
+        val activeAccountId = sessionRepository.getActiveAccountId().first()
             ?: return Result.Error(IllegalStateException("Активный счет не установлен"))
 
         return when (val accountsResult = repository.getAccounts()) {
@@ -30,7 +24,6 @@ class GetAccountUseCase @Inject constructor(
                     Result.Error(Exception("Счет с ID $activeAccountId не найден"))
                 }
             }
-
             is Result.Error -> accountsResult
             is Result.NetworkError -> accountsResult
         }

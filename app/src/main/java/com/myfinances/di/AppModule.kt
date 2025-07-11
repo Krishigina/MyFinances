@@ -3,23 +3,11 @@ package com.myfinances.di
 import com.myfinances.BuildConfig
 import com.myfinances.data.manager.AccountUpdateManager
 import com.myfinances.data.network.RetryInterceptor
-import com.myfinances.data.store.PersistentSessionStore
-import com.myfinances.data.store.SessionStore
-import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import javax.inject.Singleton
-
-@Module
-abstract class StoreModule {
-    @Binds
-    @Singleton
-    abstract fun bindSessionStore(
-        persistentSessionStore: PersistentSessionStore
-    ): SessionStore
-}
 
 @Module
 object AppModule {

@@ -11,7 +11,6 @@ import javax.inject.Singleton
         AppModule::class,
         DataModule::class,
         RepositoryModule::class,
-        StoreModule::class,
         MapperModule::class
     ]
 )
