@@ -1,6 +1,5 @@
 package com.myfinances.ui.screens.history
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myfinances.data.manager.AccountUpdateManager
@@ -12,7 +11,6 @@ import com.myfinances.domain.util.Result
 import com.myfinances.domain.util.withTimeAtEndOfDay
 import com.myfinances.domain.util.withTimeAtStartOfDay
 import com.myfinances.ui.mappers.toHistoryListItemModel
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,22 +20,24 @@ import java.util.Calendar
 import java.util.Date
 import javax.inject.Inject
 
-@HiltViewModel
 class HistoryViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
     private val getTransactionsUseCase: GetTransactionsUseCase,
     private val getActiveAccountIdUseCase: GetActiveAccountIdUseCase,
     private val getAccountUseCase: GetAccountUseCase,
     private val accountUpdateManager: AccountUpdateManager
 ) : ViewModel() {
 
-    private val transactionType: TransactionTypeFilter =
-        savedStateHandle.get<TransactionTypeFilter>("transactionType") ?: TransactionTypeFilter.ALL
+    private lateinit var transactionType: TransactionTypeFilter
 
     private val _uiState = MutableStateFlow<HistoryUiState>(HistoryUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
-    init {
+    // Метод для инициализации ViewModel с параметрами из навигации
+    fun initialize(filter: TransactionTypeFilter) {
+        if (this::transactionType.isInitialized) return // Предотвращаем повторную инициализацию
+
+        this.transactionType = filter
+
         val calendar = Calendar.getInstance()
         val endDate = calendar.withTimeAtEndOfDay().time
         calendar.set(Calendar.DAY_OF_MONTH, 1)
@@ -89,37 +89,37 @@ class HistoryViewModel @Inject constructor(
 
     private suspend fun loadDataForAccount(accountId: Int, startDate: Date, endDate: Date) =
         coroutineScope {
-        val accountDeferred = async { getAccountUseCase() }
-        val transactionsDeferred = async {
-            getTransactionsUseCase(accountId, startDate, endDate, transactionType)
-        }
+            val accountDeferred = async { getAccountUseCase() }
+            val transactionsDeferred = async {
+                getTransactionsUseCase(accountId, startDate, endDate, transactionType)
+            }
 
-        val accountResult = accountDeferred.await()
-        val transactionsResult = transactionsDeferred.await()
+            val accountResult = accountDeferred.await()
+            val transactionsResult = transactionsDeferred.await()
 
-        if (accountResult is Result.Success && transactionsResult is Result.Success) {
-            val account = accountResult.data
-            val (transactions, categories) = transactionsResult.data
-            val categoryMap = categories.associateBy { it.id }
+            if (accountResult is Result.Success && transactionsResult is Result.Success) {
+                val account = accountResult.data
+                val (transactions, categories) = transactionsResult.data
+                val categoryMap = categories.associateBy { it.id }
 
-            val transactionItems = transactions.map {
-                it.toHistoryListItemModel(
-                    categoryMap[it.categoryId],
+                val transactionItems = transactions.map {
+                    it.toHistoryListItemModel(
+                        categoryMap[it.categoryId],
+                        account.currency
+                    )
+                }
+                val totalAmount = transactions.sumOf { it.amount }
+
+                _uiState.value = HistoryUiState.Success(
+                    transactionItems,
+                    totalAmount,
+                    startDate,
+                    endDate,
                     account.currency
                 )
+            } else {
+                handleErrorResult(if (accountResult !is Result.Success) accountResult else transactionsResult)
             }
-            val totalAmount = transactions.sumOf { it.amount }
-
-            _uiState.value = HistoryUiState.Success(
-                transactionItems,
-                totalAmount,
-                startDate,
-                endDate,
-                account.currency
-            )
-        } else {
-            handleErrorResult(if (accountResult !is Result.Success) accountResult else transactionsResult)
-        }
         }
 
     private fun handleErrorResult(result: Result<*>) {

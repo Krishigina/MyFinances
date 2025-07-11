@@ -7,7 +7,6 @@ import com.myfinances.domain.usecase.GetAccountUseCase
 import com.myfinances.domain.usecase.UpdateAccountUseCase
 import com.myfinances.domain.util.Result
 import com.myfinances.ui.components.CurrencyModel
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,7 +26,6 @@ import javax.inject.Inject
  * - Управление жизненным циклом асинхронных операций в [viewModelScope], что гарантирует
  *   их автоматическую отмену при уничтожении ViewModel.
  */
-@HiltViewModel
 class AccountViewModel @Inject constructor(
     private val getAccountUseCase: GetAccountUseCase,
     private val updateAccountUseCase: UpdateAccountUseCase,

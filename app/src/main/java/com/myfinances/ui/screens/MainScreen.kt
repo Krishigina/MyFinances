@@ -14,6 +14,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -33,7 +34,7 @@ import com.myfinances.ui.navigation.NavigationGraph
 import com.myfinances.ui.screens.account.AccountEvent
 import com.myfinances.ui.screens.account.AccountUiState
 import com.myfinances.ui.screens.account.AccountViewModel
-import com.myfinances.ui.viewmodel.getViewModelFactory
+import com.myfinances.ui.viewmodel.provideViewModelFactory
 
 @Composable
 fun MainScreen() {
@@ -71,8 +72,10 @@ private fun MainScreenTopBar(
     currentRoute: String?,
     navController: NavHostController
 ) {
-    when (currentRoute) {
-        Destination.Expenses.route -> {
+    val historyRoute = Destination.History.route.substringBefore("/{")
+
+    when {
+        currentRoute == Destination.Expenses.route -> {
             MainTopBar(
                 title = stringResource(id = R.string.top_bar_expenses_today_title),
                 actions = {
@@ -85,7 +88,7 @@ private fun MainScreenTopBar(
             )
         }
 
-        Destination.Income.route -> {
+        currentRoute == Destination.Income.route -> {
             MainTopBar(
                 title = stringResource(id = R.string.top_bar_income_today_title),
                 actions = {
@@ -98,18 +101,19 @@ private fun MainScreenTopBar(
             )
         }
 
-        Destination.Account.route -> {
-            AccountTopBar()
+        currentRoute == Destination.Account.route -> {
+            AccountTopBar(navController = navController)
         }
 
-        Destination.Articles.route -> {
+        currentRoute == Destination.Articles.route -> {
             MainTopBar(title = stringResource(id = R.string.top_bar_my_articles_title))
         }
 
-        Destination.Settings.route -> {
+        currentRoute == Destination.Settings.route -> {
             MainTopBar(title = stringResource(id = R.string.top_bar_settings_title))
         }
-        Destination.History.route -> {
+
+        currentRoute?.startsWith(historyRoute) == true -> {
             MainTopBar(
                 title = stringResource(id = R.string.top_bar_history_title),
                 navigationIcon = {
@@ -126,8 +130,16 @@ private fun MainScreenTopBar(
 }
 
 @Composable
-private fun AccountTopBar() {
-    val accountViewModel: AccountViewModel = viewModel(factory = getViewModelFactory())
+private fun AccountTopBar(navController: NavHostController) {
+    // Получаем экземпляр ViewModel, привязанный к графу навигации.
+    // Это позволяет TopBar'у и самому экрану использовать одну и ту же ViewModel.
+    val backStackEntry = remember(navController.currentBackStackEntry) {
+        navController.getBackStackEntry(Destination.Account.route)
+    }
+    val accountViewModel: AccountViewModel = viewModel(
+        viewModelStoreOwner = backStackEntry,
+        factory = provideViewModelFactory()
+    )
     val state by accountViewModel.uiState.collectAsStateWithLifecycle()
 
     val isEditMode = (state as? AccountUiState.Success)?.isEditMode == true

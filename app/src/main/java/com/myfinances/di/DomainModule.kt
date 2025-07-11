@@ -1,31 +1,31 @@
 package com.myfinances.di
 
 import com.myfinances.data.store.SessionStore
+import com.myfinances.di.scopes.ViewModelScope
 import com.myfinances.domain.repository.AccountsRepository
 import com.myfinances.domain.repository.CategoriesRepository
 import com.myfinances.domain.repository.TransactionsRepository
 import com.myfinances.domain.usecase.GetAccountUseCase
 import com.myfinances.domain.usecase.GetActiveAccountIdUseCase
 import com.myfinances.domain.usecase.GetCategoriesUseCase
+import com.myfinances.domain.usecase.GetExpenseTransactionsUseCase
+import com.myfinances.domain.usecase.GetIncomeTransactionsUseCase
 import com.myfinances.domain.usecase.GetTransactionsUseCase
+import com.myfinances.domain.usecase.UpdateAccountUseCase
 import dagger.Module
 import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
-import dagger.hilt.android.scopes.ViewModelScoped
 
 /**
- * Hilt-модуль, предоставляющий зависимости для доменного слоя (UseCases).
- * Установлен в [ViewModelComponent] с областью видимости [ViewModelScoped],
- * что означает, что экземпляры UseCase'ов будут "жить" столько же, сколько
- * и соответствующая ViewModel, и будут пересоздаваться для каждой новой ViewModel.
+ * Dagger-модуль, предоставляющий зависимости для доменного слоя (UseCases).
+ * Область видимости @ViewModelScope означает, что экземпляры UseCase'ов
+ * будут "жить" столько же, сколько и ViewModelComponent, и будут
+ * пересоздаваться для каждого нового компонента.
  */
 @Module
-@InstallIn(ViewModelComponent::class)
 object DomainModule {
 
     @Provides
-    @ViewModelScoped
+    @ViewModelScope
     fun provideGetTransactionsUseCase(
         transactionsRepository: TransactionsRepository,
         categoriesRepository: CategoriesRepository
@@ -34,23 +34,50 @@ object DomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @ViewModelScope
     fun provideGetCategoriesUseCase(repository: CategoriesRepository): GetCategoriesUseCase {
         return GetCategoriesUseCase(repository)
     }
 
     @Provides
-    @ViewModelScoped
+    @ViewModelScope
     fun provideGetActiveAccountIdUseCase(
         accountsRepository: AccountsRepository,
-        sessionStore: SessionStore
+        sessionStore: SessionStore // <-- ИСПРАВЛЕНИЕ: Добавлена зависимость
     ): GetActiveAccountIdUseCase {
+        // Передаем обе зависимости в конструктор
         return GetActiveAccountIdUseCase(accountsRepository, sessionStore)
     }
 
     @Provides
-    @ViewModelScoped
-    fun provideGetAccountUseCase(repository: AccountsRepository): GetAccountUseCase {
-        return GetAccountUseCase(repository)
+    @ViewModelScope
+    fun provideGetAccountUseCase(
+        repository: AccountsRepository,
+        sessionStore: SessionStore // <-- ИСПРАВЛЕНИЕ: Добавлена зависимость
+    ): GetAccountUseCase {
+        // Передаем обе зависимости в конструктор
+        return GetAccountUseCase(repository, sessionStore)
+    }
+
+    @Provides
+    @ViewModelScope
+    fun provideGetExpenseTransactionsUseCase(
+        getTransactionsUseCase: GetTransactionsUseCase
+    ): GetExpenseTransactionsUseCase {
+        return GetExpenseTransactionsUseCase(getTransactionsUseCase)
+    }
+
+    @Provides
+    @ViewModelScope
+    fun provideGetIncomeTransactionsUseCase(
+        getTransactionsUseCase: GetTransactionsUseCase
+    ): GetIncomeTransactionsUseCase {
+        return GetIncomeTransactionsUseCase(getTransactionsUseCase)
+    }
+
+    @Provides
+    @ViewModelScope
+    fun provideUpdateAccountUseCase(repository: AccountsRepository): UpdateAccountUseCase {
+        return UpdateAccountUseCase(repository)
     }
 }

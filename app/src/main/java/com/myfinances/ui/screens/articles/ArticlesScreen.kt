@@ -24,23 +24,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.myfinances.R
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
+import com.myfinances.ui.viewmodel.provideViewModelFactory
 
-/**
- * Composable-функция экрана "Статьи".
- *
- * Отображает список категорий расходов и поле для их локального поиска.
- * Состояние экрана полностью управляется [ArticlesViewModel].
- *
- * @param viewModel ViewModel, предоставляемая Hilt.
- */
 @Composable
 fun ArticlesScreen(
-    viewModel: ArticlesViewModel = hiltViewModel()
+    viewModel: ArticlesViewModel = viewModel(factory = provideViewModelFactory())
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -78,13 +71,6 @@ fun ArticlesScreen(
     }
 }
 
-/**
- * Компонент, отвечающий за отрисовку контента экрана "Статьи" (поле поиска и список).
- *
- * @param query Текущий поисковый запрос.
- * @param onQueryChange Коллбэк для обновления запроса в ViewModel.
- * @param categoryItems Список моделей для отображения.
- */
 @Composable
 private fun ArticlesScreenContent(
     query: String,

@@ -1,6 +1,7 @@
 package com.myfinances.di
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.myfinances.ui.screens.account.AccountViewModel
 import com.myfinances.ui.screens.articles.ArticlesViewModel
 import com.myfinances.ui.screens.expenses.ExpensesViewModel
@@ -12,6 +13,9 @@ import dagger.multibindings.IntoMap
 
 @Module
 abstract class ViewModelModule {
+
+    @Binds
+    abstract fun bindViewModelFactory(factory: ViewModelFactory): ViewModelProvider.Factory
 
     @Binds
     @IntoMap

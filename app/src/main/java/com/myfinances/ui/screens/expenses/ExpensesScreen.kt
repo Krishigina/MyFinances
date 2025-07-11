@@ -15,18 +15,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.myfinances.R
 import com.myfinances.ui.components.ItemType
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.components.TrailingContent
 import com.myfinances.ui.util.formatCurrency
+import com.myfinances.ui.viewmodel.provideViewModelFactory
 
 @Composable
 fun ExpensesScreen(
-    viewModel: ExpensesViewModel = hiltViewModel()
+    viewModel: ExpensesViewModel = viewModel(factory = provideViewModelFactory())
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 

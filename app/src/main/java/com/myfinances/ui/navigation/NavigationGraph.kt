@@ -35,7 +35,8 @@ fun NavigationGraph(navController: NavHostController, modifier: Modifier = Modif
             IncomeScreen()
         }
         composable(Destination.Account.route) {
-            AccountScreen()
+            // Передаем navController для доступа к backStackEntry
+            AccountScreen(navController = navController)
         }
         composable(Destination.Articles.route) {
             ArticlesScreen()
@@ -52,8 +53,8 @@ fun NavigationGraph(navController: NavHostController, modifier: Modifier = Modif
                 },
                 navArgument("parentRoute") { type = NavType.StringType }
             )
-        ) {
-            HistoryScreen()
+        ) { backStackEntry ->
+            HistoryScreen(savedStateHandle = backStackEntry.savedStateHandle)
         }
     }
 }

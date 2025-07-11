@@ -8,7 +8,6 @@ import com.myfinances.domain.usecase.GetActiveAccountIdUseCase
 import com.myfinances.domain.usecase.GetExpenseTransactionsUseCase
 import com.myfinances.domain.util.Result
 import com.myfinances.ui.mappers.toSimpleListItemModel
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +15,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@HiltViewModel
 class ExpensesViewModel @Inject constructor(
     private val getExpenseTransactionsUseCase: GetExpenseTransactionsUseCase,
     private val getActiveAccountIdUseCase: GetActiveAccountIdUseCase,

@@ -11,6 +11,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,20 +21,35 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.myfinances.R
+import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.ui.components.HistoryDatePickerDialog
 import com.myfinances.ui.components.HistorySummaryBlock
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
+import com.myfinances.ui.viewmodel.provideViewModelFactory
 import java.util.Date
 
+// SavedStateHandle можно получить как extra в Composable
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
-    viewModel: HistoryViewModel = hiltViewModel()
+    savedStateHandle: SavedStateHandle,
+    viewModel: HistoryViewModel = viewModel(factory = provideViewModelFactory())
 ) {
+    // Получаем аргумент из SavedStateHandle
+    val transactionType = savedStateHandle.get<TransactionTypeFilter>("transactionType")
+        ?: TransactionTypeFilter.ALL
+
+    // Инициализируем ViewModel с этим аргументом.
+    // LaunchedEffect с ключом Unit гарантирует, что это произойдет только один раз.
+    LaunchedEffect(Unit) {
+        viewModel.initialize(transactionType)
+    }
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     var showStartDatePicker by remember { mutableStateOf(false) }

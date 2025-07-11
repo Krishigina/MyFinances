@@ -13,7 +13,7 @@ class ViewModelFactory @Inject constructor(
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         val viewModelProvider = viewModels[modelClass]
-            ?: throw IllegalArgumentException("ViewModel class $modelClass not found")
+            ?: throw IllegalArgumentException("ViewModel class $modelClass not found in the map")
         return viewModelProvider.get() as T
     }
 }

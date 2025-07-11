@@ -8,7 +8,6 @@ import com.myfinances.domain.usecase.GetActiveAccountIdUseCase
 import com.myfinances.domain.usecase.GetIncomeTransactionsUseCase
 import com.myfinances.domain.util.Result
 import com.myfinances.ui.mappers.toSimpleListItemModel
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +21,6 @@ import javax.inject.Inject
  * Логика аналогична ExpensesViewModel, но использует [GetIncomeTransactionsUseCase]
  * для загрузки транзакций доходов.
  */
-@HiltViewModel
 class IncomeViewModel @Inject constructor(
     private val getIncomeTransactionsUseCase: GetIncomeTransactionsUseCase,
     private val getActiveAccountIdUseCase: GetActiveAccountIdUseCase,
