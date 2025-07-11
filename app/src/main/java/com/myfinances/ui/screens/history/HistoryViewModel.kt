@@ -11,6 +11,7 @@ import com.myfinances.domain.usecase.GetTransactionsUseCase
 import com.myfinances.domain.util.Result
 import com.myfinances.domain.util.withTimeAtStartOfDay
 import com.myfinances.ui.mappers.TransactionDomainToUiMapper
+import com.myfinances.ui.model.HistoryUiModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -44,27 +45,26 @@ class HistoryViewModel @Inject constructor(
         viewModelScope.launch {
             accountUpdateManager.accountUpdateFlow.collect {
                 (_uiState.value as? HistoryUiState.Content)?.let {
-                    loadData(it.startDate, it.endDate)
+                    loadData(it.uiModel.startDate, it.uiModel.endDate)
                 }
             }
         }
     }
 
     fun onEvent(event: HistoryEvent) {
-        val currentState = _uiState.value
-        if (currentState !is HistoryUiState.Content) return
+        val contentState = (_uiState.value as? HistoryUiState.Content) ?: return
 
         when (event) {
             is HistoryEvent.StartDateSelected -> {
                 val newStartDate = Date(event.timestampMillis)
-                if (!newStartDate.after(currentState.endDate)) {
-                    loadData(newStartDate, currentState.endDate)
+                if (!newStartDate.after(contentState.uiModel.endDate)) {
+                    loadData(newStartDate, contentState.uiModel.endDate)
                 }
             }
             is HistoryEvent.EndDateSelected -> {
                 val newEndDate = Date(event.timestampMillis)
-                if (!newEndDate.before(currentState.startDate)) {
-                    loadData(currentState.startDate, newEndDate)
+                if (!newEndDate.before(contentState.uiModel.startDate)) {
+                    loadData(contentState.uiModel.startDate, newEndDate)
                 }
             }
         }
@@ -89,13 +89,15 @@ class HistoryViewModel @Inject constructor(
             mapper.toHistoryUiModel(it, data.categories[it.categoryId], data.account.currency)
         }
 
-        _uiState.value = HistoryUiState.Content(
+        val historyUiModel = HistoryUiModel(
             transactionItems = items,
             totalAmount = data.totalAmount,
             currencyCode = data.account.currency,
             startDate = data.startDate,
             endDate = data.endDate
         )
+
+        _uiState.value = HistoryUiState.Content(historyUiModel)
 
         if (items.isEmpty()) {
             showInfo("Нет транзакций за выбранный период")
@@ -111,7 +113,11 @@ class HistoryViewModel @Inject constructor(
             val endDate = calendar.time
             calendar.set(Calendar.DAY_OF_MONTH, 1)
             val startDate = calendar.withTimeAtStartOfDay().time
-            _uiState.value = HistoryUiState.Content(emptyList(), 0.0, "₽", startDate, endDate)
+            _uiState.value = HistoryUiState.Content(
+                HistoryUiModel(
+                    emptyList(), 0.0, "₽", startDate, endDate
+                )
+            )
         }
     }
 

@@ -50,8 +50,8 @@ abstract class BaseTransactionsViewModel<T>(
         val items = data.transactions.map {
             mapper.toSimpleUiModel(it, data.categories[it.categoryId], data.account.currency)
         }
-        _uiState.value =
-            createContentState(items, formatCurrency(data.totalAmount, data.account.currency))
+        val totalAmountFormatted = formatCurrency(data.totalAmount, data.account.currency)
+        _uiState.value = createContentState(items, totalAmountFormatted)
 
         if (items.isEmpty()) {
             showInfo(getEmptyDataMessage())
@@ -63,7 +63,7 @@ abstract class BaseTransactionsViewModel<T>(
             snackbarHostState.showSnackbar(message = message)
         }
         if (!isContentState(_uiState.value)) {
-            _uiState.value = createContentState(emptyList(), "0.00")
+            _uiState.value = createContentState(emptyList(), formatCurrency(0.0, "RUB"))
         }
     }
 

@@ -6,6 +6,7 @@ import com.myfinances.domain.entity.Category
 import com.myfinances.domain.usecase.GetCategoriesUseCase
 import com.myfinances.domain.util.Result
 import com.myfinances.ui.mappers.CategoryDomainToUiMapper
+import com.myfinances.ui.model.ArticlesUiModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -36,12 +37,12 @@ class ArticlesViewModel @Inject constructor(
             originalCategories.filter {
                 it.name.contains(newQuery, ignoreCase = true)
             }
-        }.map { mapper.toListItemModel(it) }
+        }.map { mapper.mapToUiModel(it) }
 
         _uiState.update {
             currentState.copy(
                 query = newQuery,
-                categoryItems = filteredItems
+                articlesModel = ArticlesUiModel(categoryItems = filteredItems)
             )
         }
     }
@@ -52,9 +53,10 @@ class ArticlesViewModel @Inject constructor(
             when (val result = getCategoriesUseCase()) {
                 is Result.Success -> {
                     originalCategories = result.data
+                    val uiItems = result.data.map { mapper.mapToUiModel(it) }
                     _uiState.value = ArticlesUiState.Success(
                         query = "",
-                        categoryItems = result.data.map { mapper.toListItemModel(it) }
+                        articlesModel = ArticlesUiModel(categoryItems = uiItems)
                     )
                 }
                 is Result.Error -> _uiState.value =

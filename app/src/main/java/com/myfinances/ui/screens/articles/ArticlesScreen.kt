@@ -27,8 +27,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.myfinances.R
+import com.myfinances.ui.components.ItemType
+import com.myfinances.ui.components.LeadingIcon
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
+import com.myfinances.ui.model.ArticlesUiModel
 import com.myfinances.ui.viewmodel.provideViewModelFactory
 
 @Composable
@@ -46,7 +49,7 @@ fun ArticlesScreen(
                 ArticlesScreenContent(
                     query = state.query,
                     onQueryChange = viewModel::onSearchQueryChanged,
-                    categoryItems = state.categoryItems
+                    articlesModel = state.articlesModel
                 )
             }
             is ArticlesUiState.Error -> {
@@ -75,7 +78,7 @@ fun ArticlesScreen(
 private fun ArticlesScreenContent(
     query: String,
     onQueryChange: (String) -> Unit,
-    categoryItems: List<ListItemModel>
+    articlesModel: ArticlesUiModel
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -103,7 +106,7 @@ private fun ArticlesScreenContent(
                 focusedContainerColor = MaterialTheme.colorScheme.background
             )
         )
-        if (categoryItems.isEmpty() && query.isNotEmpty()) {
+        if (articlesModel.categoryItems.isEmpty() && query.isNotEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
                     text = stringResource(R.string.no_articles_found),
@@ -113,8 +116,16 @@ private fun ArticlesScreenContent(
             }
         } else {
             LazyColumn {
-                items(items = categoryItems, key = { it.id }) { model ->
-                    ListItem(model = model)
+                items(items = articlesModel.categoryItems, key = { it.id }) { model ->
+                    ListItem(
+                        model = ListItemModel(
+                            id = model.id,
+                            title = model.title,
+                            type = ItemType.TRANSACTION,
+                            leadingIcon = LeadingIcon.Emoji(model.emoji),
+                            showTrailingArrow = false
+                        )
+                    )
                     Divider()
                 }
             }

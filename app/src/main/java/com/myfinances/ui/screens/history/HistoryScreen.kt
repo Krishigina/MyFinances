@@ -28,10 +28,9 @@ import com.myfinances.ui.components.LeadingIcon
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.components.TrailingContent
-import com.myfinances.ui.model.TransactionItemUiModel
+import com.myfinances.ui.model.HistoryUiModel
 import com.myfinances.ui.viewmodel.provideViewModelFactory
 import java.util.Calendar
-import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,11 +63,7 @@ fun HistoryScreen(
 
             is HistoryUiState.Content -> {
                 HistoryScreenContent(
-                    transactionItems = state.transactionItems,
-                    totalAmount = state.totalAmount,
-                    currencyCode = state.currencyCode,
-                    startDate = state.startDate,
-                    endDate = state.endDate,
+                    uiModel = state.uiModel,
                     onStartDateClick = { showStartDatePicker = true },
                     onEndDateClick = { showEndDatePicker = true }
                 )
@@ -77,11 +72,11 @@ fun HistoryScreen(
 
         if (showStartDatePicker && contentState != null) {
             val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = contentState.startDate.time,
+                initialSelectedDateMillis = contentState.uiModel.startDate.time,
                 yearRange = (2020..Calendar.getInstance().get(Calendar.YEAR)),
                 selectableDates = object : SelectableDates {
                     override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                        return utcTimeMillis <= contentState.endDate.time
+                        return utcTimeMillis <= contentState.uiModel.endDate.time
                     }
                 }
             )
@@ -96,11 +91,11 @@ fun HistoryScreen(
 
         if (showEndDatePicker && contentState != null) {
             val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = contentState.endDate.time,
+                initialSelectedDateMillis = contentState.uiModel.endDate.time,
                 yearRange = (2020..Calendar.getInstance().get(Calendar.YEAR)),
                 selectableDates = object : SelectableDates {
                     override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                        return utcTimeMillis >= contentState.startDate.time
+                        return utcTimeMillis >= contentState.uiModel.startDate.time
                     }
                 }
             )
@@ -117,27 +112,23 @@ fun HistoryScreen(
 
 @Composable
 private fun HistoryScreenContent(
-    transactionItems: List<TransactionItemUiModel>,
-    totalAmount: Double,
-    currencyCode: String,
-    startDate: Date,
-    endDate: Date,
+    uiModel: HistoryUiModel,
     onStartDateClick: () -> Unit,
     onEndDateClick: () -> Unit
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
             HistorySummaryBlock(
-                startDate = startDate,
-                endDate = endDate,
-                totalAmount = totalAmount,
-                currencyCode = currencyCode,
+                startDate = uiModel.startDate,
+                endDate = uiModel.endDate,
+                totalAmount = uiModel.totalAmount,
+                currencyCode = uiModel.currencyCode,
                 onStartDateClick = onStartDateClick,
                 onEndDateClick = onEndDateClick
             )
         }
 
-        items(items = transactionItems, key = { it.id }) { model ->
+        items(items = uiModel.transactionItems, key = { it.id }) { model ->
             ListItem(
                 model = ListItemModel(
                     id = model.id,

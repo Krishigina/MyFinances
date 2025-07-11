@@ -1,15 +1,8 @@
 package com.myfinances.ui.screens.history
 
-import com.myfinances.ui.model.TransactionItemUiModel
-import java.util.Date
+import com.myfinances.ui.model.HistoryUiModel
 
 sealed interface HistoryUiState {
     data object Loading : HistoryUiState
-    data class Content(
-        val transactionItems: List<TransactionItemUiModel>,
-        val totalAmount: Double,
-        val currencyCode: String,
-        val startDate: Date,
-        val endDate: Date
-    ) : HistoryUiState
+    data class Content(val uiModel: HistoryUiModel) : HistoryUiState
 }
