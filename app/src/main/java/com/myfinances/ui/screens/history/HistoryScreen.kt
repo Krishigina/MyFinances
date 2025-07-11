@@ -23,8 +23,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.ui.components.HistoryDatePickerDialog
 import com.myfinances.ui.components.HistorySummaryBlock
+import com.myfinances.ui.components.ItemType
+import com.myfinances.ui.components.LeadingIcon
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
+import com.myfinances.ui.components.TrailingContent
+import com.myfinances.ui.model.TransactionItemUiModel
 import com.myfinances.ui.viewmodel.provideViewModelFactory
 import java.util.Calendar
 import java.util.Date
@@ -113,7 +117,7 @@ fun HistoryScreen(
 
 @Composable
 private fun HistoryScreenContent(
-    transactionItems: List<ListItemModel>,
+    transactionItems: List<TransactionItemUiModel>,
     totalAmount: Double,
     currencyCode: String,
     startDate: Date,
@@ -134,7 +138,21 @@ private fun HistoryScreenContent(
         }
 
         items(items = transactionItems, key = { it.id }) { model ->
-            ListItem(model = model)
+            ListItem(
+                model = ListItemModel(
+                    id = model.id,
+                    title = model.title,
+                    subtitle = model.subtitle,
+                    type = ItemType.TRANSACTION,
+                    leadingIcon = LeadingIcon.Emoji(model.emoji),
+                    trailingContent = TrailingContent.TextWithArrow(
+                        text = model.amountFormatted,
+                        secondaryText = model.secondaryText
+                    ),
+                    showTrailingArrow = true,
+                    onClick = {} // TODO: Add navigation
+                )
+            )
             HorizontalDivider()
         }
     }

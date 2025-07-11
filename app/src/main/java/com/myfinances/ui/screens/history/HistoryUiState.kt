@@ -1,15 +1,12 @@
 package com.myfinances.ui.screens.history
 
-import com.myfinances.ui.components.ListItemModel
+import com.myfinances.ui.model.TransactionItemUiModel
 import java.util.Date
 
-/**
- * Определяет состояния UI для экрана "История".
- */
 sealed interface HistoryUiState {
     data object Loading : HistoryUiState
     data class Content(
-        val transactionItems: List<ListItemModel>,
+        val transactionItems: List<TransactionItemUiModel>,
         val totalAmount: Double,
         val currencyCode: String,
         val startDate: Date,

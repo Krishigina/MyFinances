@@ -29,7 +29,7 @@ import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.components.TrailingContent
 import com.myfinances.ui.navigation.Destination
-import com.myfinances.ui.util.formatCurrency
+import com.myfinances.ui.util.getCurrencySymbol
 import com.myfinances.ui.viewmodel.provideViewModelFactory
 
 @Composable
@@ -77,11 +77,6 @@ private fun AccountViewContent(
     state: AccountUiState.Success,
     onEvent: (AccountEvent) -> Unit
 ) {
-    val currencyMap = remember(state.availableCurrencies) {
-        state.availableCurrencies.associateBy { it.code }
-    }
-    val currencySymbol = currencyMap[state.account.currency]?.symbol ?: state.account.currency
-
     Column(
         modifier = Modifier
             .background(
@@ -98,9 +93,7 @@ private fun AccountViewContent(
                 leadingIcon = LeadingIcon.Emoji(state.account.emoji),
                 useWhiteIconBackground = true,
                 trailingContent = TrailingContent.TextWithArrow(
-                    text = formatCurrency(
-                        state.account.balance, state.account.currency
-                    )
+                    text = state.account.balanceFormatted
                 ),
                 onClick = { onEvent(AccountEvent.EditModeToggled) },
                 showTrailingArrow = true
@@ -112,7 +105,7 @@ private fun AccountViewContent(
                 id = "currency_view",
                 title = stringResource(R.string.currency),
                 type = ItemType.TOTAL,
-                trailingContent = TrailingContent.TextWithArrow(text = currencySymbol),
+                trailingContent = TrailingContent.TextWithArrow(text = state.account.currencySymbol),
                 onClick = { onEvent(AccountEvent.EditModeToggled) },
                 showTrailingArrow = true
             )
@@ -125,10 +118,6 @@ private fun AccountEditContent(
     state: AccountUiState.Success,
     onEvent: (AccountEvent) -> Unit
 ) {
-    val currencyMap = remember(state.availableCurrencies) {
-        state.availableCurrencies.associateBy { it.code }
-    }
-
     if (state.showCurrencyPicker) {
         CurrencyPickerBottomSheet(
             availableCurrencies = state.availableCurrencies,
@@ -170,7 +159,7 @@ private fun AccountEditContent(
                 title = stringResource(R.string.currency),
                 type = ItemType.SETTING,
                 trailingContent = TrailingContent.TextWithArrow(
-                    text = currencyMap[state.draftCurrency]?.symbol ?: state.draftCurrency
+                    text = getCurrencySymbol(state.draftCurrency)
                 ),
                 onClick = { onEvent(AccountEvent.CurrencyPickerToggled) }
             )

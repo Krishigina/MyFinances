@@ -7,8 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.myfinances.data.manager.AccountUpdateManager
 import com.myfinances.domain.entity.TransactionData
 import com.myfinances.domain.util.Result
-import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.mappers.TransactionDomainToUiMapper
+import com.myfinances.ui.model.TransactionItemUiModel
 import com.myfinances.ui.util.formatCurrency
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -48,7 +48,7 @@ abstract class BaseTransactionsViewModel<T>(
 
     private fun processSuccess(data: TransactionData) {
         val items = data.transactions.map {
-            mapper.toSimpleListItemModel(it, data.categories[it.categoryId], data.account.currency)
+            mapper.toSimpleUiModel(it, data.categories[it.categoryId], data.account.currency)
         }
         _uiState.value =
             createContentState(items, formatCurrency(data.totalAmount, data.account.currency))
@@ -79,6 +79,6 @@ abstract class BaseTransactionsViewModel<T>(
     protected abstract suspend fun getTransactionsUseCase(): Result<TransactionData>
     protected abstract fun getInitialLoadingState(): T
     protected abstract fun isContentState(state: T): Boolean
-    protected abstract fun createContentState(items: List<ListItemModel>, total: String): T
+    protected abstract fun createContentState(items: List<TransactionItemUiModel>, total: String): T
     protected abstract fun getEmptyDataMessage(): String
 }

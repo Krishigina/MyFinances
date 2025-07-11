@@ -4,8 +4,8 @@ import com.myfinances.data.manager.AccountUpdateManager
 import com.myfinances.domain.entity.TransactionData
 import com.myfinances.domain.usecase.GetIncomeTransactionsUseCase
 import com.myfinances.domain.util.Result
-import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.mappers.TransactionDomainToUiMapper
+import com.myfinances.ui.model.TransactionItemUiModel
 import com.myfinances.ui.screens.common.BaseTransactionsViewModel
 import javax.inject.Inject
 
@@ -27,7 +27,7 @@ class IncomeViewModel @Inject constructor(
     override fun isContentState(state: IncomeUiState): Boolean = state is IncomeUiState.Content
 
     override fun createContentState(
-        items: List<ListItemModel>,
+        items: List<TransactionItemUiModel>,
         total: String
     ): IncomeUiState = IncomeUiState.Content(
         transactionItems = items,

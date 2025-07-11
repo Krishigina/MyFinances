@@ -86,7 +86,7 @@ class HistoryViewModel @Inject constructor(
 
     private fun processSuccess(data: TransactionData) {
         val items = data.transactions.map {
-            mapper.toHistoryListItemModel(it, data.categories[it.categoryId], data.account.currency)
+            mapper.toHistoryUiModel(it, data.categories[it.categoryId], data.account.currency)
         }
 
         _uiState.value = HistoryUiState.Content(

@@ -16,9 +16,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.myfinances.R
 import com.myfinances.ui.components.ItemType
+import com.myfinances.ui.components.LeadingIcon
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.components.TrailingContent
+import com.myfinances.ui.model.TransactionItemUiModel
 import com.myfinances.ui.viewmodel.provideViewModelFactory
 
 @Composable
@@ -48,7 +50,7 @@ fun IncomeScreen(
 
 @Composable
 private fun IncomeScreenContent(
-    transactionItems: List<ListItemModel>,
+    transactionItems: List<TransactionItemUiModel>,
     totalAmountFormatted: String
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
@@ -65,7 +67,18 @@ private fun IncomeScreenContent(
 
         LazyColumn(modifier = Modifier.weight(1f)) {
             items(items = transactionItems, key = { it.id }) { model ->
-                ListItem(model = model)
+                ListItem(
+                    model = ListItemModel(
+                        id = model.id,
+                        title = model.title,
+                        subtitle = model.subtitle,
+                        type = ItemType.TRANSACTION,
+                        leadingIcon = LeadingIcon.Emoji(model.emoji),
+                        trailingContent = TrailingContent.TextWithArrow(text = model.amountFormatted),
+                        showTrailingArrow = true,
+                        onClick = {} // TODO: Add navigation
+                    )
+                )
                 Divider()
             }
         }

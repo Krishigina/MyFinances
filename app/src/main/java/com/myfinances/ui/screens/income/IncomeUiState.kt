@@ -1,14 +1,11 @@
 package com.myfinances.ui.screens.income
 
-import com.myfinances.ui.components.ListItemModel
+import com.myfinances.ui.model.TransactionItemUiModel
 
-/**
- * Определяет состояния UI для экрана "Доходы".
- */
 sealed interface IncomeUiState {
     data object Loading : IncomeUiState
     data class Content(
-        val transactionItems: List<ListItemModel>,
+        val transactionItems: List<TransactionItemUiModel>,
         val totalAmountFormatted: String
     ) : IncomeUiState
 }

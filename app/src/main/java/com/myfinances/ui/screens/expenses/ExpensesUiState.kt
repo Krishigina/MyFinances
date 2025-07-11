@@ -1,14 +1,11 @@
 package com.myfinances.ui.screens.expenses
 
-import com.myfinances.ui.components.ListItemModel
+import com.myfinances.ui.model.TransactionItemUiModel
 
-/**
- * Определяет состояния UI для экрана "Расходы".
- */
 sealed interface ExpensesUiState {
     data object Loading : ExpensesUiState
     data class Content(
-        val transactionItems: List<ListItemModel>,
+        val transactionItems: List<TransactionItemUiModel>,
         val totalAmountFormatted: String
     ) : ExpensesUiState
 }

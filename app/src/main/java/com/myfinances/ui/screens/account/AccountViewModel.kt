@@ -9,6 +9,7 @@ import com.myfinances.domain.usecase.GetAccountUseCase
 import com.myfinances.domain.usecase.UpdateAccountUseCase
 import com.myfinances.domain.util.Result
 import com.myfinances.ui.components.CurrencyModel
+import com.myfinances.ui.mappers.AccountDomainToUiMapper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +20,8 @@ import javax.inject.Inject
 class AccountViewModel @Inject constructor(
     private val getAccountUseCase: GetAccountUseCase,
     private val updateAccountUseCase: UpdateAccountUseCase,
-    private val accountUpdateManager: AccountUpdateManager
+    private val accountUpdateManager: AccountUpdateManager,
+    private val accountMapper: AccountDomainToUiMapper
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AccountUiState>(AccountUiState.Loading)
@@ -69,6 +71,7 @@ class AccountViewModel @Inject constructor(
                         currentState.copy(showCurrencyPicker = !currentState.showCurrencyPicker)
                     }
 
+
                     is AccountEvent.CurrencySelected -> _uiState.update {
                         currentState.copy(
                             draftCurrency = event.currency,
@@ -93,11 +96,12 @@ class AccountViewModel @Inject constructor(
 
             when (val result = getAccountUseCase()) {
                 is Result.Success -> {
+                    val accountUiModel = accountMapper.map(result.data)
                     _uiState.value = AccountUiState.Success(
-                        account = result.data,
-                        draftName = result.data.name,
-                        draftBalance = result.data.balance.toBigDecimal().toPlainString(),
-                        draftCurrency = result.data.currency,
+                        account = accountUiModel,
+                        draftName = accountUiModel.name,
+                        draftBalance = accountUiModel.balance.toBigDecimal().toPlainString(),
+                        draftCurrency = accountUiModel.currency,
                         availableCurrencies = availableCurrencies
                     )
                 }
