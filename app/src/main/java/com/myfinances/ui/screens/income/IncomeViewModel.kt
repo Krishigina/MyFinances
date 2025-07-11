@@ -1,35 +1,30 @@
 package com.myfinances.ui.screens.income
 
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myfinances.data.manager.AccountUpdateManager
-import com.myfinances.domain.usecase.GetAccountUseCase
-import com.myfinances.domain.usecase.GetActiveAccountIdUseCase
+import com.myfinances.domain.entity.TransactionData
 import com.myfinances.domain.usecase.GetIncomeTransactionsUseCase
 import com.myfinances.domain.util.Result
-import com.myfinances.ui.mappers.toSimpleListItemModel
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
+import com.myfinances.ui.mappers.TransactionDomainToUiMapper
+import com.myfinances.ui.util.formatCurrency
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * ViewModel для экрана "Доходы".
- *
- * Логика аналогична ExpensesViewModel, но использует [GetIncomeTransactionsUseCase]
- * для загрузки транзакций доходов.
- */
 class IncomeViewModel @Inject constructor(
     private val getIncomeTransactionsUseCase: GetIncomeTransactionsUseCase,
-    private val getActiveAccountIdUseCase: GetActiveAccountIdUseCase,
-    private val getAccountUseCase: GetAccountUseCase,
-    private val accountUpdateManager: AccountUpdateManager
+    private val accountUpdateManager: AccountUpdateManager,
+    private val mapper: TransactionDomainToUiMapper
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<IncomeUiState>(IncomeUiState.Loading)
     val uiState = _uiState.asStateFlow()
+
+    val snackbarHostState = SnackbarHostState()
 
     init {
         loadData()
@@ -40,62 +35,50 @@ class IncomeViewModel @Inject constructor(
         }
     }
 
-    private fun loadData() {
+    fun loadData() {
         viewModelScope.launch {
-            _uiState.value = IncomeUiState.Loading
+            if (_uiState.value !is IncomeUiState.Content) {
+                _uiState.value = IncomeUiState.Loading
+            }
 
-            when (val accountIdResult = getActiveAccountIdUseCase()) {
-                is Result.Success -> loadDataForAccount(accountIdResult.data)
-                is Result.Error -> {
-                    _uiState.value = IncomeUiState.Error(
-                        accountIdResult.exception.message ?: "Не удалось получить активный счет"
-                    )
-                }
-
-                is Result.NetworkError -> _uiState.value = IncomeUiState.NoInternet
+            when (val result = getIncomeTransactionsUseCase()) {
+                is Result.Success -> processSuccess(result.data)
+                is Result.Error -> showError(result.exception.message ?: "Неизвестная ошибка")
+                is Result.NetworkError -> showError("Ошибка сети. Проверьте подключение.")
             }
         }
     }
 
-    private suspend fun loadDataForAccount(accountId: Int) = coroutineScope {
-        val accountDeferred = async { getAccountUseCase() }
-        val transactionsDeferred = async { getIncomeTransactionsUseCase(accountId) }
+    private fun processSuccess(data: TransactionData) {
+        val items = data.transactions.map {
+            mapper.toSimpleListItemModel(it, data.categories[it.categoryId], data.account.currency)
+        }
 
-        val accountResult = accountDeferred.await()
-        val transactionsResult = transactionsDeferred.await()
+        _uiState.value = IncomeUiState.Content(
+            transactionItems = items,
+            totalAmountFormatted = formatCurrency(data.totalAmount, data.account.currency)
+        )
 
-        if (accountResult is Result.Success && transactionsResult is Result.Success) {
-            val account = accountResult.data
-            val (transactions, categories) = transactionsResult.data
-            val categoryMap = categories.associateBy { it.id }
+        if (items.isEmpty()) {
+            showInfo("За сегодня еще не было доходов")
+        }
+    }
 
-            val transactionItems = transactions.map { transaction ->
-                transaction.toSimpleListItemModel(
-                    category = categoryMap[transaction.categoryId],
-                    currencyCode = account.currency
-                )
-            }
-            val totalAmount = transactions.sumOf { it.amount }
+    private fun showError(message: String) {
+        viewModelScope.launch {
+            snackbarHostState.showSnackbar(message = message)
+        }
+        if (_uiState.value is IncomeUiState.Loading) {
+            _uiState.value = IncomeUiState.Content(emptyList(), "0,00 ₽")
+        }
+    }
 
-            _uiState.value = IncomeUiState.Success(
-                transactionItems = transactionItems,
-                totalAmount = totalAmount,
-                currency = account.currency
+    private fun showInfo(message: String) {
+        viewModelScope.launch {
+            snackbarHostState.showSnackbar(
+                message = message,
+                duration = SnackbarDuration.Short
             )
-        } else {
-            val errorResult =
-                if (accountResult !is Result.Success) accountResult else transactionsResult
-            handleErrorResult(errorResult)
-        }
-    }
-
-    private fun handleErrorResult(result: Result<*>) {
-        when (result) {
-            is Result.Error -> _uiState.value =
-                IncomeUiState.Error(result.exception.message ?: "Неизвестная ошибка")
-
-            is Result.NetworkError -> _uiState.value = IncomeUiState.NoInternet
-            else -> {}
         }
     }
 }

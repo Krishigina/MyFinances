@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myfinances.domain.usecase.GetCategoriesUseCase
 import com.myfinances.domain.util.Result
-import com.myfinances.ui.mappers.toListItemModel
+import com.myfinances.ui.model.ArticlesUiModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -18,28 +18,29 @@ class ArticlesViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<ArticlesUiState>(ArticlesUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
-    private var allCategories: List<Pair<String, com.myfinances.ui.components.ListItemModel>> =
-        emptyList()
+    private var originalArticles: ArticlesUiModel? = null
 
     init {
         loadCategories()
     }
 
     fun onSearchQueryChanged(newQuery: String) {
+        val currentArticles = originalArticles ?: return
         val currentState = _uiState.value
-        if (currentState is ArticlesUiState.Success) {
-            val filteredItems = if (newQuery.isBlank()) {
-                allCategories.map { it.second }
-            } else {
-                allCategories.filter { it.first.contains(newQuery, ignoreCase = true) }
-                    .map { it.second }
+        if (currentState !is ArticlesUiState.Success) return
+
+        val filteredItems = if (newQuery.isBlank()) {
+            currentArticles.categoryItems
+        } else {
+            currentArticles.categoryItems.filter {
+                it.title.contains(newQuery, ignoreCase = true)
             }
-            _uiState.update {
-                currentState.copy(
-                    query = newQuery,
-                    categoryItems = filteredItems
-                )
-            }
+        }
+        _uiState.update {
+            currentState.copy(
+                query = newQuery,
+                categoryItems = filteredItems
+            )
         }
     }
 
@@ -48,14 +49,10 @@ class ArticlesViewModel @Inject constructor(
             _uiState.value = ArticlesUiState.Loading
             when (val result = getCategoriesUseCase()) {
                 is Result.Success -> {
-                    allCategories = result.data
-                        .filter { !it.isIncome }
-                        .map { it.name to it.toListItemModel() }
-                        .sortedBy { it.first }
-
+                    originalArticles = result.data
                     _uiState.value = ArticlesUiState.Success(
                         query = "",
-                        categoryItems = allCategories.map { it.second }
+                        categoryItems = result.data.categoryItems
                     )
                 }
                 is Result.Error -> _uiState.value =

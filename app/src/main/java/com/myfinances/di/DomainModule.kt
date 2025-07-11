@@ -12,15 +12,10 @@ import com.myfinances.domain.usecase.GetExpenseTransactionsUseCase
 import com.myfinances.domain.usecase.GetIncomeTransactionsUseCase
 import com.myfinances.domain.usecase.GetTransactionsUseCase
 import com.myfinances.domain.usecase.UpdateAccountUseCase
+import com.myfinances.ui.mappers.CategoryDomainToUiMapper
 import dagger.Module
 import dagger.Provides
 
-/**
- * Dagger-модуль, предоставляющий зависимости для доменного слоя (UseCases).
- * Область видимости @ViewModelScope означает, что экземпляры UseCase'ов
- * будут "жить" столько же, сколько и ViewModelComponent, и будут
- * пересоздаваться для каждого нового компонента.
- */
 @Module
 object DomainModule {
 
@@ -28,24 +23,33 @@ object DomainModule {
     @ViewModelScope
     fun provideGetTransactionsUseCase(
         transactionsRepository: TransactionsRepository,
-        categoriesRepository: CategoriesRepository
+        categoriesRepository: CategoriesRepository,
+        accountsRepository: AccountsRepository,
+        getActiveAccountIdUseCase: GetActiveAccountIdUseCase
     ): GetTransactionsUseCase {
-        return GetTransactionsUseCase(transactionsRepository, categoriesRepository)
+        return GetTransactionsUseCase(
+            transactionsRepository,
+            categoriesRepository,
+            accountsRepository,
+            getActiveAccountIdUseCase
+        )
     }
 
     @Provides
     @ViewModelScope
-    fun provideGetCategoriesUseCase(repository: CategoriesRepository): GetCategoriesUseCase {
-        return GetCategoriesUseCase(repository)
+    fun provideGetCategoriesUseCase(
+        repository: CategoriesRepository,
+        mapper: CategoryDomainToUiMapper
+    ): GetCategoriesUseCase {
+        return GetCategoriesUseCase(repository, mapper)
     }
 
     @Provides
     @ViewModelScope
     fun provideGetActiveAccountIdUseCase(
         accountsRepository: AccountsRepository,
-        sessionStore: SessionStore // <-- ИСПРАВЛЕНИЕ: Добавлена зависимость
+        sessionStore: SessionStore
     ): GetActiveAccountIdUseCase {
-        // Передаем обе зависимости в конструктор
         return GetActiveAccountIdUseCase(accountsRepository, sessionStore)
     }
 
@@ -53,9 +57,8 @@ object DomainModule {
     @ViewModelScope
     fun provideGetAccountUseCase(
         repository: AccountsRepository,
-        sessionStore: SessionStore // <-- ИСПРАВЛЕНИЕ: Добавлена зависимость
+        sessionStore: SessionStore
     ): GetAccountUseCase {
-        // Передаем обе зависимости в конструктор
         return GetAccountUseCase(repository, sessionStore)
     }
 

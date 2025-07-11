@@ -1,6 +1,8 @@
 package com.myfinances.ui.screens
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -12,9 +14,12 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -26,6 +31,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.myfinances.R
 import com.myfinances.domain.entity.TransactionTypeFilter
+import com.myfinances.ui.components.AppSnackbar
 import com.myfinances.ui.components.BottomNavigationBar
 import com.myfinances.ui.components.MainFloatingActionButton
 import com.myfinances.ui.components.MainTopBar
@@ -34,6 +40,9 @@ import com.myfinances.ui.navigation.NavigationGraph
 import com.myfinances.ui.screens.account.AccountEvent
 import com.myfinances.ui.screens.account.AccountUiState
 import com.myfinances.ui.screens.account.AccountViewModel
+import com.myfinances.ui.screens.expenses.ExpensesViewModel
+import com.myfinances.ui.screens.history.HistoryViewModel
+import com.myfinances.ui.screens.income.IncomeViewModel
 import com.myfinances.ui.viewmodel.provideViewModelFactory
 
 @Composable
@@ -42,27 +51,83 @@ fun MainScreen() {
     val navBackStackEntry by mainNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    Scaffold(
-        topBar = {
-            MainScreenTopBar(
-                currentRoute = currentRoute,
-                navController = mainNavController
-            )
-        },
-        bottomBar = {
-            BottomNavigationBar(
-                navController = mainNavController,
-                modifier = Modifier.navigationBarsPadding()
-            )
-        },
-        floatingActionButton = {
-            if (currentRoute == Destination.Expenses.route || currentRoute == Destination.Income.route) {
-                MainFloatingActionButton { /* TODO: Navigate to Add Transaction */ }
+    val factory = provideViewModelFactory()
+
+    // ViewModel'и, которые живут пока жив NavGraph
+    val expensesViewModel: ExpensesViewModel = viewModel(factory = factory)
+    val incomeViewModel: IncomeViewModel = viewModel(factory = factory)
+
+    // Определяем, какой ViewModel сейчас активен, чтобы получить его SnackbarHostState
+    val historyRoutePrefix = Destination.History.route.substringBefore("/{")
+    val snackbarHostState: SnackbarHostState? = when {
+        currentRoute == Destination.Expenses.route -> expensesViewModel.snackbarHostState
+        currentRoute == Destination.Income.route -> incomeViewModel.snackbarHostState
+        // Для экранов со своим состоянием (и, возможно, аргументами), получаем ViewModel,
+        // привязанную к их собственному backStackEntry. Это гарантирует, что мы
+        // получаем правильный экземпляр.
+        currentRoute?.startsWith(historyRoutePrefix) == true -> {
+            val backStackEntry = mainNavController.currentBackStackEntry
+            if (backStackEntry != null) {
+                viewModel<HistoryViewModel>(
+                    viewModelStoreOwner = backStackEntry,
+                    factory = factory
+                ).snackbarHostState
+            } else {
+                null
             }
         }
-    ) { padding ->
-        Box(modifier = Modifier.padding(padding)) {
-            NavigationGraph(navController = mainNavController)
+
+        currentRoute == Destination.Account.route -> {
+            val backStackEntry = remember(navBackStackEntry) {
+                mainNavController.getBackStackEntry(Destination.Account.route)
+            }
+            viewModel<AccountViewModel>(
+                viewModelStoreOwner = backStackEntry,
+                factory = factory
+            ).snackbarHostState
+        }
+
+        else -> null
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                MainScreenTopBar(
+                    currentRoute = currentRoute,
+                    navController = mainNavController
+                )
+            },
+            bottomBar = {
+                BottomNavigationBar(
+                    navController = mainNavController,
+                    modifier = Modifier.navigationBarsPadding()
+                )
+            },
+            floatingActionButton = {
+                if (currentRoute == Destination.Expenses.route || currentRoute == Destination.Income.route) {
+                    MainFloatingActionButton { /* TODO: Navigate to Add Transaction */ }
+                }
+            }
+        ) { paddingValues ->
+            Box(modifier = Modifier.padding(paddingValues)) {
+                NavigationGraph(
+                    navController = mainNavController,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+
+        if (snackbarHostState != null) {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .imePadding()
+                    .padding(bottom = 90.dp, start = 16.dp, end = 16.dp)
+            ) { data ->
+                AppSnackbar(snackbarData = data)
+            }
         }
     }
 }
@@ -72,9 +137,19 @@ private fun MainScreenTopBar(
     currentRoute: String?,
     navController: NavHostController
 ) {
-    val historyRoute = Destination.History.route.substringBefore("/{")
-
+    val historyRoutePrefix = Destination.History.route.substringBefore("/{")
     when {
+        currentRoute == Destination.Account.route -> {
+            val backStackEntry = remember(navController.currentBackStackEntry) {
+                navController.getBackStackEntry(Destination.Account.route)
+            }
+            val accountViewModel: AccountViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = provideViewModelFactory()
+            )
+            AccountTopBar(accountViewModel = accountViewModel)
+        }
+        // Остальные when-ветки остаются без изменений
         currentRoute == Destination.Expenses.route -> {
             MainTopBar(
                 title = stringResource(id = R.string.top_bar_expenses_today_title),
@@ -87,7 +162,6 @@ private fun MainScreenTopBar(
                 }
             )
         }
-
         currentRoute == Destination.Income.route -> {
             MainTopBar(
                 title = stringResource(id = R.string.top_bar_income_today_title),
@@ -100,20 +174,13 @@ private fun MainScreenTopBar(
                 }
             )
         }
-
-        currentRoute == Destination.Account.route -> {
-            AccountTopBar(navController = navController)
-        }
-
         currentRoute == Destination.Articles.route -> {
             MainTopBar(title = stringResource(id = R.string.top_bar_my_articles_title))
         }
-
         currentRoute == Destination.Settings.route -> {
             MainTopBar(title = stringResource(id = R.string.top_bar_settings_title))
         }
-
-        currentRoute?.startsWith(historyRoute) == true -> {
+        currentRoute?.startsWith(historyRoutePrefix) == true -> {
             MainTopBar(
                 title = stringResource(id = R.string.top_bar_history_title),
                 navigationIcon = {
@@ -130,18 +197,8 @@ private fun MainScreenTopBar(
 }
 
 @Composable
-private fun AccountTopBar(navController: NavHostController) {
-    // Получаем экземпляр ViewModel, привязанный к графу навигации.
-    // Это позволяет TopBar'у и самому экрану использовать одну и ту же ViewModel.
-    val backStackEntry = remember(navController.currentBackStackEntry) {
-        navController.getBackStackEntry(Destination.Account.route)
-    }
-    val accountViewModel: AccountViewModel = viewModel(
-        viewModelStoreOwner = backStackEntry,
-        factory = provideViewModelFactory()
-    )
+private fun AccountTopBar(accountViewModel: AccountViewModel) {
     val state by accountViewModel.uiState.collectAsStateWithLifecycle()
-
     val isEditMode = (state as? AccountUiState.Success)?.isEditMode == true
 
     MainTopBar(

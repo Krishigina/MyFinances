@@ -14,6 +14,20 @@
     <string name="select_currency">Выберите валюту</string>
     <string name="account_name_placeholder">Здесь пишу название счета</string>
 
+    <!-- Strings for State Placeholders -->
+    <string name="error_title">Что-то пошло не так</string>
+    <string name="action_retry">Попробовать снова</string>
+    <string name="no_internet_title">Нет подключения к интернету</string>
+    <string name="no_internet_subtitle">Проверьте свое соединение и попробуйте еще раз.</string>
+    <string name="try_adding_transaction">Попробуйте добавить новую операцию, чтобы она здесь появилась.</string>
+
+    <!-- Strings for specific empty states -->
+    <string name="no_expenses_today">За сегодня еще не было расходов</string>
+    <string name="no_income_today">За сегодня еще не было доходов</string>
+    <string name="no_transactions_for_period">Нет транзакций за выбранный период</string>
+    <string name="no_articles_found_title">Статьи не найдены</string>
+    <string name="no_articles_found_subtitle">Попробуйте изменить поисковый запрос или добавьте новые категории.</string>
+
     <!-- Действия -->
     <string name="action_back">Назад</string>
     <string name="action_analysis">Анализ</string>

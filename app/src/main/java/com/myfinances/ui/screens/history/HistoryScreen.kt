@@ -2,13 +2,12 @@ package com.myfinances.ui.screens.history
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Text
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,35 +17,28 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.myfinances.R
 import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.ui.components.HistoryDatePickerDialog
 import com.myfinances.ui.components.HistorySummaryBlock
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.viewmodel.provideViewModelFactory
+import java.util.Calendar
 import java.util.Date
 
-// SavedStateHandle можно получить как extra в Composable
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
     savedStateHandle: SavedStateHandle,
     viewModel: HistoryViewModel = viewModel(factory = provideViewModelFactory())
 ) {
-    // Получаем аргумент из SavedStateHandle
     val transactionType = savedStateHandle.get<TransactionTypeFilter>("transactionType")
         ?: TransactionTypeFilter.ALL
 
-    // Инициализируем ViewModel с этим аргументом.
-    // LaunchedEffect с ключом Unit гарантирует, что это произойдет только один раз.
-    LaunchedEffect(Unit) {
+    LaunchedEffect(key1 = Unit) {
         viewModel.initialize(transactionType)
     }
 
@@ -55,45 +47,39 @@ fun HistoryScreen(
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    val contentState = uiState as? HistoryUiState.Content
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
         when (val state = uiState) {
             is HistoryUiState.Loading -> {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                CircularProgressIndicator()
             }
-            is HistoryUiState.Success -> {
+
+            is HistoryUiState.Content -> {
                 HistoryScreenContent(
                     transactionItems = state.transactionItems,
                     totalAmount = state.totalAmount,
+                    currencyCode = state.currencyCode,
                     startDate = state.startDate,
                     endDate = state.endDate,
                     onStartDateClick = { showStartDatePicker = true },
-                    onEndDateClick = { showEndDatePicker = true },
-                    state = state
-                )
-            }
-            is HistoryUiState.Error -> {
-                Text(
-                    text = state.message,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(16.dp),
-                    textAlign = TextAlign.Center
-                )
-            }
-            is HistoryUiState.NoInternet -> {
-                Text(
-                    text = stringResource(id = R.string.no_internet_connection),
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(16.dp),
-                    textAlign = TextAlign.Center
+                    onEndDateClick = { showEndDatePicker = true }
                 )
             }
         }
 
-        if (showStartDatePicker) {
+        if (showStartDatePicker && contentState != null) {
             val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = (uiState as? HistoryUiState.Success)?.startDate?.time
+                initialSelectedDateMillis = contentState.startDate.time,
+                yearRange = (2020..Calendar.getInstance().get(Calendar.YEAR)),
+                selectableDates = object : SelectableDates {
+                    override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                        return utcTimeMillis <= contentState.endDate.time
+                    }
+                }
             )
             HistoryDatePickerDialog(
                 datePickerState = datePickerState,
@@ -104,9 +90,15 @@ fun HistoryScreen(
             )
         }
 
-        if (showEndDatePicker) {
+        if (showEndDatePicker && contentState != null) {
             val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = (uiState as? HistoryUiState.Success)?.endDate?.time
+                initialSelectedDateMillis = contentState.endDate.time,
+                yearRange = (2020..Calendar.getInstance().get(Calendar.YEAR)),
+                selectableDates = object : SelectableDates {
+                    override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                        return utcTimeMillis >= contentState.startDate.time
+                    }
+                }
             )
             HistoryDatePickerDialog(
                 datePickerState = datePickerState,
@@ -123,11 +115,11 @@ fun HistoryScreen(
 private fun HistoryScreenContent(
     transactionItems: List<ListItemModel>,
     totalAmount: Double,
+    currencyCode: String,
     startDate: Date,
     endDate: Date,
     onStartDateClick: () -> Unit,
-    onEndDateClick: () -> Unit,
-    state: HistoryUiState.Success
+    onEndDateClick: () -> Unit
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
@@ -135,7 +127,7 @@ private fun HistoryScreenContent(
                 startDate = startDate,
                 endDate = endDate,
                 totalAmount = totalAmount,
-                currencyCode = state.currency,
+                currencyCode = currencyCode,
                 onStartDateClick = onStartDateClick,
                 onEndDateClick = onEndDateClick
             )

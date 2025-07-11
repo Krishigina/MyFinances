@@ -4,15 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -22,14 +17,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.myfinances.R
 import com.myfinances.ui.components.CurrencyPickerBottomSheet
 import com.myfinances.ui.components.EditableListItem
-import com.myfinances.ui.components.ErrorMessage
 import com.myfinances.ui.components.ItemType
 import com.myfinances.ui.components.LeadingIcon
 import com.myfinances.ui.components.ListItem
@@ -39,18 +32,10 @@ import com.myfinances.ui.navigation.Destination
 import com.myfinances.ui.util.formatCurrency
 import com.myfinances.ui.viewmodel.provideViewModelFactory
 
-/**
- * Главный Composable для экрана "Счет".
- *
- * Этот экран отображает информацию о счете пользователя и позволяет
- * редактировать ее. Он не содержит собственного Scaffold, а встраивается
- * в Scaffold из MainScreen.
- */
 @Composable
 fun AccountScreen(
     navController: NavHostController
 ) {
-    // Получаем ViewModel, привязанную к графу навигации, чтобы MainScreen мог ее использовать
     val backStackEntry = remember(navController.currentBackStackEntry) {
         navController.getBackStackEntry(Destination.Account.route)
     }
@@ -60,59 +45,33 @@ fun AccountScreen(
     )
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(uiState) {
-        val error = (uiState as? AccountUiState.Success)?.saveError
-        if (error != null) {
-            snackbarHostState.showSnackbar(message = error)
-            // TODO: Сбросить ошибку в ViewModel после показа, чтобы она не появлялась снова
-        }
-    }
-
-    // Корневой Box, который управляет фоном и размещением контента
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                if ((uiState as? AccountUiState.Success)?.isEditMode == true) {
-                    MaterialTheme.colorScheme.background
-                } else {
-                    Color(0xFFF3EDF7) // Фон для режима просмотра
-                }
-            )
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
         when (val state = uiState) {
-            is AccountUiState.Loading -> CircularProgressIndicator(
-                modifier = Modifier.align(
-                    Alignment.Center
-                )
-            )
-
+            is AccountUiState.Loading -> CircularProgressIndicator()
             is AccountUiState.Success -> {
-                if (state.isEditMode) {
-                    AccountEditContent(state = state, onEvent = viewModel::onEvent)
+                val background = if (state.isEditMode) {
+                    MaterialTheme.colorScheme.background
                 } else {
-                    AccountViewContent(state = state, onEvent = viewModel::onEvent)
+                    Color(0xFFF3EDF7)
+                }
+                Box(modifier = Modifier
+                    .fillMaxSize()
+                    .background(background)) {
+                    if (state.isEditMode) {
+                        AccountEditContent(state = state, onEvent = viewModel::onEvent)
+                    } else {
+                        AccountViewContent(state = state, onEvent = viewModel::onEvent)
+                    }
                 }
             }
-
-            is AccountUiState.Error -> ErrorMessage(
-                message = state.message,
-                modifier = Modifier.align(Alignment.Center)
-            )
-
-            is AccountUiState.NoInternet -> ErrorMessage(
-                message = stringResource(id = R.string.no_internet_connection),
-                modifier = Modifier.align(Alignment.Center)
-            )
         }
     }
 }
 
-/**
- * UI-компонент для режима ПРОСМОТРА счета.
- */
 @Composable
 private fun AccountViewContent(
     state: AccountUiState.Success,
@@ -123,8 +82,6 @@ private fun AccountViewContent(
     }
     val currencySymbol = currencyMap[state.account.currency]?.symbol ?: state.account.currency
 
-    // Этот Column является контейнером для зеленых элементов списка.
-    // Он не имеет fillMaxSize и будет прижат к верху родительского Box.
     Column(
         modifier = Modifier
             .background(
@@ -163,9 +120,6 @@ private fun AccountViewContent(
     }
 }
 
-/**
- * UI-компонент для режима РЕДАКТИРОВАНИЯ счета.
- */
 @Composable
 private fun AccountEditContent(
     state: AccountUiState.Success,
@@ -222,24 +176,5 @@ private fun AccountEditContent(
             )
         )
         Divider()
-
-        if (state.isSaving) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(16.dp)
-            )
-        }
-
-        state.saveError?.let {
-            Text(
-                text = it,
-                color = MaterialTheme.colorScheme.error,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            )
-        }
     }
 }

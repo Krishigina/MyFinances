@@ -6,11 +6,9 @@ import com.myfinances.ui.components.CurrencyModel
 /**
  * Определяет все возможные состояния UI для экрана "Счет".
  */
+
 sealed interface AccountUiState {
     data object Loading : AccountUiState
-    data class Error(val message: String) : AccountUiState
-    data object NoInternet : AccountUiState
-
     data class Success(
         val account: Account,
         val isEditMode: Boolean = false,
@@ -19,7 +17,6 @@ sealed interface AccountUiState {
         val draftBalance: String,
         val draftCurrency: String,
         val showCurrencyPicker: Boolean = false,
-        val availableCurrencies: List<CurrencyModel>,
-        val saveError: String? = null
+        val availableCurrencies: List<CurrencyModel>
     ) : AccountUiState
 }
