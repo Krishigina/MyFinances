@@ -1,20 +1,17 @@
 package com.myfinances.ui.screens.history
 
-import androidx.lifecycle.SavedStateHandle
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myfinances.data.manager.AccountUpdateManager
+import com.myfinances.domain.entity.TransactionData
 import com.myfinances.domain.entity.TransactionTypeFilter
-import com.myfinances.domain.usecase.GetAccountUseCase
-import com.myfinances.domain.usecase.GetActiveAccountIdUseCase
 import com.myfinances.domain.usecase.GetTransactionsUseCase
 import com.myfinances.domain.util.Result
-import com.myfinances.domain.util.withTimeAtEndOfDay
 import com.myfinances.domain.util.withTimeAtStartOfDay
-import com.myfinances.ui.mappers.toHistoryListItemModel
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
+import com.myfinances.ui.mappers.TransactionDomainToUiMapper
+import com.myfinances.ui.model.HistoryUiModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -22,53 +19,52 @@ import java.util.Calendar
 import java.util.Date
 import javax.inject.Inject
 
-@HiltViewModel
 class HistoryViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
     private val getTransactionsUseCase: GetTransactionsUseCase,
-    private val getActiveAccountIdUseCase: GetActiveAccountIdUseCase,
-    private val getAccountUseCase: GetAccountUseCase,
-    private val accountUpdateManager: AccountUpdateManager
+    private val accountUpdateManager: AccountUpdateManager,
+    private val mapper: TransactionDomainToUiMapper
 ) : ViewModel() {
 
-    private val transactionType: TransactionTypeFilter =
-        savedStateHandle.get<TransactionTypeFilter>("transactionType") ?: TransactionTypeFilter.ALL
+    private lateinit var transactionType: TransactionTypeFilter
 
     private val _uiState = MutableStateFlow<HistoryUiState>(HistoryUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
-    init {
+    val snackbarHostState = SnackbarHostState()
+
+    fun initialize(filter: TransactionTypeFilter) {
+        if (this::transactionType.isInitialized) return
+        this.transactionType = filter
+
         val calendar = Calendar.getInstance()
-        val endDate = calendar.withTimeAtEndOfDay().time
+        val endDate = calendar.time
         calendar.set(Calendar.DAY_OF_MONTH, 1)
         val startDate = calendar.withTimeAtStartOfDay().time
         loadData(startDate, endDate)
 
         viewModelScope.launch {
             accountUpdateManager.accountUpdateFlow.collect {
-                val currentState = _uiState.value
-                if (currentState is HistoryUiState.Success) {
-                    loadData(currentState.startDate, currentState.endDate)
+                (_uiState.value as? HistoryUiState.Content)?.let {
+                    loadData(it.uiModel.startDate, it.uiModel.endDate)
                 }
             }
         }
     }
 
     fun onEvent(event: HistoryEvent) {
-        val currentState = _uiState.value
-        if (currentState !is HistoryUiState.Success) return
+        val contentState = (_uiState.value as? HistoryUiState.Content) ?: return
 
         when (event) {
             is HistoryEvent.StartDateSelected -> {
                 val newStartDate = Date(event.timestampMillis)
-                if (newStartDate.before(currentState.endDate)) {
-                    loadData(newStartDate, currentState.endDate)
+                if (!newStartDate.after(contentState.uiModel.endDate)) {
+                    loadData(newStartDate, contentState.uiModel.endDate)
                 }
             }
             is HistoryEvent.EndDateSelected -> {
                 val newEndDate = Date(event.timestampMillis)
-                if (newEndDate.after(currentState.startDate)) {
-                    loadData(currentState.startDate, newEndDate)
+                if (!newEndDate.before(contentState.uiModel.startDate)) {
+                    loadData(contentState.uiModel.startDate, newEndDate)
                 }
             }
         }
@@ -76,59 +72,59 @@ class HistoryViewModel @Inject constructor(
 
     private fun loadData(startDate: Date, endDate: Date) {
         viewModelScope.launch {
-            _uiState.value = HistoryUiState.Loading
+            if (_uiState.value !is HistoryUiState.Content) {
+                _uiState.value = HistoryUiState.Loading
+            }
 
-            val accountIdResult = getActiveAccountIdUseCase()
-            if (accountIdResult is Result.Success) {
-                loadDataForAccount(accountIdResult.data, startDate, endDate)
-            } else {
-                handleErrorResult(accountIdResult)
+            when (val result = getTransactionsUseCase(startDate, endDate, transactionType)) {
+                is Result.Success -> processSuccess(result.data)
+                is Result.Error -> showError(result.exception.message ?: "Неизвестная ошибка")
+                is Result.NetworkError -> showError("Ошибка сети. Проверьте подключение.")
             }
         }
     }
 
-    private suspend fun loadDataForAccount(accountId: Int, startDate: Date, endDate: Date) =
-        coroutineScope {
-        val accountDeferred = async { getAccountUseCase() }
-        val transactionsDeferred = async {
-            getTransactionsUseCase(accountId, startDate, endDate, transactionType)
+    private fun processSuccess(data: TransactionData) {
+        val items = data.transactions.map {
+            mapper.toHistoryUiModel(it, data.categories[it.categoryId], data.account.currency)
         }
 
-        val accountResult = accountDeferred.await()
-        val transactionsResult = transactionsDeferred.await()
+        val historyUiModel = HistoryUiModel(
+            transactionItems = items,
+            totalAmount = data.totalAmount,
+            currencyCode = data.account.currency,
+            startDate = data.startDate,
+            endDate = data.endDate
+        )
 
-        if (accountResult is Result.Success && transactionsResult is Result.Success) {
-            val account = accountResult.data
-            val (transactions, categories) = transactionsResult.data
-            val categoryMap = categories.associateBy { it.id }
+        _uiState.value = HistoryUiState.Content(historyUiModel, transactionType)
 
-            val transactionItems = transactions.map {
-                it.toHistoryListItemModel(
-                    categoryMap[it.categoryId],
-                    account.currency
-                )
-            }
-            val totalAmount = transactions.sumOf { it.amount }
+        if (items.isEmpty()) {
+            showInfo("Нет транзакций за выбранный период")
+        }
+    }
 
-            _uiState.value = HistoryUiState.Success(
-                transactionItems,
-                totalAmount,
-                startDate,
-                endDate,
-                account.currency
+    private fun showError(message: String) {
+        viewModelScope.launch {
+            snackbarHostState.showSnackbar(message)
+        }
+        if (_uiState.value is HistoryUiState.Loading) {
+            val calendar = Calendar.getInstance()
+            val endDate = calendar.time
+            calendar.set(Calendar.DAY_OF_MONTH, 1)
+            val startDate = calendar.withTimeAtStartOfDay().time
+            _uiState.value = HistoryUiState.Content(
+                HistoryUiModel(
+                    emptyList(), 0.0, "₽", startDate, endDate
+                ),
+                transactionType
             )
-        } else {
-            handleErrorResult(if (accountResult !is Result.Success) accountResult else transactionsResult)
         }
-        }
+    }
 
-    private fun handleErrorResult(result: Result<*>) {
-        when (result) {
-            is Result.Error -> _uiState.value =
-                HistoryUiState.Error(result.exception.message ?: "Неизвестная ошибка")
-
-            is Result.NetworkError -> _uiState.value = HistoryUiState.NoInternet
-            else -> {}
+    private fun showInfo(message: String) {
+        viewModelScope.launch {
+            snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
         }
     }
 }

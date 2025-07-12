@@ -1,11 +1,16 @@
 package com.myfinances
 
 import android.app.Application
-import dagger.hilt.android.HiltAndroidApp
+import com.myfinances.di.AppComponent
+import com.myfinances.di.DaggerAppComponent
 
 /**
  * Главный класс Application, который служит точкой входа для Hilt
  * и инициализации глобальных компонентов приложения.
  */
-@HiltAndroidApp
-class MyFinancesApplication : Application()
+
+class MyFinancesApplication : Application() {
+    val appComponent: AppComponent by lazy {
+        DaggerAppComponent.factory().create(this)
+    }
+}

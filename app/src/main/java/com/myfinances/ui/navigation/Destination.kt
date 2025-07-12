@@ -15,7 +15,7 @@ sealed class Destination(
     @DrawableRes val icon: Int? = null,
 ) {
     data object Expenses : Destination(
-        route = "expenses_graph",
+        route = "expenses",
         title = R.string.botton_nav_label_expenses,
         icon = R.drawable.ic_bottom_nav_expenses
     )
@@ -46,6 +46,19 @@ sealed class Destination(
     data object History : Destination(route = "history/{transactionType}/{parentRoute}") {
         fun createRoute(filter: TransactionTypeFilter, parent: Destination): String {
             return "history/${filter.name}/${parent.route}"
+        }
+    }
+
+    // Маршрут теперь использует только слэши, без вопросительных знаков
+    data object AddEditTransaction :
+        Destination(route = "add_edit_transaction/{transactionType}/{transactionId}") {
+        fun createRoute(
+            transactionType: TransactionTypeFilter,
+            transactionId: Int? = null
+        ): String {
+            // ID для новой транзакции будет -1. Это значение по умолчанию в NavHost.
+            val id = transactionId ?: -1
+            return "add_edit_transaction/${transactionType.name}/$id"
         }
     }
 }

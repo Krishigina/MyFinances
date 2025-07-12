@@ -41,10 +41,6 @@ class UpdateAccountUseCase @Inject constructor(
         val balanceAsDouble = balance.replace(',', '.').toDoubleOrNull()
             ?: return Result.Error(IllegalArgumentException("Некорректный формат баланса"))
 
-        if (balanceAsDouble < 0) {
-            return Result.Error(IllegalArgumentException("Баланс не может быть отрицательным"))
-        }
-
         return repository.updateAccount(accountId, name, balanceAsDouble, currency)
     }
 }

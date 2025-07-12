@@ -1,5 +1,7 @@
 package com.myfinances.ui.screens.account
 
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myfinances.data.manager.AccountUpdateManager
@@ -7,7 +9,7 @@ import com.myfinances.domain.usecase.GetAccountUseCase
 import com.myfinances.domain.usecase.UpdateAccountUseCase
 import com.myfinances.domain.util.Result
 import com.myfinances.ui.components.CurrencyModel
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.myfinances.ui.mappers.AccountDomainToUiMapper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,28 +17,17 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * ViewModel для экрана "Счет".
- *
- * Отвечает за:
- * - Загрузку данных о счете пользователя с помощью [GetAccountUseCase].
- * - Управление состоянием UI экрана через [AccountUiState].
- * - Обработку пользовательских действий ([AccountEvent]), таких как переключение в режим
- *   редактирования, изменение данных в полях ввода и сохранение.
- * - Взаимодействие с [UpdateAccountUseCase] для отправки обновленных данных на сервер.
- * - Управление жизненным циклом асинхронных операций в [viewModelScope], что гарантирует
- *   их автоматическую отмену при уничтожении ViewModel.
- */
-@HiltViewModel
 class AccountViewModel @Inject constructor(
     private val getAccountUseCase: GetAccountUseCase,
     private val updateAccountUseCase: UpdateAccountUseCase,
-    private val accountUpdateManager: AccountUpdateManager
+    private val accountUpdateManager: AccountUpdateManager,
+    private val accountMapper: AccountDomainToUiMapper
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AccountUiState>(AccountUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
+    val snackbarHostState = SnackbarHostState()
     private var activeJob: Job? = null
 
     private val availableCurrencies = listOf(
@@ -50,63 +41,75 @@ class AccountViewModel @Inject constructor(
     }
 
     fun onEvent(event: AccountEvent) {
-        val currentState = _uiState.value
-        if (currentState !is AccountUiState.Success) return
-
         when (event) {
-            is AccountEvent.EditModeToggled -> {
-                _uiState.update {
-                    currentState.copy(
-                        isEditMode = !currentState.isEditMode,
-                        draftName = if (currentState.isEditMode) currentState.account.name else currentState.draftName,
-                        draftBalance = if (currentState.isEditMode) currentState.account.balance.toBigDecimal()
-                            .toPlainString() else currentState.draftBalance,
-                        draftCurrency = if (currentState.isEditMode) currentState.account.currency else currentState.draftCurrency,
-                        saveError = null
-                    )
+            is AccountEvent.RetryLoad -> loadAccount(forceReload = true)
+            else -> {
+                val currentState = _uiState.value
+                if (currentState !is AccountUiState.Success) return
+
+                when (event) {
+                    is AccountEvent.EditModeToggled -> {
+                        _uiState.update {
+                            currentState.copy(
+                                isEditMode = !currentState.isEditMode,
+                                draftName = currentState.account.name,
+                                draftBalance = currentState.account.balance.toBigDecimal()
+                                    .toPlainString(),
+                                draftCurrency = currentState.account.currency,
+                            )
+                        }
+                    }
+
+                    is AccountEvent.NameChanged -> _uiState.update { currentState.copy(draftName = event.name) }
+                    is AccountEvent.BalanceChanged -> _uiState.update {
+                        currentState.copy(
+                            draftBalance = event.balance
+                        )
+                    }
+
+                    is AccountEvent.CurrencyPickerToggled -> _uiState.update {
+                        currentState.copy(showCurrencyPicker = !currentState.showCurrencyPicker)
+                    }
+
+
+                    is AccountEvent.CurrencySelected -> _uiState.update {
+                        currentState.copy(
+                            draftCurrency = event.currency,
+                            showCurrencyPicker = false
+                        )
+                    }
+
+                    is AccountEvent.SaveChanges -> saveChanges(currentState)
+                    AccountEvent.RetryLoad -> { /* Handled above */
+                    }
                 }
             }
-
-            is AccountEvent.NameChanged -> _uiState.update { currentState.copy(draftName = event.name) }
-            is AccountEvent.BalanceChanged -> _uiState.update { currentState.copy(draftBalance = event.balance) }
-            is AccountEvent.CurrencyPickerToggled -> _uiState.update {
-                currentState.copy(
-                    showCurrencyPicker = !currentState.showCurrencyPicker
-                )
-            }
-
-            is AccountEvent.CurrencySelected -> _uiState.update {
-                currentState.copy(
-                    draftCurrency = event.currency,
-                    showCurrencyPicker = false
-                )
-            }
-
-            is AccountEvent.SaveChanges -> saveChanges(currentState)
         }
     }
 
     private fun loadAccount(forceReload: Boolean = false) {
         activeJob?.cancel()
         activeJob = viewModelScope.launch {
-            if (forceReload || _uiState.value is AccountUiState.Loading) {
+            if (forceReload || _uiState.value !is AccountUiState.Success) {
                 _uiState.value = AccountUiState.Loading
             }
+
             when (val result = getAccountUseCase()) {
                 is Result.Success -> {
+                    val accountUiModel = accountMapper.map(result.data)
                     _uiState.value = AccountUiState.Success(
-                        account = result.data,
-                        draftName = result.data.name,
-                        draftBalance = result.data.balance.toBigDecimal().toPlainString(),
-                        draftCurrency = result.data.currency,
+                        account = accountUiModel,
+                        draftName = accountUiModel.name,
+                        draftBalance = accountUiModel.balance.toBigDecimal().toPlainString(),
+                        draftCurrency = accountUiModel.currency,
                         availableCurrencies = availableCurrencies
                     )
                 }
+                is Result.Error -> showError(
+                    result.exception.message ?: "Не удалось загрузить счет"
+                )
 
-                is Result.Error -> _uiState.value =
-                    AccountUiState.Error(result.exception.message ?: "Unknown error")
-
-                is Result.NetworkError -> _uiState.value = AccountUiState.NoInternet
+                is Result.NetworkError -> showError("Ошибка сети. Проверьте подключение.")
             }
         }
     }
@@ -114,7 +117,7 @@ class AccountViewModel @Inject constructor(
     private fun saveChanges(state: AccountUiState.Success) {
         activeJob?.cancel()
         activeJob = viewModelScope.launch {
-            _uiState.update { state.copy(isSaving = true, saveError = null) }
+            _uiState.update { state.copy(isSaving = true) }
 
             val result = updateAccountUseCase(
                 accountId = state.account.id,
@@ -123,25 +126,35 @@ class AccountViewModel @Inject constructor(
                 currency = state.draftCurrency
             )
 
+            _uiState.update { state.copy(isSaving = false) }
+
             when (result) {
                 is Result.Success -> {
                     accountUpdateManager.notifyAccountUpdated()
+                    showInfo("Счет успешно сохранен")
                     loadAccount(forceReload = true)
                 }
-                is Result.Error -> _uiState.update {
-                    state.copy(
-                        isSaving = false,
-                        saveError = result.exception.message
-                    )
+
+                is Result.Error -> {
+                    showError(result.exception.message ?: "Ошибка сохранения")
                 }
 
-                is Result.NetworkError -> _uiState.update {
-                    state.copy(
-                        isSaving = false,
-                        saveError = "Ошибка сети. Проверьте подключение."
-                    )
+                is Result.NetworkError -> {
+                    showError("Ошибка сети. Проверьте подключение.")
                 }
             }
+        }
+    }
+
+    private fun showError(message: String) {
+        viewModelScope.launch {
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
+    private fun showInfo(message: String) {
+        viewModelScope.launch {
+            snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
         }
     }
 }

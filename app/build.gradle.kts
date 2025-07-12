@@ -7,7 +7,6 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 
     id("com.google.devtools.ksp")
-    id("com.google.dagger.hilt.android")
     id("io.gitlab.arturbosch.detekt")
 }
 
@@ -89,9 +88,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose.v291)
     implementation(libs.androidx.lifecycle.runtime.ktx.v291)
 
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.android.compiler)
-    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.dagger)
+    ksp(libs.dagger.compiler)
 
     implementation(platform(libs.okhttp.bom))
     implementation(libs.okhttp)
@@ -121,5 +119,4 @@ detekt {
     autoCorrect = false
 
     parallel = true
-
 }

@@ -1,45 +1,56 @@
 <resources>
-    <string name="app_name">MyFinances</string>
+    <string name="app_name">My Finances</string>
 
-    <!-- Общие -->
-    <string name="no_internet_connection">Нет подключения к интернету. Проверьте соединение и попробуйте снова.</string>
-    <string name="unknown">Неизвестно</string>
-    <string name="balance">Баланс</string>
-    <string name="currency">Валюта</string>
-    <string name="search">Поиск</string>
-    <string name="total_amount_card">Сумма за сегодня</string>
-    <string name="floating_action_add">Добавить транзакцию</string>
-    <string name="action_save">Сохранить</string>
-    <string name="account_name_label">Название счёта</string>
-    <string name="select_currency">Выберите валюту</string>
-    <string name="account_name_placeholder">Здесь пишу название счета</string>
+    <!-- Floating Action Button -->
+    <string name="floating_action_add">Добавить</string>
 
-    <!-- Действия -->
-    <string name="action_back">Назад</string>
-    <string name="action_analysis">Анализ</string>
+    <!-- Top Bar -->
+    <string name="top_bar_expenses_today_title">Расходы сегодня</string>
+    <string name="top_bar_income_today_title">Доходы сегодня</string>
+    <string name="top_bar_my_articles_title">Мои статьи</string>
+    <string name="top_bar_my_account_title">Мой счёт</string>
+    <string name="top_bar_settings_title">Настройки</string>
+    <string name="top_bar_history_title">История</string>
+    <string name="top_bar_icon_history">История</string>
+    <string name="top_bar_icon_edit">Редактировать</string>
+    <string name="add_expense_title">Новый расход</string>
+    <string name="add_income_title">Новый доход</string>
+    <string name="edit_expense_title">Мои расходы</string>
+    <string name="edit_income_title">Мои доходы</string>
+    <string name="edit_transaction_title">Редактировать</string>
 
-    <!-- Нижняя навигация -->
+    <!-- Bottom Navigation -->
     <string name="botton_nav_label_expenses">Расходы</string>
     <string name="botton_nav_label_income">Доходы</string>
     <string name="botton_nav_label_account">Счёт</string>
     <string name="botton_nav_label_articles">Статьи</string>
     <string name="botton_nav_label_settings">Настройки</string>
 
-    <!-- Top Bar -->
-    <string name="top_bar_expenses_today_title">Расходы сегодня</string>
-    <string name="top_bar_income_today_title">Доходы сегодня</string>
-    <string name="top_bar_my_account_title">Мой счет</string>
-    <string name="top_bar_my_articles_title">Мои статьи</string>
-    <string name="top_bar_settings_title">Настройки</string>
-    <string name="top_bar_history_title">Моя история</string>
-    <string name="top_bar_icon_history">История</string>
-    <string name="top_bar_icon_edit">Редактировать</string>
+    <!-- Common Actions -->
+    <string name="action_back">Назад</string>
+    <string name="action_cancel">Отмена</string>
+    <string name="action_save">Сохранить</string>
+    <string name="action_ok">Ок</string>
+    <string name="action_clear">Сбросить</string>
+    <string name="action_retry">Повторить</string>
+    <string name="action_delete">Удалить</string>
 
-    <!-- Экран Статей -->
-    <string name="search_placeholder_text">Поиск по названию</string>
-    <string name="no_articles_found">Статьи расходов не найдены</string>
+    <!-- Account Screen -->
+    <string name="balance">Баланс</string>
+    <string name="currency">Валюта</string>
+    <string name="account_name_placeholder">Название счета</string>
 
-    <!-- Настройки -->
+    <!-- History Screen -->
+    <string name="history_date_from">С</string>
+    <string name="history_date_to">По</string>
+    <string name="total_for_period">Итого за период</string>
+
+    <!-- Articles Screen -->
+    <string name="search">Поиск</string>
+    <string name="search_placeholder_text">Найти</string>
+    <string name="no_articles_found">Статьи не найдены</string>
+
+    <!-- Settings Screen -->
     <string name="dark_theme">Темная тема</string>
     <string name="primary_color">Основной цвет</string>
     <string name="sounds">Звуки</string>
@@ -49,12 +60,28 @@
     <string name="language">Язык</string>
     <string name="about">О приложении</string>
 
-    <!-- Диалог выбора даты -->
-    <string name="action_clear">Очистить</string>
-    <string name="action_cancel">Отмена</string>
-    <string name="action_ok">ОК</string>
+    <!-- Transaction Summary -->
+    <string name="total_amount_card">Итого</string>
 
-    <!-- Блок итогов в Истории -->
+    <!-- General Errors -->
+    <string name="no_internet_connection">Нет подключения к интернету</string>
+    <string name="error_dialog_title">Ошибка</string>
+
+    <!-- Add/Edit Transaction Screen -->
+    <string name="amount">Сумма</string>
+    <string name="account">Счет</string>
+    <string name="category">Статья</string>
+    <string name="date">Дата</string>
+    <string name="time">Время</string>
+    <string name="comment">Комментарий</string>
+    <string name="select_category">Выберите статью</string>
+    <string name="select_date">Выберите дату</string>
+    <string name="enter_comment">Введите комментарий</string>
+    <string name="enter_amount">Введите сумму</string>
+    <string name="delete_expense_button">Удалить расход</string>
+    <string name="delete_income_button">Удалить доход</string>
+    <string name="delete_confirmation_title">Подтверждение</string>
+    <string name="delete_confirmation_message">Вы уверены, что хотите удалить эту транзакцию? Это действие нельзя будет отменить.</string>
     <string name="period_start_date">Начало</string>
     <string name="period_end_date">Конец</string>
     <string name="period_total_amount">Сумма</string>
