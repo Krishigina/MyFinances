@@ -3,7 +3,6 @@ package com.myfinances.di
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.myfinances.ui.screens.account.AccountViewModel
-import com.myfinances.ui.screens.add_edit_transaction.AddEditTransactionViewModel
 import com.myfinances.ui.screens.articles.ArticlesViewModel
 import com.myfinances.ui.screens.expenses.ExpensesViewModel
 import com.myfinances.ui.screens.history.HistoryViewModel
@@ -42,9 +41,4 @@ abstract class ViewModelModule {
     @IntoMap
     @ViewModelKey(HistoryViewModel::class)
     abstract fun bindHistoryViewModel(viewModel: HistoryViewModel): ViewModel
-
-    @Binds
-    @IntoMap
-    @ViewModelKey(AddEditTransactionViewModel::class)
-    abstract fun bindAddEditTransactionViewModel(viewModel: AddEditTransactionViewModel): ViewModel
 }

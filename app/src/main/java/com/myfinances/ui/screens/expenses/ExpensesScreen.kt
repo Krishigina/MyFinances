@@ -14,17 +14,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.myfinances.R
+import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.ui.components.ItemType
 import com.myfinances.ui.components.LeadingIcon
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.components.TrailingContent
 import com.myfinances.ui.model.TransactionItemUiModel
+import com.myfinances.ui.navigation.Destination
 import com.myfinances.ui.viewmodel.provideViewModelFactory
 
 @Composable
 fun ExpensesScreen(
+    navController: NavController,
     viewModel: ExpensesViewModel = viewModel(factory = provideViewModelFactory())
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -40,6 +44,7 @@ fun ExpensesScreen(
 
             is ExpensesUiState.Content -> {
                 ExpensesScreenContent(
+                    navController = navController,
                     transactionItems = state.transactionItems,
                     totalAmountFormatted = state.totalAmountFormatted
                 )
@@ -50,6 +55,7 @@ fun ExpensesScreen(
 
 @Composable
 private fun ExpensesScreenContent(
+    navController: NavController,
     transactionItems: List<TransactionItemUiModel>,
     totalAmountFormatted: String
 ) {
@@ -76,7 +82,14 @@ private fun ExpensesScreenContent(
                         leadingIcon = LeadingIcon.Emoji(model.emoji),
                         trailingContent = TrailingContent.TextWithArrow(text = model.amountFormatted),
                         showTrailingArrow = true,
-                        onClick = {} // TODO: Add navigation
+                        onClick = {
+                            navController.navigate(
+                                Destination.AddEditTransaction.createRoute(
+                                    transactionType = TransactionTypeFilter.EXPENSE,
+                                    transactionId = model.id.toInt()
+                                )
+                            )
+                        }
                     )
                 )
                 Divider()

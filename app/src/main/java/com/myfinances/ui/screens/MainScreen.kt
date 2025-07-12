@@ -70,7 +70,7 @@ fun MainScreen() {
             if (backStackEntry != null) {
                 viewModel<HistoryViewModel>(
                     viewModelStoreOwner = backStackEntry,
-                    factory = factory
+                    factory = provideViewModelFactory(backStackEntry.savedStateHandle)
                 ).snackbarHostState
             } else {
                 null
@@ -83,7 +83,7 @@ fun MainScreen() {
             }
             viewModel<AccountViewModel>(
                 viewModelStoreOwner = backStackEntry,
-                factory = factory
+                factory = provideViewModelFactory()
             ).snackbarHostState
         }
 
@@ -106,7 +106,16 @@ fun MainScreen() {
             },
             floatingActionButton = {
                 if (currentRoute == Destination.Expenses.route || currentRoute == Destination.Income.route) {
-                    MainFloatingActionButton { /* TODO: Navigate to Add Transaction */ }
+                    MainFloatingActionButton {
+                        val type = if (currentRoute == Destination.Expenses.route) {
+                            TransactionTypeFilter.EXPENSE
+                        } else {
+                            TransactionTypeFilter.INCOME
+                        }
+                        mainNavController.navigate(
+                            Destination.AddEditTransaction.createRoute(transactionType = type)
+                        )
+                    }
                 }
             }
         ) { paddingValues ->
@@ -138,6 +147,8 @@ private fun MainScreenTopBar(
     navController: NavHostController
 ) {
     val historyRoutePrefix = Destination.History.route.substringBefore("/{")
+    val addEditTransactionRoutePrefix = Destination.AddEditTransaction.route.substringBefore("?")
+
     when {
         currentRoute == Destination.Account.route -> {
             val backStackEntry = remember(navController.currentBackStackEntry) {
@@ -149,7 +160,9 @@ private fun MainScreenTopBar(
             )
             AccountTopBar(accountViewModel = accountViewModel)
         }
-        // Остальные when-ветки остаются без изменений
+        currentRoute?.startsWith(addEditTransactionRoutePrefix) == true -> {
+            // TopBar для этого экрана рендерится внутри самого экрана
+        }
         currentRoute == Destination.Expenses.route -> {
             MainTopBar(
                 title = stringResource(id = R.string.top_bar_expenses_today_title),

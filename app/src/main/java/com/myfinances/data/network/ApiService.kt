@@ -8,6 +8,7 @@ import com.myfinances.data.network.dto.UpdateAccountRequest
 import com.myfinances.data.network.dto.UpdateTransactionRequest
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -53,6 +54,9 @@ interface ApiService {
         @Path("id") transactionId: Int,
         @Body request: UpdateTransactionRequest
     ): Response<TransactionDto>
+
+    @DELETE("transactions/{id}")
+    suspend fun deleteTransaction(@Path("id") transactionId: Int): Response<Unit>
 }
 
 data class CreateTransactionRequest(

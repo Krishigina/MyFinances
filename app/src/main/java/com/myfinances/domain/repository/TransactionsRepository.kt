@@ -32,4 +32,6 @@ interface TransactionsRepository {
         transactionDate: Date,
         comment: String?
     ): Result<Transaction>
+
+    suspend fun deleteTransaction(transactionId: Int): Result<Unit>
 }

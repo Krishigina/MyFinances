@@ -55,7 +55,10 @@ fun NavigationGraph(navController: NavHostController, modifier: Modifier = Modif
                 navArgument("parentRoute") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            HistoryScreen(savedStateHandle = backStackEntry.savedStateHandle)
+            HistoryScreen(
+                navController = navController,
+                savedStateHandle = backStackEntry.savedStateHandle
+            )
         }
         composable(
             route = Destination.AddEditTransaction.route,

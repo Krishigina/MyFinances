@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.ui.components.HistoryDatePickerDialog
 import com.myfinances.ui.components.HistorySummaryBlock
@@ -29,12 +30,14 @@ import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.components.TrailingContent
 import com.myfinances.ui.model.HistoryUiModel
+import com.myfinances.ui.navigation.Destination
 import com.myfinances.ui.viewmodel.provideViewModelFactory
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
+    navController: NavController,
     savedStateHandle: SavedStateHandle,
     viewModel: HistoryViewModel = viewModel(factory = provideViewModelFactory())
 ) {
@@ -63,6 +66,8 @@ fun HistoryScreen(
 
             is HistoryUiState.Content -> {
                 HistoryScreenContent(
+                    navController = navController,
+                    transactionType = transactionType,
                     uiModel = state.uiModel,
                     onStartDateClick = { showStartDatePicker = true },
                     onEndDateClick = { showEndDatePicker = true }
@@ -112,6 +117,8 @@ fun HistoryScreen(
 
 @Composable
 private fun HistoryScreenContent(
+    navController: NavController,
+    transactionType: TransactionTypeFilter,
     uiModel: HistoryUiModel,
     onStartDateClick: () -> Unit,
     onEndDateClick: () -> Unit
@@ -141,7 +148,14 @@ private fun HistoryScreenContent(
                         secondaryText = model.secondaryText
                     ),
                     showTrailingArrow = true,
-                    onClick = {} // TODO: Add navigation
+                    onClick = {
+                        navController.navigate(
+                            Destination.AddEditTransaction.createRoute(
+                                transactionType = transactionType,
+                                transactionId = model.id.toInt()
+                            )
+                        )
+                    }
                 )
             )
             HorizontalDivider()

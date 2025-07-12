@@ -57,7 +57,6 @@ class TransactionsRepositoryImpl @Inject constructor(
                     Result.Success(it)
                 } ?: Result.Error(IllegalStateException("Failed to parse transaction data"))
             }
-
             is Result.Error -> result
             is Result.NetworkError -> result
         }
@@ -84,7 +83,6 @@ class TransactionsRepositoryImpl @Inject constructor(
                 }
                     ?: Result.Error(IllegalStateException("Failed to parse transaction data after creation"))
             }
-
             is Result.Error -> result
             is Result.NetworkError -> result
         }
@@ -113,6 +111,15 @@ class TransactionsRepositoryImpl @Inject constructor(
                 }
                     ?: Result.Error(IllegalStateException("Failed to parse transaction data after update"))
             }
+
+            is Result.Error -> result
+            is Result.NetworkError -> result
+        }
+    }
+
+    override suspend fun deleteTransaction(transactionId: Int): Result<Unit> {
+        return when (val result = safeApiCall { apiService.deleteTransaction(transactionId) }) {
+            is Result.Success -> Result.Success(Unit)
             is Result.Error -> result
             is Result.NetworkError -> result
         }

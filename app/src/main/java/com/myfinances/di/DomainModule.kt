@@ -6,6 +6,7 @@ import com.myfinances.domain.repository.CategoriesRepository
 import com.myfinances.domain.repository.SessionRepository
 import com.myfinances.domain.repository.TransactionsRepository
 import com.myfinances.domain.usecase.CreateTransactionUseCase
+import com.myfinances.domain.usecase.DeleteTransactionUseCase
 import com.myfinances.domain.usecase.GetAccountUseCase
 import com.myfinances.domain.usecase.GetActiveAccountIdUseCase
 import com.myfinances.domain.usecase.GetCategoriesUseCase
@@ -109,5 +110,13 @@ class DomainModule {
         repository: TransactionsRepository
     ): GetTransactionDetailsUseCase {
         return GetTransactionDetailsUseCase(repository)
+    }
+
+    @Provides
+    @ViewModelScope
+    fun provideDeleteTransactionUseCase(
+        repository: TransactionsRepository
+    ): DeleteTransactionUseCase {
+        return DeleteTransactionUseCase(repository)
     }
 }
