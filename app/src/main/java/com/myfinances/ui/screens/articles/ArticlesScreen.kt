@@ -25,18 +25,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.myfinances.R
 import com.myfinances.ui.components.ItemType
 import com.myfinances.ui.components.LeadingIcon
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.model.ArticlesUiModel
-import com.myfinances.ui.viewmodel.provideViewModelFactory
 
 @Composable
 fun ArticlesScreen(
-    viewModel: ArticlesViewModel = viewModel(factory = provideViewModelFactory())
+    viewModel: ArticlesViewModel
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 

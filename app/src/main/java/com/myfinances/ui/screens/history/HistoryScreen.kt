@@ -18,7 +18,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.ui.components.HistoryDatePickerDialog
@@ -30,14 +29,13 @@ import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.components.TrailingContent
 import com.myfinances.ui.model.HistoryUiModel
 import com.myfinances.ui.navigation.Destination
-import com.myfinances.ui.viewmodel.provideViewModelFactory
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
     navController: NavController,
-    viewModel: HistoryViewModel = viewModel(factory = provideViewModelFactory())
+    viewModel: HistoryViewModel
 ) {
     LaunchedEffect(key1 = Unit) {
         viewModel.initialize()

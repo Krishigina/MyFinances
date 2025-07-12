@@ -13,7 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.myfinances.R
 import com.myfinances.domain.entity.TransactionTypeFilter
@@ -24,12 +23,11 @@ import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.components.TrailingContent
 import com.myfinances.ui.model.TransactionItemUiModel
 import com.myfinances.ui.navigation.Destination
-import com.myfinances.ui.viewmodel.provideViewModelFactory
 
 @Composable
 fun ExpensesScreen(
     navController: NavController,
-    viewModel: ExpensesViewModel = viewModel(factory = provideViewModelFactory())
+    viewModel: ExpensesViewModel
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 

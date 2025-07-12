@@ -15,7 +15,7 @@ sealed class Destination(
     @DrawableRes val icon: Int? = null,
 ) {
     data object Expenses : Destination(
-        route = "expenses_graph",
+        route = "expenses",
         title = R.string.botton_nav_label_expenses,
         icon = R.drawable.ic_bottom_nav_expenses
     )
