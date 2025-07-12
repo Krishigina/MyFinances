@@ -1,8 +1,8 @@
 package com.myfinances.di
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.myfinances.ui.screens.account.AccountViewModel
+import com.myfinances.ui.screens.add_edit_transaction.AddEditTransactionViewModel
 import com.myfinances.ui.screens.articles.ArticlesViewModel
 import com.myfinances.ui.screens.expenses.ExpensesViewModel
 import com.myfinances.ui.screens.history.HistoryViewModel
@@ -13,9 +13,6 @@ import dagger.multibindings.IntoMap
 
 @Module
 abstract class ViewModelModule {
-
-    @Binds
-    abstract fun bindViewModelFactory(factory: ViewModelFactory): ViewModelProvider.Factory
 
     @Binds
     @IntoMap
@@ -39,6 +36,15 @@ abstract class ViewModelModule {
 
     @Binds
     @IntoMap
-    @ViewModelKey(HistoryViewModel::class)
-    abstract fun bindHistoryViewModel(viewModel: HistoryViewModel): ViewModel
+    @AssistedViewModelKey(HistoryViewModel::class)
+    abstract fun bindHistoryViewModelAssistedFactory(
+        factory: HistoryViewModel.Factory
+    ): ViewModelAssistedFactory<out ViewModel>
+
+    @Binds
+    @IntoMap
+    @AssistedViewModelKey(AddEditTransactionViewModel::class)
+    abstract fun bindAddEditTransactionViewModelAssistedFactory(
+        factory: AddEditTransactionViewModel.Factory
+    ): ViewModelAssistedFactory<out ViewModel>
 }

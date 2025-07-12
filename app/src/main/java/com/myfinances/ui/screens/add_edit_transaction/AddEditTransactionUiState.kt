@@ -2,6 +2,7 @@ package com.myfinances.ui.screens.add_edit_transaction
 
 import com.myfinances.domain.entity.Account
 import com.myfinances.domain.entity.Category
+import com.myfinances.domain.entity.TransactionTypeFilter
 import java.util.Date
 
 sealed interface AddEditTransactionUiState {
@@ -14,6 +15,7 @@ sealed interface AddEditTransactionUiState {
         val comment: String = "",
         val categories: List<Category> = emptyList(),
         val isEditMode: Boolean,
+        val transactionType: TransactionTypeFilter,
         val isSaving: Boolean = false,
         val pageTitle: String,
         val showDatePicker: Boolean = false,

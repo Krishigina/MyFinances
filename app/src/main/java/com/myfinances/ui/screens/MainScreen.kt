@@ -57,20 +57,16 @@ fun MainScreen() {
     val expensesViewModel: ExpensesViewModel = viewModel(factory = factory)
     val incomeViewModel: IncomeViewModel = viewModel(factory = factory)
 
-    // Определяем, какой ViewModel сейчас активен, чтобы получить его SnackbarHostState
     val historyRoutePrefix = Destination.History.route.substringBefore("/{")
     val snackbarHostState: SnackbarHostState? = when {
         currentRoute == Destination.Expenses.route -> expensesViewModel.snackbarHostState
         currentRoute == Destination.Income.route -> incomeViewModel.snackbarHostState
-        // Для экранов со своим состоянием (и, возможно, аргументами), получаем ViewModel,
-        // привязанную к их собственному backStackEntry. Это гарантирует, что мы
-        // получаем правильный экземпляр.
         currentRoute?.startsWith(historyRoutePrefix) == true -> {
             val backStackEntry = mainNavController.currentBackStackEntry
             if (backStackEntry != null) {
                 viewModel<HistoryViewModel>(
                     viewModelStoreOwner = backStackEntry,
-                    factory = provideViewModelFactory(backStackEntry.savedStateHandle)
+                    factory = provideViewModelFactory()
                 ).snackbarHostState
             } else {
                 null

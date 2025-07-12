@@ -17,7 +17,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -38,14 +37,10 @@ import java.util.Calendar
 @Composable
 fun HistoryScreen(
     navController: NavController,
-    savedStateHandle: SavedStateHandle,
     viewModel: HistoryViewModel = viewModel(factory = provideViewModelFactory())
 ) {
-    val transactionType = savedStateHandle.get<TransactionTypeFilter>("transactionType")
-        ?: TransactionTypeFilter.ALL
-
     LaunchedEffect(key1 = Unit) {
-        viewModel.initialize(transactionType)
+        viewModel.initialize()
     }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -67,7 +62,7 @@ fun HistoryScreen(
             is HistoryUiState.Content -> {
                 HistoryScreenContent(
                     navController = navController,
-                    transactionType = transactionType,
+                    transactionType = state.transactionType,
                     uiModel = state.uiModel,
                     onStartDateClick = { showStartDatePicker = true },
                     onEndDateClick = { showEndDatePicker = true }

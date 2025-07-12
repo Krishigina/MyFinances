@@ -36,7 +36,6 @@ fun NavigationGraph(navController: NavHostController, modifier: Modifier = Modif
             IncomeScreen(navController = navController)
         }
         composable(Destination.Account.route) {
-            // Передаем navController для доступа к backStackEntry
             AccountScreen(navController = navController)
         }
         composable(Destination.Articles.route) {
@@ -50,14 +49,12 @@ fun NavigationGraph(navController: NavHostController, modifier: Modifier = Modif
             arguments = listOf(
                 navArgument("transactionType") {
                     type = NavType.EnumType(TransactionTypeFilter::class.java)
-                    defaultValue = TransactionTypeFilter.ALL
                 },
                 navArgument("parentRoute") { type = NavType.StringType }
             )
-        ) { backStackEntry ->
+        ) {
             HistoryScreen(
-                navController = navController,
-                savedStateHandle = backStackEntry.savedStateHandle
+                navController = navController
             )
         }
         composable(
@@ -71,10 +68,9 @@ fun NavigationGraph(navController: NavHostController, modifier: Modifier = Modif
                     type = NavType.EnumType(TransactionTypeFilter::class.java)
                 }
             )
-        ) { backStackEntry ->
+        ) {
             AddEditTransactionScreen(
-                navController = navController,
-                savedStateHandle = backStackEntry.savedStateHandle
+                navController = navController
             )
         }
     }

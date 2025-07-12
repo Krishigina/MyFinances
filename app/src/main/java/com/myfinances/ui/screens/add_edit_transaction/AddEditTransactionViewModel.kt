@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myfinances.R
 import com.myfinances.data.manager.AccountUpdateManager
+import com.myfinances.di.ViewModelAssistedFactory
 import com.myfinances.domain.entity.Account
 import com.myfinances.domain.entity.Category
 import com.myfinances.domain.entity.Transaction
@@ -42,8 +43,8 @@ class AddEditTransactionViewModel @AssistedInject constructor(
 ) : ViewModel() {
 
     @AssistedFactory
-    interface Factory {
-        fun create(savedStateHandle: SavedStateHandle): AddEditTransactionViewModel
+    interface Factory : ViewModelAssistedFactory<AddEditTransactionViewModel> {
+        override fun create(savedStateHandle: SavedStateHandle): AddEditTransactionViewModel
     }
 
     private val _uiState =
@@ -52,13 +53,13 @@ class AddEditTransactionViewModel @AssistedInject constructor(
 
     private val transactionId: Int? = savedStateHandle.get<String>("transactionId")?.toIntOrNull()
     private val transactionType: TransactionTypeFilter =
-        savedStateHandle.get<TransactionTypeFilter>("transactionType")!!
+        savedStateHandle.get<TransactionTypeFilter>("transactionType")
+            ?: TransactionTypeFilter.EXPENSE
 
     init {
         loadInitialData()
     }
 
-    // ... остальной код ViewModel остается без изменений ...
     fun onEvent(event: AddEditTransactionEvent) {
         val currentState = _uiState.value
         if (currentState !is AddEditTransactionUiState.Success) return
@@ -177,7 +178,8 @@ class AddEditTransactionViewModel @AssistedInject constructor(
                 comment = transaction?.comment ?: "",
                 categories = categories,
                 pageTitle = title,
-                isEditMode = transactionId != null
+                isEditMode = transactionId != null,
+                transactionType = transactionType
             )
         }
     }
@@ -276,7 +278,8 @@ class AddEditTransactionViewModel @AssistedInject constructor(
             _uiState.value = AddEditTransactionUiState.Success(
                 pageTitle = resourceProvider.getString(R.string.error_dialog_title),
                 error = error,
-                isEditMode = transactionId != null
+                isEditMode = transactionId != null,
+                transactionType = this.transactionType
             )
         }
     }
