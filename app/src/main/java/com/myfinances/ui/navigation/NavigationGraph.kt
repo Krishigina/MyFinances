@@ -228,8 +228,11 @@ fun NavigationGraph(
                 navArgument("parentRoute") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val factory = remember { viewModelFactoryCreator.create(backStackEntry) }
-            val viewModel: HistoryViewModel = viewModel(factory = factory)
+            val viewModel: HistoryViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = viewModelFactoryCreator.create(backStackEntry)
+            )
+
             LaunchedEffect(Unit) {
                 onScaffoldStateChanged(
                     ScaffoldState(
@@ -259,17 +262,20 @@ fun NavigationGraph(
             route = Destination.AddEditTransaction.route,
             arguments = listOf(
                 navArgument("transactionId") {
-                    type = NavType.StringType
-                    nullable = true
+                    type = NavType.IntType
+                    defaultValue = -1
                 },
                 navArgument("transactionType") {
                     type = NavType.EnumType(TransactionTypeFilter::class.java)
                 }
             )
         ) { backStackEntry ->
-            val factory = remember { viewModelFactoryCreator.create(backStackEntry) }
-            val viewModel: AddEditTransactionViewModel = viewModel(factory = factory)
+            val viewModel: AddEditTransactionViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = viewModelFactoryCreator.create(backStackEntry)
+            )
             val topBarState by viewModel.topBarState.collectAsStateWithLifecycle()
+
             LaunchedEffect(topBarState) {
                 onScaffoldStateChanged(
                     ScaffoldState(topBarState = topBarState)

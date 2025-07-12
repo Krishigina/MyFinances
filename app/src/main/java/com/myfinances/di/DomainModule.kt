@@ -98,10 +98,9 @@ class DomainModule {
     @Provides
     @ViewModelScope
     fun provideUpdateTransactionUseCase(
-        transactionsRepository: TransactionsRepository,
-        getActiveAccountIdUseCase: GetActiveAccountIdUseCase
+        transactionsRepository: TransactionsRepository
     ): UpdateTransactionUseCase {
-        return UpdateTransactionUseCase(transactionsRepository, getActiveAccountIdUseCase)
+        return UpdateTransactionUseCase(transactionsRepository)
     }
 
     @Provides

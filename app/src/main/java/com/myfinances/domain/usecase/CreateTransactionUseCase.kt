@@ -18,7 +18,7 @@ class CreateTransactionUseCase @Inject constructor(
         categoryId: Int,
         amount: String,
         transactionDate: Date,
-        comment: String?
+        comment: String
     ): Result<Transaction> {
         val accountIdResult = getActiveAccountIdUseCase()
         if (accountIdResult !is Result.Success) {

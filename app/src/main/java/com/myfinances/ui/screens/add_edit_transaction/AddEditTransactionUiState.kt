@@ -9,6 +9,7 @@ sealed interface AddEditTransactionUiState {
     data object Loading : AddEditTransactionUiState
     data class Success(
         val account: Account? = null,
+        val accountId: Int,
         val amount: String = "",
         val selectedCategory: Category? = null,
         val date: Date = Date(),

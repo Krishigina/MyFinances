@@ -11,5 +11,5 @@ data class UpdateTransactionRequest(
     @SerializedName("categoryId") val categoryId: Int,
     @SerializedName("amount") val amount: String,
     @SerializedName("transactionDate") val transactionDate: String,
-    @SerializedName("comment") val comment: String?
+    @SerializedName("comment") val comment: String
 )

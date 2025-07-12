@@ -76,7 +76,7 @@
     <string name="comment">Комментарий</string>
     <string name="select_category">Выберите статью</string>
     <string name="select_date">Выберите дату</string>
-    <string name="enter_comment">Ремонт - фурнитура для дверей</string>
+    <string name="enter_comment">Введите комментарий</string>
     <string name="enter_amount">Введите сумму</string>
     <string name="delete_expense_button">Удалить расход</string>
     <string name="delete_income_button">Удалить доход</string>

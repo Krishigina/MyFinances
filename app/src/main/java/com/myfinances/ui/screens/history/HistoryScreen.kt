@@ -1,5 +1,6 @@
 package com.myfinances.ui.screens.history
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -142,12 +143,15 @@ private fun HistoryScreenContent(
                     ),
                     showTrailingArrow = true,
                     onClick = {
-                        navController.navigate(
-                            Destination.AddEditTransaction.createRoute(
-                                transactionType = transactionType,
-                                transactionId = model.id.toInt()
-                            )
+                        // <<< ОТЛАДКА
+                        Log.d("DEBUG_NAV", "[HistoryScreen] Click on transaction with ID: ${model.id}")
+                        val route = Destination.AddEditTransaction.createRoute(
+                            transactionType = transactionType,
+                            transactionId = model.id.toInt()
                         )
+                        Log.d("DEBUG_NAV", "[HistoryScreen] Navigating to route: $route")
+                        // >>> ОТЛАДКА
+                        navController.navigate(route)
                     }
                 )
             )

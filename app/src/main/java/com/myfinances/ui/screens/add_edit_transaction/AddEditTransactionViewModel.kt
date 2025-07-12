@@ -1,5 +1,6 @@
 package com.myfinances.ui.screens.add_edit_transaction
 
+import android.util.Log
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -66,12 +67,30 @@ class AddEditTransactionViewModel @AssistedInject constructor(
 
     override val topBarState: MutableStateFlow<TopBarState> = MutableStateFlow(TopBarState())
 
-    private val transactionId: Int? = savedStateHandle.get<String>("transactionId")?.toIntOrNull()
-    private val transactionType: TransactionTypeFilter =
-        savedStateHandle.get<TransactionTypeFilter>("transactionType")
-            ?: TransactionTypeFilter.EXPENSE
+    private var transactionId: Int = -1
+    private var isEditMode: Boolean = false
+    private lateinit var transactionType: TransactionTypeFilter
 
     init {
+        // <<< ОТЛАДКА
+        Log.d("DEBUG_NAV", "[ViewModel] Initializing...")
+        val keys = savedStateHandle.keys()
+        if (keys.isEmpty()) {
+            Log.d("DEBUG_NAV", "[ViewModel] SavedStateHandle is EMPTY.")
+        } else {
+            Log.d("DEBUG_NAV", "[ViewModel] SavedStateHandle keys: $keys")
+            for (key in keys) {
+                Log.d("DEBUG_NAV", "[ViewModel]   - Key: '$key', Value: '${savedStateHandle.get<Any>(key)}', Type: ${savedStateHandle.get<Any>(key)?.javaClass?.simpleName}")
+            }
+        }
+        // >>> ОТЛАДКА
+
+        transactionId = savedStateHandle.get<Int>("transactionId") ?: -1
+        isEditMode = transactionId != -1
+        transactionType = savedStateHandle.get<TransactionTypeFilter>("transactionType")
+            ?: TransactionTypeFilter.EXPENSE
+
+        Log.d("DEBUG_NAV", "[ViewModel] Parsed transactionId: $transactionId, isEditMode: $isEditMode")
         loadInitialData()
         observeUiStateForTopBar()
     }
@@ -200,10 +219,13 @@ class AddEditTransactionViewModel @AssistedInject constructor(
                 (currentState as AddEditTransactionUiState.Success).copy(showDeleteConfirmation = false)
             }
 
-            AddEditTransactionEvent.NavigateBack -> _uiState.update {
-                (currentState as AddEditTransactionUiState.Success).copy(
-                    closeScreen = true
-                )
+            AddEditTransactionEvent.NavigateBack -> {
+                val state = _uiState.value
+                if (state is AddEditTransactionUiState.Success) {
+                    _uiState.update { state.copy(closeScreen = true) }
+                } else {
+                    // Handle case where back is pressed during loading
+                }
             }
         }
     }
@@ -214,8 +236,11 @@ class AddEditTransactionViewModel @AssistedInject constructor(
 
             val accountDeferred = async { getAccountUseCase() }
             val categoriesDeferred = async { getCategoriesUseCase(transactionType) }
-            val transactionDeferred =
-                transactionId?.let { async { getTransactionDetailsUseCase(it) } }
+            val transactionDeferred = if (isEditMode) {
+                async { getTransactionDetailsUseCase(transactionId) }
+            } else {
+                null
+            }
 
             val accountResult: Result<Account> = accountDeferred.await()
             val categoriesResult: Result<List<Category>> = categoriesDeferred.await()
@@ -241,7 +266,7 @@ class AddEditTransactionViewModel @AssistedInject constructor(
             val categories = (categoriesResult as Result.Success<List<Category>>).data
             val transaction = (transactionResult as? Result.Success<Transaction>)?.data
 
-            val title = if (transactionId == null) {
+            val title = if (!isEditMode) {
                 if (transactionType == TransactionTypeFilter.EXPENSE)
                     resourceProvider.getString(R.string.add_expense_title)
                 else
@@ -255,6 +280,7 @@ class AddEditTransactionViewModel @AssistedInject constructor(
 
             _uiState.value = AddEditTransactionUiState.Success(
                 account = account,
+                accountId = transaction?.accountId ?: account.id,
                 amount = transaction?.amount?.toBigDecimal()?.setScale(2, RoundingMode.UNNECESSARY)
                     ?.toPlainString() ?: "",
                 selectedCategory = transaction?.categoryId?.let { catId -> categories.find { it.id == catId } },
@@ -262,7 +288,7 @@ class AddEditTransactionViewModel @AssistedInject constructor(
                 comment = transaction?.comment ?: "",
                 categories = categories,
                 pageTitle = title,
-                isEditMode = transactionId != null,
+                isEditMode = isEditMode,
                 transactionType = transactionType
             )
         }
@@ -281,20 +307,21 @@ class AddEditTransactionViewModel @AssistedInject constructor(
         viewModelScope.launch {
             _uiState.update { currentState.copy(isSaving = true, error = null) }
 
-            val result: Result<Transaction> = if (transactionId == null) {
+            val result: Result<Transaction> = if (!isEditMode) {
                 createTransactionUseCase(
                     categoryId = currentState.selectedCategory.id,
                     amount = currentState.amount,
                     transactionDate = currentState.date,
-                    comment = currentState.comment.takeIf { it.isNotBlank() }
+                    comment = currentState.comment
                 )
             } else {
                 updateTransactionUseCase(
                     transactionId = transactionId,
+                    accountId = currentState.accountId,
                     categoryId = currentState.selectedCategory.id,
                     amount = currentState.amount,
                     transactionDate = currentState.date,
-                    comment = currentState.comment.takeIf { it.isNotBlank() }
+                    comment = currentState.comment
                 )
             }
 
@@ -321,7 +348,7 @@ class AddEditTransactionViewModel @AssistedInject constructor(
 
     private fun deleteTransaction() {
         val currentState = _uiState.value as? AddEditTransactionUiState.Success ?: return
-        val currentTransactionId = transactionId ?: return
+        if (!isEditMode) return
 
         viewModelScope.launch {
             _uiState.update {
@@ -332,7 +359,7 @@ class AddEditTransactionViewModel @AssistedInject constructor(
                 )
             }
 
-            when (val result = deleteTransactionUseCase(currentTransactionId)) {
+            when (val result = deleteTransactionUseCase(transactionId)) {
                 is Result.Success -> {
                     accountUpdateManager.notifyAccountUpdated()
                     _uiState.update { currentState.copy(isSaving = false, closeScreen = true) }
@@ -359,11 +386,24 @@ class AddEditTransactionViewModel @AssistedInject constructor(
         if (currentState is AddEditTransactionUiState.Success) {
             _uiState.update { currentState.copy(error = error) }
         } else {
+            // Если исходное состояние было Loading, создаем Success состояние с ошибкой
+            val title = if (!isEditMode) {
+                if (transactionType == TransactionTypeFilter.EXPENSE)
+                    resourceProvider.getString(R.string.add_expense_title)
+                else
+                    resourceProvider.getString(R.string.add_income_title)
+            } else {
+                if (transactionType == TransactionTypeFilter.EXPENSE)
+                    resourceProvider.getString(R.string.edit_expense_title)
+                else
+                    resourceProvider.getString(R.string.edit_income_title)
+            }
             _uiState.value = AddEditTransactionUiState.Success(
-                pageTitle = resourceProvider.getString(R.string.error_dialog_title),
+                pageTitle = title,
                 error = error,
-                isEditMode = transactionId != null,
-                transactionType = this.transactionType
+                isEditMode = isEditMode,
+                transactionType = this.transactionType,
+                accountId = -1 // Временное значение, т.к. загрузка не удалась
             )
         }
     }

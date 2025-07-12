@@ -17,6 +17,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalTextStyle
@@ -64,8 +65,8 @@ fun AddEditTransactionScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(uiState) {
-        val successState = uiState as? AddEditTransactionUiState.Success
-        if (successState?.closeScreen == true) {
+        val state = uiState
+        if (state is AddEditTransactionUiState.Success && state.closeScreen) {
             navController.popBackStack()
         }
     }
@@ -93,7 +94,6 @@ private fun TransactionDetailsContent(
     uiState: AddEditTransactionUiState.Success,
     onEvent: (AddEditTransactionEvent) -> Unit
 ) {
-    val dimensions = LocalDimensions.current
     val dateFormat = remember { SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()) }
     val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
 
@@ -113,6 +113,7 @@ private fun TransactionDetailsContent(
             )
         }
         item {
+            Divider()
             ListItem(
                 model = ListItemModel(
                     id = "category",
@@ -126,6 +127,7 @@ private fun TransactionDetailsContent(
             )
         }
         item {
+            Divider()
             AmountItem(
                 amount = uiState.amount,
                 currency = uiState.account?.currency,
@@ -133,6 +135,7 @@ private fun TransactionDetailsContent(
             )
         }
         item {
+            Divider()
             ListItem(
                 model = ListItemModel(
                     id = "date",
@@ -146,6 +149,7 @@ private fun TransactionDetailsContent(
             )
         }
         item {
+            Divider()
             ListItem(
                 model = ListItemModel(
                     id = "time",
@@ -159,11 +163,14 @@ private fun TransactionDetailsContent(
             )
         }
         item {
+            Divider()
             CommentItem(
                 comment = uiState.comment,
                 onCommentChange = { onEvent(AddEditTransactionEvent.CommentChanged(it)) }
             )
-            HorizontalDivider(modifier = Modifier.padding(horizontal = dimensions.spacing.paddingLarge))
+        }
+        item {
+            Divider()
         }
 
         if (uiState.isEditMode) {
@@ -219,7 +226,6 @@ private fun AmountItem(
             )
         }
     }
-    HorizontalDivider(modifier = Modifier.padding(horizontal = dimensions.spacing.paddingLarge))
 }
 
 
@@ -345,7 +351,10 @@ private fun HandleDialogs(
             text = { Text(stringResource(R.string.delete_confirmation_message)) },
             confirmButton = {
                 TextButton(
-                    onClick = { onEvent(AddEditTransactionEvent.DeleteTransaction) },
+                    onClick = {
+                        onEvent(AddEditTransactionEvent.DeleteTransaction)
+                        onEvent(AddEditTransactionEvent.DismissDeleteConfirmation)
+                    },
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
                     Text(stringResource(id = R.string.action_delete))

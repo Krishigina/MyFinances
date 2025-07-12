@@ -95,11 +95,13 @@ fun ListItem(model: ListItemModel) {
                 style = MaterialTheme.typography.bodyLarge
             )
             model.subtitle?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = LightBlack
-                )
+                if (it.isNotBlank()) {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = LightBlack
+                    )
+                }
             }
         }
 

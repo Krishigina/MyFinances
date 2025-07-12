@@ -67,7 +67,7 @@ class TransactionsRepositoryImpl @Inject constructor(
         categoryId: Int,
         amount: Double,
         transactionDate: Date,
-        comment: String?
+        comment: String
     ): Result<Transaction> {
         val request = CreateTransactionRequest(
             accountId = accountId,
@@ -94,7 +94,7 @@ class TransactionsRepositoryImpl @Inject constructor(
         categoryId: Int,
         amount: Double,
         transactionDate: Date,
-        comment: String?
+        comment: String
     ): Result<Transaction> {
         val request = UpdateTransactionRequest(
             accountId = accountId,

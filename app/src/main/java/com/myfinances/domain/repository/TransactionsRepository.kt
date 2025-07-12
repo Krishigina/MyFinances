@@ -21,7 +21,7 @@ interface TransactionsRepository {
         categoryId: Int,
         amount: Double,
         transactionDate: Date,
-        comment: String?
+        comment: String
     ): Result<Transaction>
 
     suspend fun updateTransaction(
@@ -30,7 +30,7 @@ interface TransactionsRepository {
         categoryId: Int,
         amount: Double,
         transactionDate: Date,
-        comment: String?
+        comment: String
     ): Result<Transaction>
 
     suspend fun deleteTransaction(transactionId: Int): Result<Unit>

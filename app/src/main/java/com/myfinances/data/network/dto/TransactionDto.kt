@@ -46,13 +46,15 @@ data class TransactionDto(
 
 fun TransactionDto.toDomainModel(): Transaction? {
     val finalCategoryId = this.category?.id ?: this.categoryId
+    val finalAccountId = this.account?.id ?: this.accountId ?: return null
     val parsedDate = parseDate(this.transactionDate) ?: return null
 
     return Transaction(
         id = this.id,
+        accountId = finalAccountId,
         categoryId = finalCategoryId,
         amount = this.amount.toDoubleOrNull() ?: 0.0,
-        comment = this.comment,
+        comment = this.comment ?: "",
         date = parsedDate
     )
 }

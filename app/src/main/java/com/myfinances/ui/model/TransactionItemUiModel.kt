@@ -5,6 +5,6 @@ data class TransactionItemUiModel(
     val title: String,
     val amountFormatted: String,
     val emoji: String,
-    val subtitle: String?,
+    val subtitle: String,
     val secondaryText: String? = null
 )

@@ -1,5 +1,6 @@
 package com.myfinances.ui.screens.expenses
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -81,12 +82,15 @@ private fun ExpensesScreenContent(
                         trailingContent = TrailingContent.TextWithArrow(text = model.amountFormatted),
                         showTrailingArrow = true,
                         onClick = {
-                            navController.navigate(
-                                Destination.AddEditTransaction.createRoute(
-                                    transactionType = TransactionTypeFilter.EXPENSE,
-                                    transactionId = model.id.toInt()
-                                )
+                            // <<< ОТЛАДКА
+                            Log.d("DEBUG_NAV", "[ExpensesScreen] Click on transaction with ID: ${model.id}")
+                            val route = Destination.AddEditTransaction.createRoute(
+                                transactionType = TransactionTypeFilter.EXPENSE,
+                                transactionId = model.id.toInt()
                             )
+                            Log.d("DEBUG_NAV", "[ExpensesScreen] Navigating to route: $route")
+                            // >>> ОТЛАДКА
+                            navController.navigate(route)
                         }
                     )
                 )

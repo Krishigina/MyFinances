@@ -49,18 +49,16 @@ sealed class Destination(
         }
     }
 
+    // Маршрут теперь использует только слэши, без вопросительных знаков
     data object AddEditTransaction :
-        Destination(route = "add_edit_transaction?transactionId={transactionId}&transactionType={transactionType}") {
+        Destination(route = "add_edit_transaction/{transactionType}/{transactionId}") {
         fun createRoute(
             transactionType: TransactionTypeFilter,
             transactionId: Int? = null
         ): String {
-            val baseRoute = "add_edit_transaction?transactionType=${transactionType.name}"
-            return if (transactionId != null) {
-                "$baseRoute&transactionId=$transactionId"
-            } else {
-                baseRoute
-            }
+            // ID для новой транзакции будет -1. Это значение по умолчанию в NavHost.
+            val id = transactionId ?: -1
+            return "add_edit_transaction/${transactionType.name}/$id"
         }
     }
 }
