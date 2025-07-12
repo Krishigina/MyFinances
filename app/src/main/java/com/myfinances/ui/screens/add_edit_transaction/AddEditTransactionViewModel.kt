@@ -1,5 +1,12 @@
 package com.myfinances.ui.screens.add_edit_transaction
 
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,12 +25,18 @@ import com.myfinances.domain.usecase.GetTransactionDetailsUseCase
 import com.myfinances.domain.usecase.UpdateTransactionUseCase
 import com.myfinances.domain.util.Result
 import com.myfinances.ui.util.ResourceProvider
+import com.myfinances.ui.viewmodel.TopBarAction
+import com.myfinances.ui.viewmodel.TopBarState
+import com.myfinances.ui.viewmodel.TopBarStateProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.RoundingMode
@@ -40,7 +53,7 @@ class AddEditTransactionViewModel @AssistedInject constructor(
     private val getAccountUseCase: GetAccountUseCase,
     private val accountUpdateManager: AccountUpdateManager,
     private val resourceProvider: ResourceProvider
-) : ViewModel() {
+) : ViewModel(), TopBarStateProvider {
 
     @AssistedFactory
     interface Factory : ViewModelAssistedFactory<AddEditTransactionViewModel> {
@@ -51,6 +64,8 @@ class AddEditTransactionViewModel @AssistedInject constructor(
         MutableStateFlow<AddEditTransactionUiState>(AddEditTransactionUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
+    override val topBarState: MutableStateFlow<TopBarState> = MutableStateFlow(TopBarState())
+
     private val transactionId: Int? = savedStateHandle.get<String>("transactionId")?.toIntOrNull()
     private val transactionType: TransactionTypeFilter =
         savedStateHandle.get<TransactionTypeFilter>("transactionType")
@@ -58,26 +73,91 @@ class AddEditTransactionViewModel @AssistedInject constructor(
 
     init {
         loadInitialData()
+        observeUiStateForTopBar()
+    }
+
+    private fun observeUiStateForTopBar() {
+        viewModelScope.launch {
+            _uiState.map { state ->
+                val successState = state as? AddEditTransactionUiState.Success
+                TopBarState(
+                    title = successState?.pageTitle ?: "",
+                    navigationAction = TopBarAction(
+                        id = "back",
+                        onAction = {
+                            val event = AddEditTransactionEvent.NavigateBack
+                            onEvent(event)
+                        },
+                        content = {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_top_bar_cancel),
+                                contentDescription = resourceProvider.getString(R.string.action_cancel)
+                            )
+                        }
+                    ),
+                    actions = listOf(
+                        TopBarAction(
+                            id = "save",
+                            isEnabled = successState?.let { it.selectedCategory != null && it.amount.isNotBlank() }
+                                ?: false,
+                            onAction = { onEvent(AddEditTransactionEvent.SaveTransaction) },
+                            content = {
+                                if (successState?.isSaving == true) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_top_bar_confirm),
+                                        contentDescription = resourceProvider.getString(R.string.action_save)
+                                    )
+                                }
+                            }
+                        )
+                    )
+                )
+            }.stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = TopBarState()
+            ).collect {
+                topBarState.value = it
+            }
+        }
     }
 
     fun onEvent(event: AddEditTransactionEvent) {
         val currentState = _uiState.value
-        if (currentState !is AddEditTransactionUiState.Success) return
+        if (currentState !is AddEditTransactionUiState.Success && event !is AddEditTransactionEvent.NavigateBack) return
 
         when (event) {
-            is AddEditTransactionEvent.AmountChanged -> _uiState.update { currentState.copy(amount = event.amount) }
-            is AddEditTransactionEvent.CommentChanged -> _uiState.update { currentState.copy(comment = event.comment) }
-            is AddEditTransactionEvent.CategorySelected -> _uiState.update {
-                currentState.copy(selectedCategory = event.category, showCategoryPicker = false)
+            is AddEditTransactionEvent.AmountChanged -> _uiState.update {
+                (currentState as AddEditTransactionUiState.Success).copy(
+                    amount = event.amount
+                )
             }
 
+            is AddEditTransactionEvent.CommentChanged -> _uiState.update {
+                (currentState as AddEditTransactionUiState.Success).copy(
+                    comment = event.comment
+                )
+            }
+            is AddEditTransactionEvent.CategorySelected -> _uiState.update {
+                (currentState as AddEditTransactionUiState.Success).copy(
+                    selectedCategory = event.category,
+                    showCategoryPicker = false
+                )
+            }
             is AddEditTransactionEvent.DateSelected -> {
-                val calendar = Calendar.getInstance().apply { time = currentState.date }
+                val calendar = Calendar.getInstance()
+                    .apply { time = (currentState as AddEditTransactionUiState.Success).date }
                 val newDateCalendar = Calendar.getInstance().apply { time = event.date }
                 newDateCalendar.set(Calendar.HOUR_OF_DAY, calendar.get(Calendar.HOUR_OF_DAY))
                 newDateCalendar.set(Calendar.MINUTE, calendar.get(Calendar.MINUTE))
                 _uiState.update {
-                    currentState.copy(
+                    (currentState as AddEditTransactionUiState.Success).copy(
                         date = newDateCalendar.time,
                         showDatePicker = false
                     )
@@ -85,40 +165,44 @@ class AddEditTransactionViewModel @AssistedInject constructor(
             }
 
             is AddEditTransactionEvent.TimeChanged -> {
-                val calendar = Calendar.getInstance().apply { time = currentState.date }
+                val calendar = Calendar.getInstance()
+                    .apply { time = (currentState as AddEditTransactionUiState.Success).date }
                 calendar.set(Calendar.HOUR_OF_DAY, event.hour)
                 calendar.set(Calendar.MINUTE, event.minute)
-                _uiState.update { currentState.copy(date = calendar.time, showTimePicker = false) }
+                _uiState.update {
+                    (currentState as AddEditTransactionUiState.Success).copy(
+                        date = calendar.time,
+                        showTimePicker = false
+                    )
+                }
             }
             AddEditTransactionEvent.SaveTransaction -> saveTransaction()
             AddEditTransactionEvent.DeleteTransaction -> deleteTransaction()
             AddEditTransactionEvent.ToggleDatePicker -> _uiState.update {
-                currentState.copy(
-                    showDatePicker = !currentState.showDatePicker
-                )
+                (currentState as AddEditTransactionUiState.Success).copy(showDatePicker = !currentState.showDatePicker)
             }
-
             AddEditTransactionEvent.ToggleTimePicker -> _uiState.update {
-                currentState.copy(
-                    showTimePicker = !currentState.showTimePicker
-                )
+                (currentState as AddEditTransactionUiState.Success).copy(showTimePicker = !currentState.showTimePicker)
             }
-
             AddEditTransactionEvent.ToggleCategoryPicker -> _uiState.update {
-                currentState.copy(
-                    showCategoryPicker = !currentState.showCategoryPicker
-                )
-            }
-            AddEditTransactionEvent.DismissErrorDialog -> _uiState.update { currentState.copy(error = null) }
-            AddEditTransactionEvent.ShowDeleteConfirmation -> _uiState.update {
-                currentState.copy(
-                    showDeleteConfirmation = true
-                )
+                (currentState as AddEditTransactionUiState.Success).copy(showCategoryPicker = !currentState.showCategoryPicker)
             }
 
+            AddEditTransactionEvent.DismissErrorDialog -> _uiState.update {
+                (currentState as AddEditTransactionUiState.Success).copy(
+                    error = null
+                )
+            }
+            AddEditTransactionEvent.ShowDeleteConfirmation -> _uiState.update {
+                (currentState as AddEditTransactionUiState.Success).copy(showDeleteConfirmation = true)
+            }
             AddEditTransactionEvent.DismissDeleteConfirmation -> _uiState.update {
-                currentState.copy(
-                    showDeleteConfirmation = false
+                (currentState as AddEditTransactionUiState.Success).copy(showDeleteConfirmation = false)
+            }
+
+            AddEditTransactionEvent.NavigateBack -> _uiState.update {
+                (currentState as AddEditTransactionUiState.Success).copy(
+                    closeScreen = true
                 )
             }
         }

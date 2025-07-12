@@ -17,4 +17,5 @@ sealed interface AddEditTransactionEvent {
     data object DismissErrorDialog : AddEditTransactionEvent
     data object DismissDeleteConfirmation : AddEditTransactionEvent
     data object ShowDeleteConfirmation : AddEditTransactionEvent
+    data object NavigateBack : AddEditTransactionEvent
 }

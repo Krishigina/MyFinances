@@ -17,6 +17,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -24,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -40,9 +42,11 @@ import com.myfinances.ui.navigation.NavigationGraph
 import com.myfinances.ui.screens.account.AccountEvent
 import com.myfinances.ui.screens.account.AccountUiState
 import com.myfinances.ui.screens.account.AccountViewModel
+import com.myfinances.ui.screens.add_edit_transaction.AddEditTransactionViewModel
 import com.myfinances.ui.screens.expenses.ExpensesViewModel
 import com.myfinances.ui.screens.history.HistoryViewModel
 import com.myfinances.ui.screens.income.IncomeViewModel
+import com.myfinances.ui.viewmodel.TopBarStateProvider
 import com.myfinances.ui.viewmodel.provideViewModelFactory
 
 @Composable
@@ -53,85 +57,92 @@ fun MainScreen() {
 
     val factory = provideViewModelFactory()
 
-    // ViewModel'и, которые живут пока жив NavGraph
+    // --- Создание ViewModel для текущего экрана ---
     val expensesViewModel: ExpensesViewModel = viewModel(factory = factory)
     val incomeViewModel: IncomeViewModel = viewModel(factory = factory)
 
     val historyRoutePrefix = Destination.History.route.substringBefore("/{")
-    val snackbarHostState: SnackbarHostState? = when {
-        currentRoute == Destination.Expenses.route -> expensesViewModel.snackbarHostState
-        currentRoute == Destination.Income.route -> incomeViewModel.snackbarHostState
-        currentRoute?.startsWith(historyRoutePrefix) == true -> {
-            val backStackEntry = mainNavController.currentBackStackEntry
-            if (backStackEntry != null) {
-                viewModel<HistoryViewModel>(
-                    viewModelStoreOwner = backStackEntry,
-                    factory = provideViewModelFactory()
-                ).snackbarHostState
-            } else {
-                null
-            }
+    val addEditTransactionRoutePrefix = Destination.AddEditTransaction.route.substringBefore("?")
+
+    val currentViewModel: ViewModel? = when {
+        currentRoute == Destination.Expenses.route -> expensesViewModel
+        currentRoute == Destination.Income.route -> incomeViewModel
+        currentRoute?.startsWith(historyRoutePrefix) == true -> navBackStackEntry?.let {
+            viewModel<HistoryViewModel>(viewModelStoreOwner = it, factory = factory)
         }
 
-        currentRoute == Destination.Account.route -> {
-            val backStackEntry = remember(navBackStackEntry) {
+        currentRoute?.startsWith(addEditTransactionRoutePrefix) == true -> navBackStackEntry?.let {
+            viewModel<AddEditTransactionViewModel>(viewModelStoreOwner = it, factory = factory)
+        }
+
+        currentRoute == Destination.Account.route -> navBackStackEntry?.let {
+            remember(it) {
                 mainNavController.getBackStackEntry(Destination.Account.route)
             }
-            viewModel<AccountViewModel>(
-                viewModelStoreOwner = backStackEntry,
-                factory = provideViewModelFactory()
-            ).snackbarHostState
+        }?.let {
+            viewModel<AccountViewModel>(viewModelStoreOwner = it, factory = factory)
         }
-
         else -> null
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            topBar = {
-                MainScreenTopBar(
-                    currentRoute = currentRoute,
-                    navController = mainNavController
-                )
-            },
-            bottomBar = {
-                BottomNavigationBar(
-                    navController = mainNavController,
-                    modifier = Modifier.navigationBarsPadding()
-                )
-            },
-            floatingActionButton = {
-                if (currentRoute == Destination.Expenses.route || currentRoute == Destination.Income.route) {
-                    MainFloatingActionButton {
-                        val type = if (currentRoute == Destination.Expenses.route) {
-                            TransactionTypeFilter.EXPENSE
-                        } else {
-                            TransactionTypeFilter.INCOME
-                        }
-                        mainNavController.navigate(
-                            Destination.AddEditTransaction.createRoute(transactionType = type)
-                        )
+    val snackbarHostState: SnackbarHostState? = when (currentViewModel) {
+        is ExpensesViewModel -> currentViewModel.snackbarHostState
+        is IncomeViewModel -> currentViewModel.snackbarHostState
+        is HistoryViewModel -> currentViewModel.snackbarHostState
+        is AccountViewModel -> currentViewModel.snackbarHostState
+        else -> null
+    }
+
+    Scaffold(
+        topBar = {
+            MainScreenTopBar(
+                currentRoute = currentRoute,
+                navController = mainNavController,
+                viewModelProvider = { currentViewModel }
+            )
+        },
+        bottomBar = {
+            BottomNavigationBar(
+                navController = mainNavController,
+                modifier = Modifier.navigationBarsPadding()
+            )
+        },
+        floatingActionButton = {
+            if (currentRoute == Destination.Expenses.route || currentRoute == Destination.Income.route) {
+                MainFloatingActionButton {
+                    val type = if (currentRoute == Destination.Expenses.route) {
+                        TransactionTypeFilter.EXPENSE
+                    } else {
+                        TransactionTypeFilter.INCOME
                     }
+                    mainNavController.navigate(
+                        Destination.AddEditTransaction.createRoute(transactionType = type)
+                    )
                 }
             }
-        ) { paddingValues ->
-            Box(modifier = Modifier.padding(paddingValues)) {
-                NavigationGraph(
-                    navController = mainNavController,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
         }
+    ) { paddingValues ->
+        Box(modifier = Modifier.fillMaxSize()) {
+            NavigationGraph(
+                navController = mainNavController,
+                modifier = Modifier.padding(paddingValues),
+                viewModelProvider = { currentViewModel }
+            )
 
-        if (snackbarHostState != null) {
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .imePadding()
-                    .padding(bottom = 90.dp, start = 16.dp, end = 16.dp)
-            ) { data ->
-                AppSnackbar(snackbarData = data)
+            if (snackbarHostState != null) {
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .imePadding()
+                        .padding(
+                            bottom = paddingValues.calculateBottomPadding(),
+                            start = 16.dp,
+                            end = 16.dp
+                        )
+                ) { data ->
+                    AppSnackbar(snackbarData = data)
+                }
             }
         }
     }
@@ -140,24 +151,38 @@ fun MainScreen() {
 @Composable
 private fun MainScreenTopBar(
     currentRoute: String?,
-    navController: NavHostController
+    navController: NavHostController,
+    viewModelProvider: () -> ViewModel?
 ) {
     val historyRoutePrefix = Destination.History.route.substringBefore("/{")
     val addEditTransactionRoutePrefix = Destination.AddEditTransaction.route.substringBefore("?")
 
+    val viewModel = viewModelProvider()
+
     when {
-        currentRoute == Destination.Account.route -> {
-            val backStackEntry = remember(navController.currentBackStackEntry) {
-                navController.getBackStackEntry(Destination.Account.route)
-            }
-            val accountViewModel: AccountViewModel = viewModel(
-                viewModelStoreOwner = backStackEntry,
-                factory = provideViewModelFactory()
+        currentRoute?.startsWith(addEditTransactionRoutePrefix) == true && viewModel is TopBarStateProvider -> {
+            val topBarState by viewModel.topBarState.collectAsState()
+            MainTopBar(
+                title = topBarState.title,
+                navigationIcon = {
+                    topBarState.navigationAction?.let { action ->
+                        IconButton(onClick = action.onAction, enabled = action.isEnabled) {
+                            action.content()
+                        }
+                    }
+                },
+                actions = {
+                    topBarState.actions.forEach { action ->
+                        IconButton(onClick = action.onAction, enabled = action.isEnabled) {
+                            action.content()
+                        }
+                    }
+                }
             )
-            AccountTopBar(accountViewModel = accountViewModel)
         }
-        currentRoute?.startsWith(addEditTransactionRoutePrefix) == true -> {
-            // TopBar для этого экрана рендерится внутри самого экрана
+
+        currentRoute == Destination.Account.route && viewModel is AccountViewModel -> {
+            AccountTopBar(accountViewModel = viewModel)
         }
         currentRoute == Destination.Expenses.route -> {
             MainTopBar(
@@ -238,12 +263,10 @@ private fun AccountTopBar(accountViewModel: AccountViewModel) {
                             modifier = Modifier.size(24.dp),
                             strokeWidth = 2.dp
                         )
-
                         isEditMode -> Icon(
                             Icons.Default.Check,
                             contentDescription = stringResource(R.string.action_save)
                         )
-
                         else -> Icon(
                             Icons.Default.Edit,
                             contentDescription = stringResource(R.string.top_bar_icon_edit)

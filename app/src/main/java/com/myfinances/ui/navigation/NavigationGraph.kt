@@ -2,6 +2,7 @@ package com.myfinances.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.ViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -10,6 +11,7 @@ import androidx.navigation.navArgument
 import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.ui.screens.account.AccountScreen
 import com.myfinances.ui.screens.add_edit_transaction.AddEditTransactionScreen
+import com.myfinances.ui.screens.add_edit_transaction.AddEditTransactionViewModel
 import com.myfinances.ui.screens.articles.ArticlesScreen
 import com.myfinances.ui.screens.expenses.ExpensesScreen
 import com.myfinances.ui.screens.history.HistoryScreen
@@ -23,7 +25,11 @@ import com.myfinances.ui.screens.settings.SettingsScreen
  * @param navController Контроллер навигации, управляющий стеком экранов.
  */
 @Composable
-fun NavigationGraph(navController: NavHostController, modifier: Modifier = Modifier) {
+fun NavigationGraph(
+    navController: NavHostController,
+    modifier: Modifier = Modifier,
+    viewModelProvider: () -> ViewModel?
+) {
     NavHost(
         navController = navController,
         startDestination = Destination.Expenses.route,
@@ -69,9 +75,13 @@ fun NavigationGraph(navController: NavHostController, modifier: Modifier = Modif
                 }
             )
         ) {
-            AddEditTransactionScreen(
-                navController = navController
-            )
+            val viewModel = viewModelProvider()
+            if (viewModel is AddEditTransactionViewModel) {
+                AddEditTransactionScreen(
+                    navController = navController,
+                    viewModel = viewModel
+                )
+            }
         }
     }
 }
