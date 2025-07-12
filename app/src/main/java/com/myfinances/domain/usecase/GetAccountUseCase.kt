@@ -5,9 +5,8 @@ import com.myfinances.domain.repository.AccountsRepository
 import com.myfinances.domain.repository.SessionRepository
 import com.myfinances.domain.util.Result
 import kotlinx.coroutines.flow.first
-import javax.inject.Inject
 
-class GetAccountUseCase @Inject constructor(
+class GetAccountUseCase(
     private val repository: AccountsRepository,
     private val sessionRepository: SessionRepository
 ) {

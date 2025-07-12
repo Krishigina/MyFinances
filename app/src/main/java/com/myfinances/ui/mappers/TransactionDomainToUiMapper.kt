@@ -6,9 +6,8 @@ import com.myfinances.ui.model.TransactionItemUiModel
 import com.myfinances.ui.util.formatCurrency
 import java.text.SimpleDateFormat
 import java.util.Locale
-import javax.inject.Inject
 
-class TransactionDomainToUiMapper @Inject constructor() {
+class TransactionDomainToUiMapper {
     private val historyDateTimeFormat = SimpleDateFormat("d MMMM · HH:mm", Locale("ru"))
 
     fun toSimpleUiModel(

@@ -4,9 +4,8 @@ import com.myfinances.domain.entity.Account
 import com.myfinances.ui.model.AccountUiModel
 import com.myfinances.ui.util.formatCurrency
 import com.myfinances.ui.util.getCurrencySymbol
-import javax.inject.Inject
 
-class AccountDomainToUiMapper @Inject constructor() {
+class AccountDomainToUiMapper {
     fun map(account: Account): AccountUiModel {
         return AccountUiModel(
             id = account.id,

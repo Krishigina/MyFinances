@@ -2,9 +2,8 @@ package com.myfinances.ui.mappers
 
 import com.myfinances.domain.entity.Category
 import com.myfinances.ui.model.ArticleItemUiModel
-import javax.inject.Inject
 
-class CategoryDomainToUiMapper @Inject constructor() {
+class CategoryDomainToUiMapper {
     fun mapToUiModel(category: Category): ArticleItemUiModel {
         return ArticleItemUiModel(
             id = category.id.toString(),

@@ -9,7 +9,6 @@ import com.myfinances.domain.util.Result
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import java.util.Date
-import javax.inject.Inject
 
 /**
  * Use-case, который инкапсулирует бизнес-логику получения и обработки транзакций.
@@ -20,7 +19,7 @@ import javax.inject.Inject
  * 5. Считает итоговую сумму.
  * 6. Возвращает агрегированные доменные данные в контейнере [TransactionData].
  */
-class GetTransactionsUseCase @Inject constructor(
+class GetTransactionsUseCase(
     private val transactionsRepository: TransactionsRepository,
     private val categoriesRepository: CategoriesRepository,
     private val accountsRepository: AccountsRepository,
