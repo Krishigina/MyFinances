@@ -5,6 +5,7 @@ import com.myfinances.data.network.dto.AccountDto
 import com.myfinances.data.network.dto.CategoryDto
 import com.myfinances.data.network.dto.TransactionDto
 import com.myfinances.data.network.dto.UpdateAccountRequest
+import com.myfinances.data.network.dto.UpdateTransactionRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -43,6 +44,15 @@ interface ApiService {
         @Query("startDate") startDate: String,
         @Query("endDate") endDate: String
     ): Response<List<TransactionDto>>
+
+    @GET("transactions/{id}")
+    suspend fun getTransactionById(@Path("id") transactionId: Int): Response<TransactionDto>
+
+    @PUT("transactions/{id}")
+    suspend fun updateTransaction(
+        @Path("id") transactionId: Int,
+        @Body request: UpdateTransactionRequest
+    ): Response<TransactionDto>
 }
 
 data class CreateTransactionRequest(

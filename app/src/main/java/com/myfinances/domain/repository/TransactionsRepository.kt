@@ -13,4 +13,23 @@ interface TransactionsRepository {
         startDate: Date,
         endDate: Date
     ): Result<List<Transaction>>
+
+    suspend fun getTransactionById(transactionId: Int): Result<Transaction>
+
+    suspend fun createTransaction(
+        accountId: Int,
+        categoryId: Int,
+        amount: Double,
+        transactionDate: Date,
+        comment: String?
+    ): Result<Transaction>
+
+    suspend fun updateTransaction(
+        transactionId: Int,
+        accountId: Int,
+        categoryId: Int,
+        amount: Double,
+        transactionDate: Date,
+        comment: String?
+    ): Result<Transaction>
 }
