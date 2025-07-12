@@ -1,5 +1,6 @@
 package com.myfinances.ui.screens.add_edit_transaction
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -119,7 +120,7 @@ private fun TransactionDetailsContent(
                     id = "category",
                     title = stringResource(R.string.category),
                     type = ItemType.SETTING,
-                    onClick = { onEvent(AddEditTransactionEvent.ToggleCategoryPicker) },
+                    onClick = { onEvent(AddEditTransactionEvent.ShowCategoryPicker) },
                     trailingContent = TrailingContent.TextWithArrow(
                         text = uiState.selectedCategory?.name ?: ""
                     )
@@ -141,7 +142,7 @@ private fun TransactionDetailsContent(
                     id = "date",
                     title = stringResource(R.string.date),
                     type = ItemType.SETTING,
-                    onClick = { onEvent(AddEditTransactionEvent.ToggleDatePicker) },
+                    onClick = { onEvent(AddEditTransactionEvent.ShowDatePicker) },
                     trailingContent = TrailingContent.TextWithArrow(
                         text = dateFormat.format(uiState.date)
                     )
@@ -155,7 +156,7 @@ private fun TransactionDetailsContent(
                     id = "time",
                     title = stringResource(R.string.time),
                     type = ItemType.SETTING,
-                    onClick = { onEvent(AddEditTransactionEvent.ToggleTimePicker) },
+                    onClick = { onEvent(AddEditTransactionEvent.ShowTimePicker) },
                     trailingContent = TrailingContent.TextWithArrow(
                         text = timeFormat.format(uiState.date)
                     )
@@ -302,22 +303,22 @@ private fun HandleDialogs(
         )
         HistoryDatePickerDialog(
             datePickerState = datePickerState,
-            onDismissRequest = { onEvent(AddEditTransactionEvent.ToggleDatePicker) },
+            onDismissRequest = { onEvent(AddEditTransactionEvent.HideDatePicker) },
             onConfirm = { timestamp ->
                 timestamp?.let {
                     onEvent(AddEditTransactionEvent.DateSelected(Date(it)))
                 }
-                onEvent(AddEditTransactionEvent.ToggleDatePicker)
+                onEvent(AddEditTransactionEvent.HideDatePicker)
             }
         )
     }
 
     if (uiState.showTimePicker) {
         TimePickerDialog(
-            onDismiss = { onEvent(AddEditTransactionEvent.ToggleTimePicker) },
+            onDismiss = { onEvent(AddEditTransactionEvent.HideTimePicker) },
             onConfirm = { hour, minute ->
                 onEvent(AddEditTransactionEvent.TimeChanged(hour, minute))
-                onEvent(AddEditTransactionEvent.ToggleTimePicker)
+                onEvent(AddEditTransactionEvent.HideTimePicker)
             },
             initialHour = calendar.get(Calendar.HOUR_OF_DAY),
             initialMinute = calendar.get(Calendar.MINUTE)
@@ -327,8 +328,10 @@ private fun HandleDialogs(
     if (uiState.showCategoryPicker) {
         CategoryPickerBottomSheet(
             categories = uiState.categories,
-            onCategorySelected = { onEvent(AddEditTransactionEvent.CategorySelected(it)) },
-            onDismiss = { onEvent(AddEditTransactionEvent.ToggleCategoryPicker) },
+            onCategorySelected = {
+                onEvent(AddEditTransactionEvent.CategorySelected(it))
+            },
+            onDismiss = { onEvent(AddEditTransactionEvent.HideCategoryPicker) },
         )
     }
 
@@ -346,14 +349,13 @@ private fun HandleDialogs(
 
     if (uiState.showDeleteConfirmation) {
         AlertDialog(
-            onDismissRequest = { onEvent(AddEditTransactionEvent.DismissDeleteConfirmation) },
+            onDismissRequest = { onEvent(AddEditTransactionEvent.HideDeleteConfirmation) },
             title = { Text(stringResource(R.string.delete_confirmation_title)) },
             text = { Text(stringResource(R.string.delete_confirmation_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
                         onEvent(AddEditTransactionEvent.DeleteTransaction)
-                        onEvent(AddEditTransactionEvent.DismissDeleteConfirmation)
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
@@ -361,7 +363,7 @@ private fun HandleDialogs(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { onEvent(AddEditTransactionEvent.DismissDeleteConfirmation) }) {
+                TextButton(onClick = { onEvent(AddEditTransactionEvent.HideDeleteConfirmation) }) {
                     Text(stringResource(id = R.string.action_cancel))
                 }
             }

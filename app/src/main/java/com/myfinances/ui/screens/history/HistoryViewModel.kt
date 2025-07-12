@@ -2,11 +2,9 @@ package com.myfinances.ui.screens.history
 
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myfinances.data.manager.AccountUpdateManager
-import com.myfinances.di.ViewModelAssistedFactory
 import com.myfinances.domain.entity.TransactionData
 import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.domain.usecase.GetTransactionsUseCase
@@ -14,26 +12,18 @@ import com.myfinances.domain.util.Result
 import com.myfinances.domain.util.withTimeAtStartOfDay
 import com.myfinances.ui.mappers.TransactionDomainToUiMapper
 import com.myfinances.ui.model.HistoryUiModel
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
+import javax.inject.Inject
 
-class HistoryViewModel @AssistedInject constructor(
-    @Assisted private val savedStateHandle: SavedStateHandle,
+class HistoryViewModel @Inject constructor(
     private val getTransactionsUseCase: GetTransactionsUseCase,
     private val accountUpdateManager: AccountUpdateManager,
     private val mapper: TransactionDomainToUiMapper
 ) : ViewModel() {
-
-    @AssistedFactory
-    interface Factory : ViewModelAssistedFactory<HistoryViewModel> {
-        override fun create(savedStateHandle: SavedStateHandle): HistoryViewModel
-    }
 
     private lateinit var transactionType: TransactionTypeFilter
 
@@ -42,11 +32,9 @@ class HistoryViewModel @AssistedInject constructor(
 
     val snackbarHostState = SnackbarHostState()
 
-    fun initialize() {
+    fun initialize(filter: TransactionTypeFilter) {
         if (this::transactionType.isInitialized) return
-        this.transactionType = savedStateHandle.get<TransactionTypeFilter>("transactionType")
-            ?: TransactionTypeFilter.ALL
-
+        this.transactionType = filter
 
         val calendar = Calendar.getInstance()
         val endDate = calendar.time

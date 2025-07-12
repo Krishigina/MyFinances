@@ -8,12 +8,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myfinances.R
 import com.myfinances.data.manager.AccountUpdateManager
-import com.myfinances.di.ViewModelAssistedFactory
 import com.myfinances.domain.entity.Account
 import com.myfinances.domain.entity.Category
 import com.myfinances.domain.entity.Transaction
@@ -28,24 +26,17 @@ import com.myfinances.domain.util.Result
 import com.myfinances.ui.util.ResourceProvider
 import com.myfinances.ui.viewmodel.TopBarAction
 import com.myfinances.ui.viewmodel.TopBarState
-import com.myfinances.ui.viewmodel.TopBarStateProvider
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.RoundingMode
 import java.util.Calendar
 import java.util.Date
+import javax.inject.Inject
 
-class AddEditTransactionViewModel @AssistedInject constructor(
-    @Assisted private val savedStateHandle: SavedStateHandle,
+class AddEditTransactionViewModel @Inject constructor(
     private val getCategoriesUseCase: GetCategoriesUseCase,
     private val createTransactionUseCase: CreateTransactionUseCase,
     private val updateTransactionUseCase: UpdateTransactionUseCase,
@@ -54,59 +45,39 @@ class AddEditTransactionViewModel @AssistedInject constructor(
     private val getAccountUseCase: GetAccountUseCase,
     private val accountUpdateManager: AccountUpdateManager,
     private val resourceProvider: ResourceProvider
-) : ViewModel(), TopBarStateProvider {
-
-    @AssistedFactory
-    interface Factory : ViewModelAssistedFactory<AddEditTransactionViewModel> {
-        override fun create(savedStateHandle: SavedStateHandle): AddEditTransactionViewModel
-    }
+) : ViewModel() {
 
     private val _uiState =
         MutableStateFlow<AddEditTransactionUiState>(AddEditTransactionUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
-    override val topBarState: MutableStateFlow<TopBarState> = MutableStateFlow(TopBarState())
+    val topBarState: MutableStateFlow<TopBarState> = MutableStateFlow(TopBarState())
 
     private var transactionId: Int = -1
     private var isEditMode: Boolean = false
     private lateinit var transactionType: TransactionTypeFilter
 
-    init {
-        // <<< ОТЛАДКА
-        Log.d("DEBUG_NAV", "[ViewModel] Initializing...")
-        val keys = savedStateHandle.keys()
-        if (keys.isEmpty()) {
-            Log.d("DEBUG_NAV", "[ViewModel] SavedStateHandle is EMPTY.")
-        } else {
-            Log.d("DEBUG_NAV", "[ViewModel] SavedStateHandle keys: $keys")
-            for (key in keys) {
-                Log.d("DEBUG_NAV", "[ViewModel]   - Key: '$key', Value: '${savedStateHandle.get<Any>(key)}', Type: ${savedStateHandle.get<Any>(key)?.javaClass?.simpleName}")
-            }
-        }
-        // >>> ОТЛАДКА
+    fun initialize(id: Int, type: TransactionTypeFilter) {
+        if (this::transactionType.isInitialized) return
 
-        transactionId = savedStateHandle.get<Int>("transactionId") ?: -1
-        isEditMode = transactionId != -1
-        transactionType = savedStateHandle.get<TransactionTypeFilter>("transactionType")
-            ?: TransactionTypeFilter.EXPENSE
+        this.transactionId = id
+        this.isEditMode = id != -1
+        this.transactionType = type
 
-        Log.d("DEBUG_NAV", "[ViewModel] Parsed transactionId: $transactionId, isEditMode: $isEditMode")
+        Log.d("DEBUG_NAV", "[ViewModel] Initialized with transactionId: $transactionId, isEditMode: $isEditMode")
         loadInitialData()
         observeUiStateForTopBar()
     }
 
     private fun observeUiStateForTopBar() {
         viewModelScope.launch {
-            _uiState.map { state ->
+            _uiState.collect { state ->
                 val successState = state as? AddEditTransactionUiState.Success
-                TopBarState(
+                val newTopBarState = TopBarState(
                     title = successState?.pageTitle ?: "",
                     navigationAction = TopBarAction(
                         id = "back",
-                        onAction = {
-                            val event = AddEditTransactionEvent.NavigateBack
-                            onEvent(event)
-                        },
+                        onAction = { onEvent(AddEditTransactionEvent.NavigateBack) },
                         content = {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_top_bar_cancel),
@@ -117,8 +88,7 @@ class AddEditTransactionViewModel @AssistedInject constructor(
                     actions = listOf(
                         TopBarAction(
                             id = "save",
-                            isEnabled = successState?.let { it.selectedCategory != null && it.amount.isNotBlank() }
-                                ?: false,
+                            isEnabled = successState?.let { it.selectedCategory != null && it.amount.isNotBlank() } ?: false,
                             onAction = { onEvent(AddEditTransactionEvent.SaveTransaction) },
                             content = {
                                 if (successState?.isSaving == true) {
@@ -137,12 +107,9 @@ class AddEditTransactionViewModel @AssistedInject constructor(
                         )
                     )
                 )
-            }.stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.Eagerly,
-                initialValue = TopBarState()
-            ).collect {
-                topBarState.value = it
+                if (topBarState.value != newTopBarState) {
+                    topBarState.value = newTopBarState
+                }
             }
         }
     }
@@ -197,25 +164,13 @@ class AddEditTransactionViewModel @AssistedInject constructor(
             }
             AddEditTransactionEvent.SaveTransaction -> saveTransaction()
             AddEditTransactionEvent.DeleteTransaction -> deleteTransaction()
-            AddEditTransactionEvent.ToggleDatePicker -> _uiState.update {
-                (currentState as AddEditTransactionUiState.Success).copy(showDatePicker = !currentState.showDatePicker)
-            }
-            AddEditTransactionEvent.ToggleTimePicker -> _uiState.update {
-                (currentState as AddEditTransactionUiState.Success).copy(showTimePicker = !currentState.showTimePicker)
-            }
-            AddEditTransactionEvent.ToggleCategoryPicker -> _uiState.update {
-                (currentState as AddEditTransactionUiState.Success).copy(showCategoryPicker = !currentState.showCategoryPicker)
-            }
-
             AddEditTransactionEvent.DismissErrorDialog -> _uiState.update {
-                (currentState as AddEditTransactionUiState.Success).copy(
-                    error = null
-                )
+                (currentState as AddEditTransactionUiState.Success).copy(error = null)
             }
             AddEditTransactionEvent.ShowDeleteConfirmation -> _uiState.update {
                 (currentState as AddEditTransactionUiState.Success).copy(showDeleteConfirmation = true)
             }
-            AddEditTransactionEvent.DismissDeleteConfirmation -> _uiState.update {
+            AddEditTransactionEvent.HideDeleteConfirmation -> _uiState.update {
                 (currentState as AddEditTransactionUiState.Success).copy(showDeleteConfirmation = false)
             }
 
@@ -223,10 +178,15 @@ class AddEditTransactionViewModel @AssistedInject constructor(
                 val state = _uiState.value
                 if (state is AddEditTransactionUiState.Success) {
                     _uiState.update { state.copy(closeScreen = true) }
-                } else {
-                    // Handle case where back is pressed during loading
                 }
             }
+
+            AddEditTransactionEvent.ShowDatePicker -> _uiState.update { (currentState as AddEditTransactionUiState.Success).copy(showDatePicker = true) }
+            AddEditTransactionEvent.HideDatePicker -> _uiState.update { (currentState as AddEditTransactionUiState.Success).copy(showDatePicker = false) }
+            AddEditTransactionEvent.ShowTimePicker -> _uiState.update { (currentState as AddEditTransactionUiState.Success).copy(showTimePicker = true) }
+            AddEditTransactionEvent.HideTimePicker -> _uiState.update { (currentState as AddEditTransactionUiState.Success).copy(showTimePicker = false) }
+            AddEditTransactionEvent.ShowCategoryPicker -> _uiState.update { (currentState as AddEditTransactionUiState.Success).copy(showCategoryPicker = true) }
+            AddEditTransactionEvent.HideCategoryPicker -> _uiState.update { (currentState as AddEditTransactionUiState.Success).copy(showCategoryPicker = false) }
         }
     }
 
@@ -386,7 +346,6 @@ class AddEditTransactionViewModel @AssistedInject constructor(
         if (currentState is AddEditTransactionUiState.Success) {
             _uiState.update { currentState.copy(error = error) }
         } else {
-            // Если исходное состояние было Loading, создаем Success состояние с ошибкой
             val title = if (!isEditMode) {
                 if (transactionType == TransactionTypeFilter.EXPENSE)
                     resourceProvider.getString(R.string.add_expense_title)
@@ -403,7 +362,7 @@ class AddEditTransactionViewModel @AssistedInject constructor(
                 error = error,
                 isEditMode = isEditMode,
                 transactionType = this.transactionType,
-                accountId = -1 // Временное значение, т.к. загрузка не удалась
+                accountId = -1
             )
         }
     }

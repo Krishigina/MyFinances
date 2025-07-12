@@ -36,15 +36,11 @@ abstract class ViewModelModule {
 
     @Binds
     @IntoMap
-    @AssistedViewModelKey(HistoryViewModel::class)
-    abstract fun bindHistoryViewModelAssistedFactory(
-        factory: HistoryViewModel.Factory
-    ): ViewModelAssistedFactory<out ViewModel>
+    @ViewModelKey(HistoryViewModel::class)
+    abstract fun bindHistoryViewModel(viewModel: HistoryViewModel): ViewModel
 
     @Binds
     @IntoMap
-    @AssistedViewModelKey(AddEditTransactionViewModel::class)
-    abstract fun bindAddEditTransactionViewModelAssistedFactory(
-        factory: AddEditTransactionViewModel.Factory
-    ): ViewModelAssistedFactory<out ViewModel>
+    @ViewModelKey(AddEditTransactionViewModel::class)
+    abstract fun bindAddEditTransactionViewModel(viewModel: AddEditTransactionViewModel): ViewModel
 }

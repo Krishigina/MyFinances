@@ -11,11 +11,15 @@ sealed interface AddEditTransactionEvent {
     data class CommentChanged(val comment: String) : AddEditTransactionEvent
     data object SaveTransaction : AddEditTransactionEvent
     data object DeleteTransaction : AddEditTransactionEvent
-    data object ToggleDatePicker : AddEditTransactionEvent
-    data object ToggleTimePicker : AddEditTransactionEvent
-    data object ToggleCategoryPicker : AddEditTransactionEvent
     data object DismissErrorDialog : AddEditTransactionEvent
-    data object DismissDeleteConfirmation : AddEditTransactionEvent
     data object ShowDeleteConfirmation : AddEditTransactionEvent
+    data object HideDeleteConfirmation : AddEditTransactionEvent
     data object NavigateBack : AddEditTransactionEvent
+
+    data object ShowDatePicker : AddEditTransactionEvent
+    data object HideDatePicker : AddEditTransactionEvent
+    data object ShowTimePicker : AddEditTransactionEvent
+    data object HideTimePicker : AddEditTransactionEvent
+    data object ShowCategoryPicker : AddEditTransactionEvent
+    data object HideCategoryPicker : AddEditTransactionEvent
 }

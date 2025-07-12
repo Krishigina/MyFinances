@@ -1,5 +1,6 @@
 package com.myfinances.ui.navigation
 
+import android.os.Build
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -54,7 +55,7 @@ import com.myfinances.ui.viewmodel.TopBarState
 fun NavigationGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    viewModelFactoryCreator: ViewModelFactory,
+    viewModelFactory: ViewModelFactory,
     onScaffoldStateChanged: (ScaffoldState) -> Unit
 ) {
     NavHost(
@@ -66,11 +67,8 @@ fun NavigationGraph(
             startDestination = Destination.Expenses.route,
             route = "main_graph"
         ) {
-            composable(Destination.Expenses.route) { backStackEntry ->
-                val mainGraphEntry = remember(backStackEntry) { navController.getBackStackEntry("main_graph") }
-                val graphScopedFactory = remember { viewModelFactoryCreator.create(mainGraphEntry) }
-                val viewModel: ExpensesViewModel = viewModel(viewModelStoreOwner = mainGraphEntry, factory = graphScopedFactory)
-
+            composable(Destination.Expenses.route) {
+                val viewModel: ExpensesViewModel = viewModel(factory = viewModelFactory)
                 LaunchedEffect(Unit) {
                     onScaffoldStateChanged(
                         ScaffoldState(
@@ -104,10 +102,8 @@ fun NavigationGraph(
                 }
                 ExpensesScreen(navController = navController, viewModel = viewModel)
             }
-            composable(Destination.Income.route) { backStackEntry ->
-                val mainGraphEntry = remember(backStackEntry) { navController.getBackStackEntry("main_graph") }
-                val graphScopedFactory = remember { viewModelFactoryCreator.create(mainGraphEntry) }
-                val viewModel: IncomeViewModel = viewModel(viewModelStoreOwner = mainGraphEntry, factory = graphScopedFactory)
+            composable(Destination.Income.route) {
+                val viewModel: IncomeViewModel = viewModel(factory = viewModelFactory)
 
                 LaunchedEffect(Unit) {
                     onScaffoldStateChanged(
@@ -142,10 +138,8 @@ fun NavigationGraph(
                 }
                 IncomeScreen(navController = navController, viewModel = viewModel)
             }
-            composable(Destination.Account.route) { backStackEntry ->
-                val mainGraphEntry = remember(backStackEntry) { navController.getBackStackEntry("main_graph") }
-                val graphScopedFactory = remember { viewModelFactoryCreator.create(mainGraphEntry) }
-                val viewModel: AccountViewModel = viewModel(viewModelStoreOwner = mainGraphEntry, factory = graphScopedFactory)
+            composable(Destination.Account.route) {
+                val viewModel: AccountViewModel = viewModel(factory = viewModelFactory)
                 val accountState by viewModel.uiState.collectAsStateWithLifecycle()
 
                 LaunchedEffect(accountState) {
@@ -192,11 +186,8 @@ fun NavigationGraph(
                 }
                 AccountScreen(navController = navController, viewModel = viewModel)
             }
-            composable(Destination.Articles.route) { backStackEntry ->
-                val mainGraphEntry = remember(backStackEntry) { navController.getBackStackEntry("main_graph") }
-                val graphScopedFactory = remember { viewModelFactoryCreator.create(mainGraphEntry) }
-                val viewModel: ArticlesViewModel = viewModel(viewModelStoreOwner = mainGraphEntry, factory = graphScopedFactory)
-
+            composable(Destination.Articles.route) {
+                val viewModel: ArticlesViewModel = viewModel(factory = viewModelFactory)
                 LaunchedEffect(Unit) {
                     onScaffoldStateChanged(
                         ScaffoldState(
@@ -228,12 +219,19 @@ fun NavigationGraph(
                 navArgument("parentRoute") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val viewModel: HistoryViewModel = viewModel(
-                viewModelStoreOwner = backStackEntry,
-                factory = viewModelFactoryCreator.create(backStackEntry)
-            )
+            val viewModel: HistoryViewModel = viewModel(factory = viewModelFactory)
 
-            LaunchedEffect(Unit) {
+            // Безопасно получаем аргумент
+            @Suppress("DEPRECATION") // Для поддержки старых API
+            val transactionType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                backStackEntry.arguments?.getSerializable("transactionType", TransactionTypeFilter::class.java)
+            } else {
+                backStackEntry.arguments?.getSerializable("transactionType") as? TransactionTypeFilter
+            } ?: TransactionTypeFilter.ALL
+
+
+            LaunchedEffect(key1 = viewModel) {
+                viewModel.initialize(transactionType)
                 onScaffoldStateChanged(
                     ScaffoldState(
                         topBarState = TopBarState(
@@ -270,17 +268,28 @@ fun NavigationGraph(
                 }
             )
         ) { backStackEntry ->
-            val viewModel: AddEditTransactionViewModel = viewModel(
-                viewModelStoreOwner = backStackEntry,
-                factory = viewModelFactoryCreator.create(backStackEntry)
-            )
-            val topBarState by viewModel.topBarState.collectAsStateWithLifecycle()
+            val viewModel: AddEditTransactionViewModel = viewModel(factory = viewModelFactory)
+            val topBarState by viewModel.uiState.collectAsStateWithLifecycle()
+
+            val transactionId = backStackEntry.arguments?.getInt("transactionId") ?: -1
+
+            @Suppress("DEPRECATION")
+            val transactionType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                backStackEntry.arguments?.getSerializable("transactionType", TransactionTypeFilter::class.java)
+            } else {
+                backStackEntry.arguments?.getSerializable("transactionType") as? TransactionTypeFilter
+            } ?: TransactionTypeFilter.EXPENSE
+
+            LaunchedEffect(key1 = viewModel) {
+                viewModel.initialize(transactionId, transactionType)
+            }
 
             LaunchedEffect(topBarState) {
                 onScaffoldStateChanged(
-                    ScaffoldState(topBarState = topBarState)
+                    ScaffoldState(topBarState = viewModel.topBarState.value)
                 )
             }
+
             AddEditTransactionScreen(
                 navController = navController,
                 viewModel = viewModel

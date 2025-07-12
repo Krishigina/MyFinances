@@ -11,7 +11,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,10 +37,6 @@ fun HistoryScreen(
     navController: NavController,
     viewModel: HistoryViewModel
 ) {
-    LaunchedEffect(key1 = Unit) {
-        viewModel.initialize()
-    }
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     var showStartDatePicker by remember { mutableStateOf(false) }
@@ -143,14 +138,12 @@ private fun HistoryScreenContent(
                     ),
                     showTrailingArrow = true,
                     onClick = {
-                        // <<< ОТЛАДКА
                         Log.d("DEBUG_NAV", "[HistoryScreen] Click on transaction with ID: ${model.id}")
                         val route = Destination.AddEditTransaction.createRoute(
                             transactionType = transactionType,
                             transactionId = model.id.toInt()
                         )
                         Log.d("DEBUG_NAV", "[HistoryScreen] Navigating to route: $route")
-                        // >>> ОТЛАДКА
                         navController.navigate(route)
                     }
                 )

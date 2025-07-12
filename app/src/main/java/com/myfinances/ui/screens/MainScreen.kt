@@ -33,7 +33,7 @@ fun MainScreen() {
     val mainNavController = rememberNavController()
 
     val appComponent = (LocalContext.current.applicationContext as MyFinancesApplication).appComponent
-    val viewModelFactoryCreator = remember {
+    val viewModelFactory = remember {
         appComponent.viewModelComponentFactory().create().getViewModelFactory()
     }
 
@@ -88,7 +88,7 @@ fun MainScreen() {
             NavigationGraph(
                 navController = mainNavController,
                 modifier = Modifier.padding(paddingValues),
-                viewModelFactoryCreator = viewModelFactoryCreator,
+                viewModelFactory = viewModelFactory,
                 onScaffoldStateChanged = { newState ->
                     scaffoldState = newState
                 }
