@@ -48,4 +48,19 @@ sealed class Destination(
             return "history/${filter.name}/${parent.route}"
         }
     }
+
+    data object AddEditTransaction :
+        Destination(route = "add_edit_transaction?transactionId={transactionId}&transactionType={transactionType}") {
+        fun createRoute(
+            transactionType: TransactionTypeFilter,
+            transactionId: Int? = null
+        ): String {
+            val baseRoute = "add_edit_transaction?transactionType=${transactionType.name}"
+            return if (transactionId != null) {
+                "$baseRoute&transactionId=$transactionId"
+            } else {
+                baseRoute
+            }
+        }
+    }
 }

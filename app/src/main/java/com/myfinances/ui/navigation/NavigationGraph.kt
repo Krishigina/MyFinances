@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.ui.screens.account.AccountScreen
+import com.myfinances.ui.screens.add_edit_transaction.AddEditTransactionScreen
 import com.myfinances.ui.screens.articles.ArticlesScreen
 import com.myfinances.ui.screens.expenses.ExpensesScreen
 import com.myfinances.ui.screens.history.HistoryScreen
@@ -29,10 +30,10 @@ fun NavigationGraph(navController: NavHostController, modifier: Modifier = Modif
         modifier = modifier
     ) {
         composable(Destination.Expenses.route) {
-            ExpensesScreen()
+            ExpensesScreen(navController = navController)
         }
         composable(Destination.Income.route) {
-            IncomeScreen()
+            IncomeScreen(navController = navController)
         }
         composable(Destination.Account.route) {
             // Передаем navController для доступа к backStackEntry
@@ -55,6 +56,23 @@ fun NavigationGraph(navController: NavHostController, modifier: Modifier = Modif
             )
         ) { backStackEntry ->
             HistoryScreen(savedStateHandle = backStackEntry.savedStateHandle)
+        }
+        composable(
+            route = Destination.AddEditTransaction.route,
+            arguments = listOf(
+                navArgument("transactionId") {
+                    type = NavType.StringType
+                    nullable = true
+                },
+                navArgument("transactionType") {
+                    type = NavType.EnumType(TransactionTypeFilter::class.java)
+                }
+            )
+        ) { backStackEntry ->
+            AddEditTransactionScreen(
+                navController = navController,
+                savedStateHandle = backStackEntry.savedStateHandle
+            )
         }
     }
 }

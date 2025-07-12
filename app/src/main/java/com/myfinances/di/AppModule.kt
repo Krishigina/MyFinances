@@ -3,6 +3,7 @@ package com.myfinances.di
 import com.myfinances.BuildConfig
 import com.myfinances.data.manager.AccountUpdateManager
 import com.myfinances.data.network.RetryInterceptor
+import com.myfinances.ui.util.ResourceProvider
 import dagger.Module
 import dagger.Provides
 import okhttp3.OkHttpClient
@@ -51,5 +52,11 @@ object AppModule {
     @Singleton
     fun provideAccountUpdateManager(): AccountUpdateManager {
         return AccountUpdateManager()
+    }
+
+    @Provides
+    @Singleton
+    fun provideResourceProvider(context: android.content.Context): ResourceProvider {
+        return ResourceProvider(context)
     }
 }
