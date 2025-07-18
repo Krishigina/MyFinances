@@ -1,5 +1,6 @@
 package com.myfinances.di
 
+import com.myfinances.data.manager.AccountUpdateManager
 import com.myfinances.di.scopes.ViewModelScope
 import com.myfinances.domain.repository.AccountsRepository
 import com.myfinances.domain.repository.CategoriesRepository
@@ -90,17 +91,23 @@ class DomainModule {
     @ViewModelScope
     fun provideCreateTransactionUseCase(
         transactionsRepository: TransactionsRepository,
-        getActiveAccountIdUseCase: GetActiveAccountIdUseCase
+        getActiveAccountIdUseCase: GetActiveAccountIdUseCase,
+        accountUpdateManager: AccountUpdateManager
     ): CreateTransactionUseCase {
-        return CreateTransactionUseCase(transactionsRepository, getActiveAccountIdUseCase)
+        return CreateTransactionUseCase(
+            transactionsRepository,
+            getActiveAccountIdUseCase,
+            accountUpdateManager
+        )
     }
 
     @Provides
     @ViewModelScope
     fun provideUpdateTransactionUseCase(
-        transactionsRepository: TransactionsRepository
+        transactionsRepository: TransactionsRepository,
+        accountUpdateManager: AccountUpdateManager
     ): UpdateTransactionUseCase {
-        return UpdateTransactionUseCase(transactionsRepository)
+        return UpdateTransactionUseCase(transactionsRepository, accountUpdateManager)
     }
 
     @Provides
@@ -114,8 +121,9 @@ class DomainModule {
     @Provides
     @ViewModelScope
     fun provideDeleteTransactionUseCase(
-        repository: TransactionsRepository
+        repository: TransactionsRepository,
+        accountUpdateManager: AccountUpdateManager
     ): DeleteTransactionUseCase {
-        return DeleteTransactionUseCase(repository)
+        return DeleteTransactionUseCase(repository, accountUpdateManager)
     }
 }

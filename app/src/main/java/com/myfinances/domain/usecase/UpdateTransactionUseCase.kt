@@ -1,5 +1,6 @@
 package com.myfinances.domain.usecase
 
+import com.myfinances.data.manager.AccountUpdateManager
 import com.myfinances.domain.entity.Transaction
 import com.myfinances.domain.repository.TransactionsRepository
 import com.myfinances.domain.util.Result
@@ -11,7 +12,8 @@ import javax.inject.Inject
  * Выполняет валидацию входных данных перед отправкой в репозиторий.
  */
 class UpdateTransactionUseCase @Inject constructor(
-    private val transactionsRepository: TransactionsRepository
+    private val transactionsRepository: TransactionsRepository,
+    private val accountUpdateManager: AccountUpdateManager
 ) {
     suspend operator fun invoke(
         transactionId: Int,
@@ -26,7 +28,7 @@ class UpdateTransactionUseCase @Inject constructor(
             return Result.Error(IllegalArgumentException("Сумма должна быть положительным числом"))
         }
 
-        return transactionsRepository.updateTransaction(
+        val result = transactionsRepository.updateTransaction(
             transactionId = transactionId,
             accountId = accountId,
             categoryId = categoryId,
@@ -34,5 +36,11 @@ class UpdateTransactionUseCase @Inject constructor(
             transactionDate = transactionDate,
             comment = comment
         )
+
+        if (result is Result.Success) {
+            accountUpdateManager.notifyAccountUpdated()
+        }
+
+        return result
     }
 }

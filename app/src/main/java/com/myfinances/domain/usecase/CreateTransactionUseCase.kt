@@ -1,5 +1,6 @@
 package com.myfinances.domain.usecase
 
+import com.myfinances.data.manager.AccountUpdateManager
 import com.myfinances.domain.entity.Transaction
 import com.myfinances.domain.repository.TransactionsRepository
 import com.myfinances.domain.util.Result
@@ -12,7 +13,8 @@ import javax.inject.Inject
  */
 class CreateTransactionUseCase @Inject constructor(
     private val transactionsRepository: TransactionsRepository,
-    private val getActiveAccountIdUseCase: GetActiveAccountIdUseCase
+    private val getActiveAccountIdUseCase: GetActiveAccountIdUseCase,
+    private val accountUpdateManager: AccountUpdateManager
 ) {
     suspend operator fun invoke(
         categoryId: Int,
@@ -30,12 +32,18 @@ class CreateTransactionUseCase @Inject constructor(
             return Result.Error(IllegalArgumentException("Сумма должна быть положительным числом"))
         }
 
-        return transactionsRepository.createTransaction(
+        val result = transactionsRepository.createTransaction(
             accountId = accountIdResult.data,
             categoryId = categoryId,
             amount = amountAsDouble,
             transactionDate = transactionDate,
             comment = comment
         )
+
+        if (result is Result.Success) {
+            accountUpdateManager.notifyAccountUpdated()
+        }
+
+        return result
     }
 }
