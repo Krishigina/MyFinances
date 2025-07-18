@@ -19,6 +19,10 @@ class ExpensesViewModel @Inject constructor(
     mapper: TransactionDomainToUiMapper
 ) : BaseTransactionsViewModel<ExpensesUiState, ExpensesEvent>(accountUpdateManager, mapper) {
 
+    init {
+        startDataCollection()
+    }
+
     override fun getInitialState(): ExpensesUiState = ExpensesUiState.Loading
     override fun getLoadingState(): ExpensesUiState = ExpensesUiState.Loading
     override fun isContentState(state: ExpensesUiState): Boolean = state is ExpensesUiState.Content

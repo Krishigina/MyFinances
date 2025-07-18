@@ -19,6 +19,10 @@ class IncomeViewModel @Inject constructor(
     mapper: TransactionDomainToUiMapper
 ) : BaseTransactionsViewModel<IncomeUiState, IncomeEvent>(accountUpdateManager, mapper) {
 
+    init {
+        startDataCollection()
+    }
+
     override fun getInitialState(): IncomeUiState = IncomeUiState.Loading
     override fun getLoadingState(): IncomeUiState = IncomeUiState.Loading
     override fun isContentState(state: IncomeUiState): Boolean = state is IncomeUiState.Content

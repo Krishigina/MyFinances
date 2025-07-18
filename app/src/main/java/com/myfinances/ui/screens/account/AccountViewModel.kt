@@ -12,6 +12,8 @@ import com.myfinances.ui.mappers.AccountDomainToUiMapper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -92,7 +94,13 @@ class AccountViewModel @Inject constructor(
                 _uiState.value = AccountUiState.Loading
             }
 
-            when (val result = getAccountUseCase()) {
+            if (forceReload) {
+                getAccountUseCase.refresh()
+            }
+        }
+
+        getAccountUseCase().onEach { result ->
+            when (result) {
                 is Result.Success -> {
                     val accountUiModel = accountMapper.map(result.data)
                     _uiState.value = AccountUiState.Success(
@@ -109,7 +117,7 @@ class AccountViewModel @Inject constructor(
 
                 is Result.NetworkError -> showError("Ошибка сети. Проверьте подключение.")
             }
-        }
+        }.launchIn(viewModelScope)
     }
 
     private fun saveChanges(state: AccountUiState.Success) {
@@ -124,12 +132,25 @@ class AccountViewModel @Inject constructor(
                 currency = state.draftCurrency
             )
 
-            _uiState.update { state.copy(isSaving = false) }
+            // Явное приведение типа 'it' к AccountUiState.Success
+            _uiState.update {
+                if (it is AccountUiState.Success) {
+                    it.copy(isSaving = false)
+                } else {
+                    it
+                }
+            }
 
             when (result) {
                 is Result.Success -> {
                     showInfo("Счет успешно сохранен")
-                    loadAccount(forceReload = true)
+                    _uiState.update {
+                        if (it is AccountUiState.Success) {
+                            it.copy(isEditMode = false)
+                        } else {
+                            it
+                        }
+                    }
                 }
 
                 is Result.Error -> {

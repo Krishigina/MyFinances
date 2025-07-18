@@ -1,5 +1,10 @@
 package com.myfinances.data.repository
 
+import android.content.Context
+import androidx.work.Constraints
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.myfinances.data.db.dao.TransactionDao
 import com.myfinances.data.db.entity.toEntity
 import com.myfinances.data.network.ApiService
@@ -7,6 +12,7 @@ import com.myfinances.data.network.ConnectivityManagerSource
 import com.myfinances.data.network.CreateTransactionRequest
 import com.myfinances.data.network.dto.UpdateTransactionRequest
 import com.myfinances.data.network.dto.toDomainModel
+import com.myfinances.data.workers.SyncWorker
 import com.myfinances.domain.entity.Transaction
 import com.myfinances.domain.repository.TransactionsRepository
 import com.myfinances.domain.util.Result
@@ -23,6 +29,8 @@ import kotlin.random.Random
 
 
 class TransactionsRepositoryImpl @Inject constructor(
+    // Добавляем Context в конструктор
+    private val context: Context,
     private val apiService: ApiService,
     private val transactionDao: TransactionDao,
     private val connectivityManager: ConnectivityManagerSource
@@ -81,13 +89,11 @@ class TransactionsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getTransactionById(transactionId: Int): Result<Transaction> {
-        // Сначала пытаемся получить из локальной базы
         val localTransaction = transactionDao.getTransactionById(transactionId)
         if (localTransaction != null) {
             return Result.Success(localTransaction.toDomainModel())
         }
 
-        // Если нет в базе, идем в сеть (может быть полезно для синхронизации)
         if (!connectivityManager.isNetworkAvailable.first()) {
             return Result.Error(Exception("Transaction not found locally and no network"))
         }
@@ -119,8 +125,6 @@ class TransactionsRepositoryImpl @Inject constructor(
         transactionDate: Date,
         comment: String
     ): Result<Transaction> {
-        // Создаем транзакцию с временным отрицательным ID, чтобы избежать конфликтов
-        // с серверными ID. И помечаем её как несинхронизированную.
         val temporaryId = (System.currentTimeMillis() * -1) + Random.nextInt()
 
         val newTransaction = Transaction(
@@ -134,7 +138,7 @@ class TransactionsRepositoryImpl @Inject constructor(
 
         transactionDao.upsert(newTransaction.toEntity(isSynced = false))
 
-        // TODO: Запустить воркер для синхронизации
+        scheduleSync()
 
         return Result.Success(newTransaction)
     }
@@ -156,10 +160,9 @@ class TransactionsRepositoryImpl @Inject constructor(
             comment = comment
         )
 
-        // Обновляем локальную запись и помечаем её как несинхронизированную
         transactionDao.upsert(updatedTransaction.toEntity(isSynced = false))
 
-        // TODO: Запустить воркер для синхронизации
+        scheduleSync()
 
         return Result.Success(updatedTransaction)
     }
@@ -168,12 +171,9 @@ class TransactionsRepositoryImpl @Inject constructor(
         val transaction = transactionDao.getTransactionById(transactionId)
             ?: return Result.Error(Exception("Transaction not found"))
 
-        // Если транзакция была создана оффлайн и никогда не была на сервере
-        // (отрицательный ID), просто удаляем ее из локальной базы.
         if (transaction.id < 0) {
             transactionDao.deleteById(transaction.id)
         } else {
-            // Иначе, помечаем для "мягкого" удаления и последующей синхронизации
             val updatedTransaction = transaction.copy(
                 isDeletedLocally = true,
                 isSynced = false
@@ -181,8 +181,19 @@ class TransactionsRepositoryImpl @Inject constructor(
             transactionDao.upsert(updatedTransaction)
         }
 
-        // TODO: Запустить воркер для синхронизации
+        scheduleSync()
 
         return Result.Success(Unit)
+    }
+
+    // Метод для запуска разовой синхронизации
+    private fun scheduleSync() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+        val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
+            .setConstraints(constraints)
+            .build()
+        WorkManager.getInstance(context).enqueue(syncRequest)
     }
 }

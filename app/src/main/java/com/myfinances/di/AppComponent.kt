@@ -23,4 +23,6 @@ interface AppComponent {
     }
 
     fun viewModelComponentFactory(): ViewModelComponent.Factory
+
+    fun customWorkerFactory(): CustomWorkerFactory
 }

@@ -26,11 +26,6 @@ class GetExpenseTransactionsUseCase @Inject constructor(
     }
 
     suspend fun refresh(): Result<Unit> {
-        val accountIdResult = getActiveAccountIdUseCase()
-        return if (accountIdResult is Result.Success) {
-            getTransactionsUseCase.refresh(accountIdResult.data, startDate, endDate)
-        } else {
-            Result.Error(Exception("Active account not found"))
-        }
+        return getTransactionsUseCase.refresh(startDate, endDate)
     }
 }

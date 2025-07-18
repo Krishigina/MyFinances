@@ -28,6 +28,7 @@ import com.myfinances.ui.viewmodel.TopBarState
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.RoundingMode
@@ -181,22 +182,22 @@ class AddEditTransactionViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = AddEditTransactionUiState.Loading
 
-            val accountDeferred = async { getAccountUseCase() }
-            val categoriesDeferred = async { getCategoriesUseCase(transactionType) }
+            // Получаем Flow и берем первое значение
+            val accountResultDeferred = async { getAccountUseCase().first() }
+            val categoriesResultDeferred = async { getCategoriesUseCase(transactionType).first() }
             val transactionDeferred = if (isEditMode) {
                 async { getTransactionDetailsUseCase(transactionId) }
             } else {
                 null
             }
 
-            val accountResult: Result<Account> = accountDeferred.await()
-            val categoriesResult: Result<List<Category>> = categoriesDeferred.await()
+            val accountResult: Result<Account> = accountResultDeferred.await()
+            val categories: List<Category> = categoriesResultDeferred.await()
             val transactionResult: Result<Transaction>? = transactionDeferred?.await()
 
-            val results: List<Result<Any>> =
-                listOfNotNull(accountResult, categoriesResult, transactionResult)
-            val firstError = results.filterIsInstance<Result.Error>().firstOrNull()
-            val isNetworkError = results.any { it is Result.NetworkError }
+            // Проверяем ошибки
+            val firstError = listOfNotNull(accountResult, transactionResult).filterIsInstance<Result.Error>().firstOrNull()
+            val isNetworkError = listOfNotNull(accountResult, transactionResult).any { it is Result.NetworkError }
 
             if (isNetworkError) {
                 showErrorDialog("Ошибка сети. Проверьте подключение.") { loadInitialData() }
@@ -210,7 +211,6 @@ class AddEditTransactionViewModel @Inject constructor(
             }
 
             val account = (accountResult as Result.Success<Account>).data
-            val categories = (categoriesResult as Result.Success<List<Category>>).data
             val transaction = (transactionResult as? Result.Success<Transaction>)?.data
 
             val title = if (!isEditMode) {

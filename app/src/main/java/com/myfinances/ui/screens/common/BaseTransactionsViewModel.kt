@@ -29,7 +29,13 @@ abstract class BaseTransactionsViewModel<T, E : UiEvent>(
     val snackbarHostState = SnackbarHostState()
     private var dataCollectionJob: Job? = null
 
-    init {
+    // Вызов collectData() был здесь и был удален
+    // init {
+    //    collectData()
+    //    ...
+    // }
+
+    protected fun startDataCollection() {
         // При инициализации ViewModel, сразу начинаем слушать данные
         collectData()
 
@@ -40,12 +46,6 @@ abstract class BaseTransactionsViewModel<T, E : UiEvent>(
                 // Это также вызовет refresh.
                 collectData()
             }
-        }
-    }
-
-    open fun onEvent(event: E) {
-        when (event) {
-            is CommonEvent.Refresh -> refreshData()
         }
     }
 

@@ -15,6 +15,8 @@ import com.myfinances.ui.model.HistoryUiModel
 import com.myfinances.ui.navigation.Destination
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
@@ -78,13 +80,19 @@ class HistoryViewModel @Inject constructor(
             if (_uiState.value !is HistoryUiState.Content) {
                 _uiState.value = HistoryUiState.Loading
             }
-
-            when (val result = getTransactionsUseCase(startDate, endDate, transactionType)) {
-                is Result.Success -> processSuccess(result.data)
-                is Result.Error -> showError(result.exception.message ?: "Неизвестная ошибка")
-                is Result.NetworkError -> showError("Ошибка сети. Проверьте подключение.")
-            }
+            // Запускаем обновление данных с сервера в фоне
+            getTransactionsUseCase.refresh(startDate, endDate)
         }
+
+        // Подписываемся на Flow из базы данных
+        getTransactionsUseCase(startDate, endDate, transactionType)
+            .onEach { result ->
+                when (result) {
+                    is Result.Success -> processSuccess(result.data)
+                    is Result.Error -> showError(result.exception.message ?: "Неизвестная ошибка")
+                    is Result.NetworkError -> showError("Ошибка сети. Проверьте подключение.")
+                }
+            }.launchIn(viewModelScope)
     }
 
     private fun processSuccess(data: TransactionData) {
