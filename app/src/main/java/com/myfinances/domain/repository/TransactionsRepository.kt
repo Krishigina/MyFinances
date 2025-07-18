@@ -2,17 +2,21 @@ package com.myfinances.domain.repository
 
 import com.myfinances.domain.entity.Transaction
 import com.myfinances.domain.util.Result
+import kotlinx.coroutines.flow.Flow
 import java.util.Date
 
-/**
- * Репозиторий для управления данными о транзакциях.
- */
 interface TransactionsRepository {
-    suspend fun getTransactions(
+    fun getTransactions(
         accountId: Int,
         startDate: Date,
         endDate: Date
-    ): Result<List<Transaction>>
+    ): Flow<List<Transaction>>
+
+    suspend fun refreshTransactions(
+        accountId: Int,
+        startDate: Date,
+        endDate: Date
+    ): Result<Unit>
 
     suspend fun getTransactionById(transactionId: Int): Result<Transaction>
 
