@@ -7,6 +7,7 @@ import com.myfinances.domain.repository.TransactionsRepository
 import com.myfinances.domain.usecase.GetAccountUseCase
 import com.myfinances.domain.usecase.GetActiveAccountIdUseCase
 import com.myfinances.domain.usecase.GetCategoriesUseCase
+import com.myfinances.domain.usecase.GetLastSyncTimeUseCase
 import com.myfinances.domain.usecase.GetTransactionsUseCase
 import dagger.Module
 import dagger.Provides
@@ -40,5 +41,10 @@ object DomainModule {
             accountsRepository,
             getActiveAccountIdUseCase
         )
+    }
+
+    @Provides
+    fun provideGetLastSyncTimeUseCase(sessionRepository: SessionRepository): GetLastSyncTimeUseCase {
+        return GetLastSyncTimeUseCase(sessionRepository)
     }
 }

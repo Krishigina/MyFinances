@@ -5,6 +5,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myfinances.data.manager.AccountUpdateManager
+import com.myfinances.data.manager.SyncUpdateManager
 import com.myfinances.domain.entity.TransactionData
 import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.domain.usecase.GetTransactionsUseCase
@@ -13,6 +14,7 @@ import com.myfinances.domain.util.withTimeAtStartOfDay
 import com.myfinances.ui.mappers.TransactionDomainToUiMapper
 import com.myfinances.ui.model.HistoryUiModel
 import com.myfinances.ui.navigation.Destination
+import com.myfinances.ui.util.formatSyncTime
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -25,6 +27,7 @@ import javax.inject.Inject
 class HistoryViewModel @Inject constructor(
     private val getTransactionsUseCase: GetTransactionsUseCase,
     private val accountUpdateManager: AccountUpdateManager,
+    private val syncUpdateManager: SyncUpdateManager,
     private val mapper: TransactionDomainToUiMapper
 ) : ViewModel() {
 
@@ -77,14 +80,19 @@ class HistoryViewModel @Inject constructor(
 
     private fun loadData(startDate: Date, endDate: Date) {
         viewModelScope.launch {
-            if (_uiState.value !is HistoryUiState.Content) {
-                _uiState.value = HistoryUiState.Loading
+            accountUpdateManager.accountUpdateFlow.collect {
+                (_uiState.value as? HistoryUiState.Content)?.let {
+                    loadData(it.uiModel.startDate, it.uiModel.endDate)
+                }
             }
-            // Запускаем обновление данных с сервера в фоне
-            getTransactionsUseCase.refresh(startDate, endDate)
         }
 
-        // Подписываемся на Flow из базы данных
+        viewModelScope.launch {
+            syncUpdateManager.syncCompletedFlow.collect { syncTime ->
+                showInfo("Синхронизация завершена: ${formatSyncTime(syncTime)}")
+            }
+        }
+
         getTransactionsUseCase(startDate, endDate, transactionType)
             .onEach { result ->
                 when (result) {

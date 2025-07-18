@@ -29,7 +29,6 @@ import kotlin.random.Random
 
 
 class TransactionsRepositoryImpl @Inject constructor(
-    // Добавляем Context в конструктор
     private val context: Context,
     private val apiService: ApiService,
     private val transactionDao: TransactionDao,
@@ -133,13 +132,12 @@ class TransactionsRepositoryImpl @Inject constructor(
             categoryId = categoryId,
             amount = amount,
             date = transactionDate,
-            comment = comment
+            comment = comment,
+            lastUpdatedAt = System.currentTimeMillis()
         )
 
         transactionDao.upsert(newTransaction.toEntity(isSynced = false))
-
         scheduleSync()
-
         return Result.Success(newTransaction)
     }
 
@@ -151,19 +149,19 @@ class TransactionsRepositoryImpl @Inject constructor(
         transactionDate: Date,
         comment: String
     ): Result<Transaction> {
+        val originalTransaction = transactionDao.getTransactionById(transactionId)
         val updatedTransaction = Transaction(
             id = transactionId,
             accountId = accountId,
             categoryId = categoryId,
             amount = amount,
             date = transactionDate,
-            comment = comment
+            comment = comment,
+            lastUpdatedAt = System.currentTimeMillis()
         )
 
         transactionDao.upsert(updatedTransaction.toEntity(isSynced = false))
-
         scheduleSync()
-
         return Result.Success(updatedTransaction)
     }
 
@@ -186,7 +184,6 @@ class TransactionsRepositoryImpl @Inject constructor(
         return Result.Success(Unit)
     }
 
-    // Метод для запуска разовой синхронизации
     private fun scheduleSync() {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)

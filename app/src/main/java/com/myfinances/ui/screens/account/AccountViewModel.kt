@@ -4,11 +4,13 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.myfinances.data.manager.SyncUpdateManager
 import com.myfinances.domain.usecase.GetAccountUseCase
 import com.myfinances.domain.usecase.UpdateAccountUseCase
 import com.myfinances.domain.util.Result
 import com.myfinances.ui.components.CurrencyModel
 import com.myfinances.ui.mappers.AccountDomainToUiMapper
+import com.myfinances.ui.util.formatSyncTime
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,6 +23,7 @@ import javax.inject.Inject
 class AccountViewModel @Inject constructor(
     private val getAccountUseCase: GetAccountUseCase,
     private val updateAccountUseCase: UpdateAccountUseCase,
+    private val syncUpdateManager: SyncUpdateManager, // <-- Добавлена зависимость
     private val accountMapper: AccountDomainToUiMapper
 ) : ViewModel() {
 
@@ -38,6 +41,12 @@ class AccountViewModel @Inject constructor(
 
     init {
         loadAccount()
+        // Слушаем события успешной синхронизации
+        viewModelScope.launch {
+            syncUpdateManager.syncCompletedFlow.collect { syncTime ->
+                showInfo("Синхронизация завершена: ${formatSyncTime(syncTime)}")
+            }
+        }
     }
 
     fun onEvent(event: AccountEvent) {
@@ -71,7 +80,6 @@ class AccountViewModel @Inject constructor(
                         currentState.copy(showCurrencyPicker = !currentState.showCurrencyPicker)
                     }
 
-
                     is AccountEvent.CurrencySelected -> _uiState.update {
                         currentState.copy(
                             draftCurrency = event.currency,
@@ -80,8 +88,7 @@ class AccountViewModel @Inject constructor(
                     }
 
                     is AccountEvent.SaveChanges -> saveChanges(currentState)
-                    AccountEvent.RetryLoad -> { /* Handled above */
-                    }
+                    AccountEvent.RetryLoad -> { /* Handled above */ }
                 }
             }
         }
@@ -89,13 +96,10 @@ class AccountViewModel @Inject constructor(
 
     private fun loadAccount(forceReload: Boolean = false) {
         activeJob?.cancel()
-        activeJob = viewModelScope.launch {
-            if (forceReload || _uiState.value !is AccountUiState.Success) {
+        if (forceReload) {
+            viewModelScope.launch {
                 _uiState.value = AccountUiState.Loading
-            }
-
-            if (forceReload) {
-                getAccountUseCase.refresh()
+                getAccountUseCase.refresh() // Этот метод запустит SyncWorker, если нужно
             }
         }
 
@@ -114,7 +118,6 @@ class AccountViewModel @Inject constructor(
                 is Result.Error -> showError(
                     result.exception.message ?: "Не удалось загрузить счет"
                 )
-
                 is Result.NetworkError -> showError("Ошибка сети. Проверьте подключение.")
             }
         }.launchIn(viewModelScope)
@@ -132,7 +135,6 @@ class AccountViewModel @Inject constructor(
                 currency = state.draftCurrency
             )
 
-            // Явное приведение типа 'it' к AccountUiState.Success
             _uiState.update {
                 if (it is AccountUiState.Success) {
                     it.copy(isSaving = false)
@@ -152,11 +154,9 @@ class AccountViewModel @Inject constructor(
                         }
                     }
                 }
-
                 is Result.Error -> {
                     showError(result.exception.message ?: "Ошибка сохранения")
                 }
-
                 is Result.NetworkError -> {
                     showError("Ошибка сети. Проверьте подключение.")
                 }

@@ -11,6 +11,7 @@ import com.myfinances.data.network.ConnectivityManagerSource
 import com.myfinances.data.network.CreateTransactionRequest
 import com.myfinances.data.network.dto.UpdateTransactionRequest
 import com.myfinances.data.network.dto.toDomainModel
+import com.myfinances.domain.repository.SessionRepository
 import com.myfinances.domain.repository.SyncRepository
 import com.myfinances.domain.util.Result
 import kotlinx.coroutines.coroutineScope
@@ -18,6 +19,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.format.DateTimeParseException
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -32,7 +35,8 @@ class SyncRepositoryImpl @Inject constructor(
     private val accountDao: AccountDao,
     private val categoryDao: CategoryDao,
     private val connectivityManager: ConnectivityManagerSource,
-    private val context: Context
+    private val context: Context,
+    private val sessionRepository: SessionRepository
 ) : SyncRepository {
 
     private val apiDateFormat =
@@ -41,7 +45,6 @@ class SyncRepositoryImpl @Inject constructor(
         }
 
     private val transactionsRepository: TransactionsRepositoryImpl by lazy {
-        // Исправлен порядок аргументов в конструкторе
         TransactionsRepositoryImpl(
             context = context,
             apiService = apiService,
@@ -56,14 +59,14 @@ class SyncRepositoryImpl @Inject constructor(
         }
 
         return try {
-            // Используем coroutineScope, чтобы дождаться завершения обеих задач
             coroutineScope {
-                // Запускаем синхронизацию локальных изменений и обновление с сервера параллельно
+                Log.d("SyncWorker", "Starting data synchronization...")
                 val localSyncJob = launch { syncLocalChangesToServer() }
-                val remoteRefreshJob = launch { refreshAllDataFromServer() }
                 localSyncJob.join()
+                val remoteRefreshJob = launch { refreshAllDataFromServer() }
                 remoteRefreshJob.join()
             }
+            sessionRepository.setLastSyncTime(System.currentTimeMillis())
             Log.d("SyncWorker", "Synchronization finished successfully.")
             Result.Success(Unit)
         } catch (e: IOException) {
@@ -115,21 +118,45 @@ class SyncRepositoryImpl @Inject constructor(
                         Log.e("SyncWorker", "Failed to create transaction on server. Code: ${response.code()}")
                     }
                 }
-                else -> {
-                    val request = UpdateTransactionRequest(
-                        accountId = transactionEntity.accountId,
-                        categoryId = transactionEntity.categoryId ?: 0,
-                        amount = transactionEntity.amount.toString(),
-                        transactionDate = apiDateFormat.format(transactionEntity.date),
-                        comment = transactionEntity.comment
-                    )
-                    val response = apiService.updateTransaction(transactionEntity.id, request)
-                    if (response.isSuccessful && response.body() != null) {
-                        val updatedEntity = transactionEntity.copy(isSynced = true)
-                        transactionDao.upsert(updatedEntity)
-                        Log.d("SyncWorker", "Updated transaction ${transactionEntity.id} on server.")
-                    } else {
-                        Log.e("SyncWorker", "Failed to update transaction ${transactionEntity.id} on server. Code: ${response.code()}")
+                else -> { // Логика разрешения конфликтов для измененных транзакций
+                    try {
+                        val serverResponse = apiService.getTransactionById(transactionEntity.id)
+                        if (!serverResponse.isSuccessful || serverResponse.body() == null) {
+                            Log.e("SyncWorker", "Failed to fetch transaction ${transactionEntity.id} for conflict check.")
+                            continue
+                        }
+
+                        val serverTransactionDto = serverResponse.body()!!
+                        val serverUpdatedAt = serverTransactionDto.updatedAt?.let { parseTimestamp(it) } ?: 0L
+
+                        if (serverUpdatedAt > transactionEntity.lastUpdatedAt) {
+                            Log.w("SyncWorker", "Conflict detected for transaction ${transactionEntity.id}. Server is newer. Discarding local changes.")
+                            serverTransactionDto.toDomainModel()?.let {
+                                transactionDao.upsert(it.toEntity(isSynced = true))
+                            }
+                        } else {
+                            val request = UpdateTransactionRequest(
+                                accountId = transactionEntity.accountId,
+                                categoryId = transactionEntity.categoryId ?: 0,
+                                amount = transactionEntity.amount.toString(),
+                                transactionDate = apiDateFormat.format(transactionEntity.date),
+                                comment = transactionEntity.comment
+                            )
+                            val updateResponse = apiService.updateTransaction(transactionEntity.id, request)
+                            if (updateResponse.isSuccessful) {
+                                // После успешного обновления, обновляем lastUpdatedAt и isSynced
+                                val updatedEntity = transactionEntity.copy(
+                                    isSynced = true,
+                                    lastUpdatedAt = System.currentTimeMillis() // Можно взять с ответа сервера, если он возвращает
+                                )
+                                transactionDao.upsert(updatedEntity)
+                                Log.d("SyncWorker", "Updated transaction ${transactionEntity.id} on server.")
+                            } else {
+                                Log.e("SyncWorker", "Failed to update transaction ${transactionEntity.id} on server. Code: ${updateResponse.code()}")
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e("SyncWorker", "Error processing update for transaction ${transactionEntity.id}", e)
                     }
                 }
             }
@@ -138,7 +165,6 @@ class SyncRepositoryImpl @Inject constructor(
 
     private suspend fun refreshAllDataFromServer() {
         Log.d("SyncWorker", "Refreshing all data from server...")
-
         try {
             val accountsResponse = apiService.getAccounts()
             if (accountsResponse.isSuccessful) {
@@ -168,6 +194,14 @@ class SyncRepositoryImpl @Inject constructor(
             Log.d("SyncWorker", "Refreshed accounts, categories, and recent transactions.")
         } catch(e: Exception) {
             Log.e("SyncWorker", "Error refreshing data from server", e)
+        }
+    }
+
+    private fun parseTimestamp(dateString: String): Long? {
+        return try {
+            Instant.parse(dateString).toEpochMilli()
+        } catch (e: DateTimeParseException) {
+            null
         }
     }
 }

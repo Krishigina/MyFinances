@@ -32,9 +32,9 @@ data class TransactionEntity(
     val amount: Double,
     val comment: String,
     val date: Date,
-    val isSynced: Boolean = true, // Флаг для синхронизации
-    val isDeletedLocally: Boolean = false, // Флаг для "мягкого" удаления
-    val lastUpdatedAt: Long = System.currentTimeMillis() // Для разрешения конфликтов
+    val isSynced: Boolean = true,
+    val isDeletedLocally: Boolean = false,
+    val lastUpdatedAt: Long = System.currentTimeMillis()
 ) {
     fun toDomainModel(): Transaction {
         return Transaction(
@@ -43,7 +43,8 @@ data class TransactionEntity(
             categoryId = this.categoryId,
             amount = this.amount,
             comment = this.comment,
-            date = this.date
+            date = this.date,
+            lastUpdatedAt = this.lastUpdatedAt
         )
     }
 }
@@ -58,6 +59,6 @@ fun Transaction.toEntity(isSynced: Boolean = true, isDeletedLocally: Boolean = f
         date = this.date,
         isSynced = isSynced,
         isDeletedLocally = isDeletedLocally,
-        lastUpdatedAt = System.currentTimeMillis()
+        lastUpdatedAt = this.lastUpdatedAt
     )
 }

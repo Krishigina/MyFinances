@@ -5,11 +5,13 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myfinances.data.manager.AccountUpdateManager
+import com.myfinances.data.manager.SyncUpdateManager
 import com.myfinances.domain.entity.TransactionData
 import com.myfinances.domain.util.Result
 import com.myfinances.ui.mappers.TransactionDomainToUiMapper
 import com.myfinances.ui.model.TransactionItemUiModel
 import com.myfinances.ui.util.formatCurrency
+import com.myfinances.ui.util.formatSyncTime
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +22,7 @@ import kotlinx.coroutines.launch
 
 abstract class BaseTransactionsViewModel<T, E : UiEvent>(
     private val accountUpdateManager: AccountUpdateManager,
+    private val syncUpdateManager: SyncUpdateManager,
     private val mapper: TransactionDomainToUiMapper
 ) : ViewModel() {
 
@@ -29,22 +32,18 @@ abstract class BaseTransactionsViewModel<T, E : UiEvent>(
     val snackbarHostState = SnackbarHostState()
     private var dataCollectionJob: Job? = null
 
-    // Вызов collectData() был здесь и был удален
-    // init {
-    //    collectData()
-    //    ...
-    // }
-
     protected fun startDataCollection() {
-        // При инициализации ViewModel, сразу начинаем слушать данные
         collectData()
 
-        // Также слушаем глобальные обновления счета
         viewModelScope.launch {
             accountUpdateManager.accountUpdateFlow.collect {
-                // При обновлении счета, просто перезапускаем сбор данных.
-                // Это также вызовет refresh.
                 collectData()
+            }
+        }
+
+        viewModelScope.launch {
+            syncUpdateManager.syncCompletedFlow.collect { syncTime ->
+                showInfo("Синхронизация завершена: ${formatSyncTime(syncTime)}")
             }
         }
     }
