@@ -11,7 +11,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myfinances.R
-import com.myfinances.data.manager.AccountUpdateManager
 import com.myfinances.domain.entity.Account
 import com.myfinances.domain.entity.Category
 import com.myfinances.domain.entity.Transaction
@@ -43,7 +42,6 @@ class AddEditTransactionViewModel @Inject constructor(
     private val getTransactionDetailsUseCase: GetTransactionDetailsUseCase,
     private val deleteTransactionUseCase: DeleteTransactionUseCase,
     private val getAccountUseCase: GetAccountUseCase,
-    private val accountUpdateManager: AccountUpdateManager,
     private val resourceProvider: ResourceProvider
 ) : ViewModel() {
 
@@ -115,80 +113,69 @@ class AddEditTransactionViewModel @Inject constructor(
     }
 
     fun onEvent(event: AddEditTransactionEvent) {
-        val currentState = _uiState.value
-        if (currentState !is AddEditTransactionUiState.Success && event !is AddEditTransactionEvent.NavigateBack) return
+        val successState = _uiState.value as? AddEditTransactionUiState.Success
+
+        if (successState == null) {
+            if (event is AddEditTransactionEvent.NavigateBack) {
+                // Позволяем навигации назад работать даже если экран в состоянии загрузки
+                val state = _uiState.value
+                if (state is AddEditTransactionUiState.Success) {
+                    _uiState.update { state.copy(closeScreen = true) }
+                }
+            }
+            return
+        }
 
         when (event) {
-            is AddEditTransactionEvent.AmountChanged -> _uiState.update {
-                (currentState as AddEditTransactionUiState.Success).copy(
-                    amount = event.amount
-                )
-            }
-
-            is AddEditTransactionEvent.CommentChanged -> _uiState.update {
-                (currentState as AddEditTransactionUiState.Success).copy(
-                    comment = event.comment
-                )
-            }
+            is AddEditTransactionEvent.AmountChanged -> _uiState.update { successState.copy(amount = event.amount) }
+            is AddEditTransactionEvent.CommentChanged -> _uiState.update { successState.copy(comment = event.comment) }
             is AddEditTransactionEvent.CategorySelected -> _uiState.update {
-                (currentState as AddEditTransactionUiState.Success).copy(
+                successState.copy(
                     selectedCategory = event.category,
                     showCategoryPicker = false
                 )
             }
             is AddEditTransactionEvent.DateSelected -> {
-                val calendar = Calendar.getInstance()
-                    .apply { time = (currentState as AddEditTransactionUiState.Success).date }
+                val calendar = Calendar.getInstance().apply { time = successState.date }
                 val newDateCalendar = Calendar.getInstance().apply { time = event.date }
                 newDateCalendar.set(Calendar.HOUR_OF_DAY, calendar.get(Calendar.HOUR_OF_DAY))
                 newDateCalendar.set(Calendar.MINUTE, calendar.get(Calendar.MINUTE))
                 _uiState.update {
-                    (currentState as AddEditTransactionUiState.Success).copy(
+                    successState.copy(
                         date = newDateCalendar.time,
                         showDatePicker = false
                     )
                 }
             }
-
             is AddEditTransactionEvent.TimeChanged -> {
-                val calendar = Calendar.getInstance()
-                    .apply { time = (currentState as AddEditTransactionUiState.Success).date }
+                val calendar = Calendar.getInstance().apply { time = successState.date }
                 calendar.set(Calendar.HOUR_OF_DAY, event.hour)
                 calendar.set(Calendar.MINUTE, event.minute)
                 _uiState.update {
-                    (currentState as AddEditTransactionUiState.Success).copy(
+                    successState.copy(
                         date = calendar.time,
                         showTimePicker = false
                     )
                 }
             }
             AddEditTransactionEvent.SaveTransaction -> saveTransaction()
-            AddEditTransactionEvent.DeleteTransaction -> deleteTransaction()
-            AddEditTransactionEvent.DismissErrorDialog -> _uiState.update {
-                (currentState as AddEditTransactionUiState.Success).copy(error = null)
+            AddEditTransactionEvent.DeleteTransaction -> {
+                _uiState.update { successState.copy(showDeleteConfirmation = false) }
+                deleteTransaction()
             }
-            AddEditTransactionEvent.ShowDeleteConfirmation -> _uiState.update {
-                (currentState as AddEditTransactionUiState.Success).copy(showDeleteConfirmation = true)
-            }
-            AddEditTransactionEvent.HideDeleteConfirmation -> _uiState.update {
-                (currentState as AddEditTransactionUiState.Success).copy(showDeleteConfirmation = false)
-            }
-
-            AddEditTransactionEvent.NavigateBack -> {
-                val state = _uiState.value
-                if (state is AddEditTransactionUiState.Success) {
-                    _uiState.update { state.copy(closeScreen = true) }
-                }
-            }
-
-            AddEditTransactionEvent.ShowDatePicker -> _uiState.update { (currentState as AddEditTransactionUiState.Success).copy(showDatePicker = true) }
-            AddEditTransactionEvent.HideDatePicker -> _uiState.update { (currentState as AddEditTransactionUiState.Success).copy(showDatePicker = false) }
-            AddEditTransactionEvent.ShowTimePicker -> _uiState.update { (currentState as AddEditTransactionUiState.Success).copy(showTimePicker = true) }
-            AddEditTransactionEvent.HideTimePicker -> _uiState.update { (currentState as AddEditTransactionUiState.Success).copy(showTimePicker = false) }
-            AddEditTransactionEvent.ShowCategoryPicker -> _uiState.update { (currentState as AddEditTransactionUiState.Success).copy(showCategoryPicker = true) }
-            AddEditTransactionEvent.HideCategoryPicker -> _uiState.update { (currentState as AddEditTransactionUiState.Success).copy(showCategoryPicker = false) }
+            AddEditTransactionEvent.DismissErrorDialog -> _uiState.update { successState.copy(error = null) }
+            AddEditTransactionEvent.ShowDeleteConfirmation -> _uiState.update { successState.copy(showDeleteConfirmation = true) }
+            AddEditTransactionEvent.HideDeleteConfirmation -> _uiState.update { successState.copy(showDeleteConfirmation = false) }
+            AddEditTransactionEvent.NavigateBack -> _uiState.update { successState.copy(closeScreen = true) }
+            AddEditTransactionEvent.ShowDatePicker -> _uiState.update { successState.copy(showDatePicker = true) }
+            AddEditTransactionEvent.HideDatePicker -> _uiState.update { successState.copy(showDatePicker = false) }
+            AddEditTransactionEvent.ShowTimePicker -> _uiState.update { successState.copy(showTimePicker = true) }
+            AddEditTransactionEvent.HideTimePicker -> _uiState.update { successState.copy(showTimePicker = false) }
+            AddEditTransactionEvent.ShowCategoryPicker -> _uiState.update { successState.copy(showCategoryPicker = true) }
+            AddEditTransactionEvent.HideCategoryPicker -> _uiState.update { successState.copy(showCategoryPicker = false) }
         }
     }
+
 
     private fun loadInitialData() {
         viewModelScope.launch {
@@ -287,19 +274,30 @@ class AddEditTransactionViewModel @Inject constructor(
 
             when (result) {
                 is Result.Success -> {
-                    accountUpdateManager.notifyAccountUpdated()
-                    _uiState.update { currentState.copy(isSaving = false, closeScreen = true) }
+                    _uiState.update { state ->
+                        if (state is AddEditTransactionUiState.Success) {
+                            state.copy(isSaving = false, closeScreen = true)
+                        } else state
+                    }
                 }
 
                 is Result.Error -> {
-                    _uiState.update { currentState.copy(isSaving = false) }
+                    _uiState.update { state ->
+                        if (state is AddEditTransactionUiState.Success) {
+                            state.copy(isSaving = false)
+                        } else state
+                    }
                     showErrorDialog(
                         result.exception.message ?: "Ошибка сохранения"
                     ) { saveTransaction() }
                 }
 
                 is Result.NetworkError -> {
-                    _uiState.update { currentState.copy(isSaving = false) }
+                    _uiState.update { state ->
+                        if (state is AddEditTransactionUiState.Success) {
+                            state.copy(isSaving = false)
+                        } else state
+                    }
                     showErrorDialog("Ошибка сети. Проверьте подключение.") { saveTransaction() }
                 }
             }
@@ -307,33 +305,41 @@ class AddEditTransactionViewModel @Inject constructor(
     }
 
     private fun deleteTransaction() {
-        val currentState = _uiState.value as? AddEditTransactionUiState.Success ?: return
         if (!isEditMode) return
 
         viewModelScope.launch {
-            _uiState.update {
-                currentState.copy(
-                    isSaving = true,
-                    showDeleteConfirmation = false,
-                    error = null
-                )
+            _uiState.update { state ->
+                if (state is AddEditTransactionUiState.Success) {
+                    state.copy(isSaving = true, error = null)
+                } else state
             }
 
             when (val result = deleteTransactionUseCase(transactionId)) {
                 is Result.Success -> {
-                    accountUpdateManager.notifyAccountUpdated()
-                    _uiState.update { currentState.copy(isSaving = false, closeScreen = true) }
+                    _uiState.update { state ->
+                        if (state is AddEditTransactionUiState.Success) {
+                            state.copy(isSaving = false, closeScreen = true)
+                        } else state
+                    }
                 }
 
                 is Result.Error -> {
-                    _uiState.update { currentState.copy(isSaving = false) }
+                    _uiState.update { state ->
+                        if (state is AddEditTransactionUiState.Success) {
+                            state.copy(isSaving = false)
+                        } else state
+                    }
                     showErrorDialog(
                         result.exception.message ?: "Ошибка удаления"
                     ) { deleteTransaction() }
                 }
 
                 is Result.NetworkError -> {
-                    _uiState.update { currentState.copy(isSaving = false) }
+                    _uiState.update { state ->
+                        if (state is AddEditTransactionUiState.Success) {
+                            state.copy(isSaving = false)
+                        } else state
+                    }
                     showErrorDialog("Ошибка сети. Проверьте подключение.") { deleteTransaction() }
                 }
             }

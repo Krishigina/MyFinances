@@ -83,8 +83,11 @@ class DomainModule {
 
     @Provides
     @ViewModelScope
-    fun provideUpdateAccountUseCase(repository: AccountsRepository): UpdateAccountUseCase {
-        return UpdateAccountUseCase(repository)
+    fun provideUpdateAccountUseCase(
+        repository: AccountsRepository,
+        accountUpdateManager: AccountUpdateManager
+    ): UpdateAccountUseCase {
+        return UpdateAccountUseCase(repository, accountUpdateManager)
     }
 
     @Provides

@@ -4,7 +4,6 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.myfinances.data.manager.AccountUpdateManager
 import com.myfinances.domain.usecase.GetAccountUseCase
 import com.myfinances.domain.usecase.UpdateAccountUseCase
 import com.myfinances.domain.util.Result
@@ -20,7 +19,6 @@ import javax.inject.Inject
 class AccountViewModel @Inject constructor(
     private val getAccountUseCase: GetAccountUseCase,
     private val updateAccountUseCase: UpdateAccountUseCase,
-    private val accountUpdateManager: AccountUpdateManager,
     private val accountMapper: AccountDomainToUiMapper
 ) : ViewModel() {
 
@@ -130,7 +128,6 @@ class AccountViewModel @Inject constructor(
 
             when (result) {
                 is Result.Success -> {
-                    accountUpdateManager.notifyAccountUpdated()
                     showInfo("Счет успешно сохранен")
                     loadAccount(forceReload = true)
                 }

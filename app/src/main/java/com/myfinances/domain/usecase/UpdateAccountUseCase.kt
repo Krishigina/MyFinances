@@ -1,5 +1,6 @@
 package com.myfinances.domain.usecase
 
+import com.myfinances.data.manager.AccountUpdateManager
 import com.myfinances.domain.entity.Account
 import com.myfinances.domain.repository.AccountsRepository
 import com.myfinances.domain.util.Result
@@ -17,7 +18,8 @@ import javax.inject.Inject
  * Это позволяет отделить правила валидации от ViewModel и слоя данных.
  */
 class UpdateAccountUseCase @Inject constructor(
-    private val repository: AccountsRepository
+    private val repository: AccountsRepository,
+    private val accountUpdateManager: AccountUpdateManager
 ) {
     /**
      * Выполняет операцию обновления счета.
@@ -41,6 +43,12 @@ class UpdateAccountUseCase @Inject constructor(
         val balanceAsDouble = balance.replace(',', '.').toDoubleOrNull()
             ?: return Result.Error(IllegalArgumentException("Некорректный формат баланса"))
 
-        return repository.updateAccount(accountId, name, balanceAsDouble, currency)
+        val result = repository.updateAccount(accountId, name, balanceAsDouble, currency)
+
+        if (result is Result.Success) {
+            accountUpdateManager.notifyAccountUpdated()
+        }
+
+        return result
     }
 }

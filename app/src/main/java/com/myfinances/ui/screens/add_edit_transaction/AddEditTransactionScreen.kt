@@ -2,6 +2,7 @@ package com.myfinances.ui.screens.add_edit_transaction
 
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -32,6 +33,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
@@ -194,10 +197,15 @@ private fun AmountItem(
     onAmountChange: (String) -> Unit
 ) {
     val dimensions = LocalDimensions.current
+    // 1. Создаем FocusRequester
+    val focusRequester = remember { FocusRequester() }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(dimensions.listItem.heightTotal)
+            // 2. Делаем всю строку кликабельной, чтобы запросить фокус
+            .clickable { focusRequester.requestFocus() }
             .padding(horizontal = dimensions.spacing.paddingLarge),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -210,7 +218,10 @@ private fun AmountItem(
             BasicTextField(
                 value = amount,
                 onValueChange = onAmountChange,
-                modifier = Modifier.width(140.dp),
+                // 3. Привязываем FocusRequester и добавляем исходные модификаторы
+                modifier = Modifier
+                    .width(140.dp)
+                    .focusRequester(focusRequester),
                 textStyle = LocalTextStyle.current.copy(
                     color = MaterialTheme.colorScheme.onBackground,
                     textAlign = TextAlign.End
@@ -233,17 +244,25 @@ private fun AmountItem(
 @Composable
 private fun CommentItem(comment: String, onCommentChange: (String) -> Unit) {
     val dimensions = LocalDimensions.current
+    // 1. Создаем FocusRequester
+    val focusRequester = remember { FocusRequester() }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(dimensions.listItem.heightTotal)
+            // 2. Делаем Box кликабельным, чтобы запросить фокус
+            .clickable { focusRequester.requestFocus() }
             .padding(horizontal = dimensions.spacing.paddingLarge),
         contentAlignment = Alignment.CenterStart
     ) {
         BasicTextField(
             value = comment,
             onValueChange = onCommentChange,
-            modifier = Modifier.fillMaxWidth(),
+            // 3. Привязываем FocusRequester и добавляем исходные модификаторы
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(focusRequester),
             textStyle = LocalTextStyle.current.copy(
                 color = MaterialTheme.colorScheme.onBackground
             ),

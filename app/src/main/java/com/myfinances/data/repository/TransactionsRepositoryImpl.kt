@@ -8,6 +8,8 @@ import com.myfinances.data.network.dto.toDomainModel
 import com.myfinances.domain.entity.Transaction
 import com.myfinances.domain.repository.TransactionsRepository
 import com.myfinances.domain.util.Result
+import kotlinx.coroutines.flow.first
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -21,7 +23,7 @@ import javax.inject.Inject
  */
 class TransactionsRepositoryImpl @Inject constructor(
     private val apiService: ApiService,
-    connectivityManager: ConnectivityManagerSource
+    private val connectivityManager: ConnectivityManagerSource
 ) : BaseRepository(connectivityManager), TransactionsRepository {
 
     private val apiDateFormat =
@@ -118,10 +120,26 @@ class TransactionsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteTransaction(transactionId: Int): Result<Unit> {
-        return when (val result = safeApiCall { apiService.deleteTransaction(transactionId) }) {
-            is Result.Success -> Result.Success(Unit)
-            is Result.Error -> result
-            is Result.NetworkError -> result
+        // Проверяем доступность сети перед выполнением запроса
+        if (!connectivityManager.isNetworkAvailable.first()) {
+            return Result.NetworkError
+        }
+        return try {
+            val response = apiService.deleteTransaction(transactionId)
+            // Для DELETE запросов успешный ответ (например, 204 No Content) не содержит тела,
+            // но isSuccessful будет true. Мы должны вернуть Success(Unit) в этом случае.
+            if (response.isSuccessful) {
+                Result.Success(Unit)
+            } else {
+                // Если сервер вернул ошибку, создаем Result.Error
+                Result.Error(Exception("Error deleting transaction: ${response.code()} ${response.message()}"))
+            }
+        } catch (e: IOException) {
+            // Отлавливаем сетевые исключения
+            Result.NetworkError
+        } catch (e: Exception) {
+            // Отлавливаем другие возможные исключения
+            Result.Error(e)
         }
     }
 }
