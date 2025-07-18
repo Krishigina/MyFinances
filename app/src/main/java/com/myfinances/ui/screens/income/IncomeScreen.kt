@@ -34,7 +34,6 @@ fun IncomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Запускаем загрузку данных при первом показе экрана
     LaunchedEffect(key1 = Unit) {
         viewModel.onEvent(UiEvent.LoadInitialData)
     }

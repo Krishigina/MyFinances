@@ -13,7 +13,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -38,7 +37,6 @@ fun MainScreen() {
     }
 
     var scaffoldState by remember { mutableStateOf(ScaffoldState()) }
-    val snackbarHostState = remember { scaffoldState.snackbarHostState }
 
     Scaffold(
         topBar = {
@@ -85,6 +83,16 @@ fun MainScreen() {
                     )
                 }
             }
+        },
+        snackbarHost = {
+            SnackbarHost(
+                hostState = scaffoldState.snackbarHostState,
+                modifier = Modifier
+                    .imePadding()
+                    .padding(horizontal = 16.dp)
+            ) { data ->
+                AppSnackbar(snackbarData = data)
+            }
         }
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
@@ -96,15 +104,6 @@ fun MainScreen() {
                     scaffoldState = newState
                 }
             )
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .imePadding()
-                    .padding(bottom = paddingValues.calculateBottomPadding(), start = 16.dp, end = 16.dp)
-            ) { data ->
-                AppSnackbar(snackbarData = data)
-            }
         }
     }
 }

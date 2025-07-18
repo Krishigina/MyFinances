@@ -34,7 +34,6 @@ fun ExpensesScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Запускаем загрузку данных при первом показе экрана
     LaunchedEffect(key1 = Unit) {
         viewModel.onEvent(UiEvent.LoadInitialData)
     }
@@ -47,7 +46,6 @@ fun ExpensesScreen(
             is ExpensesUiState.Loading -> {
                 CircularProgressIndicator()
             }
-
             is ExpensesUiState.Content -> {
                 ExpensesScreenContent(
                     navController = navController,

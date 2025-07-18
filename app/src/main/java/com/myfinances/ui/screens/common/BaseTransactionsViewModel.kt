@@ -32,14 +32,13 @@ abstract class BaseTransactionsViewModel<T>(
         }
     }
 
-    // Новый метод для обработки событий
     open fun onEvent(event: UiEvent) {
         when (event) {
             is UiEvent.LoadInitialData -> loadData()
         }
     }
 
-    fun loadData() {
+    private fun loadData() {
         viewModelScope.launch {
             if (!isContentState(_uiState.value)) {
                 _uiState.value = getInitialLoadingState()
@@ -47,8 +46,14 @@ abstract class BaseTransactionsViewModel<T>(
 
             when (val result = getTransactionsUseCase()) {
                 is Result.Success -> processSuccess(result.data)
-                is Result.Error -> showError(result.exception.message ?: "Неизвестная ошибка")
-                is Result.NetworkError -> showError("Ошибка сети. Проверьте подключение.")
+                is Result.Error -> {
+                    val errorMessage = result.exception.message ?: "Неизвестная ошибка"
+                    showError(errorMessage)
+                }
+                is Result.NetworkError -> {
+                    val errorMessage = "Ошибка сети. Проверьте подключение."
+                    showError(errorMessage)
+                }
             }
         }
     }
@@ -66,9 +71,12 @@ abstract class BaseTransactionsViewModel<T>(
     }
 
     private fun showError(message: String) {
+        // Показываем снэкбар
         viewModelScope.launch {
             snackbarHostState.showSnackbar(message = message)
         }
+        // Если экран был в состоянии загрузки, переводим его в состояние
+        // контента с пустыми данными, чтобы снэкбар мог отобразиться.
         if (!isContentState(_uiState.value)) {
             _uiState.value = createContentState(emptyList(), formatCurrency(0.0, "RUB"))
         }
