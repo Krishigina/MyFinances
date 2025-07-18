@@ -34,9 +34,6 @@ fun ExpensesScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(key1 = Unit) {
-        viewModel.onEvent(UiEvent.LoadInitialData)
-    }
 
     Box(
         modifier = Modifier.fillMaxSize(),

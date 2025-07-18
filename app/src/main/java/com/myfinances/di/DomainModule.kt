@@ -1,132 +1,36 @@
-package com.myfinances.di
+package com.myfinances.domain.usecase
 
-import com.myfinances.data.manager.AccountUpdateManager
-import com.myfinances.di.scopes.ViewModelScope
-import com.myfinances.domain.repository.AccountsRepository
-import com.myfinances.domain.repository.CategoriesRepository
-import com.myfinances.domain.repository.SessionRepository
-import com.myfinances.domain.repository.TransactionsRepository
-import com.myfinances.domain.usecase.CreateTransactionUseCase
-import com.myfinances.domain.usecase.DeleteTransactionUseCase
-import com.myfinances.domain.usecase.GetAccountUseCase
-import com.myfinances.domain.usecase.GetActiveAccountIdUseCase
-import com.myfinances.domain.usecase.GetCategoriesUseCase
-import com.myfinances.domain.usecase.GetExpenseTransactionsUseCase
-import com.myfinances.domain.usecase.GetIncomeTransactionsUseCase
-import com.myfinances.domain.usecase.GetTransactionDetailsUseCase
-import com.myfinances.domain.usecase.GetTransactionsUseCase
-import com.myfinances.domain.usecase.UpdateAccountUseCase
-import com.myfinances.domain.usecase.UpdateTransactionUseCase
-import dagger.Module
-import dagger.Provides
+import com.myfinances.domain.entity.TransactionData
+import com.myfinances.domain.entity.TransactionTypeFilter
+import com.myfinances.domain.util.Result
+import com.myfinances.domain.util.withTimeAtEndOfDay
+import com.myfinances.domain.util.withTimeAtStartOfDay
+import kotlinx.coroutines.flow.Flow
+import java.util.Calendar
+import javax.inject.Inject
 
-@Module
-class DomainModule {
+class GetIncomeTransactionsUseCase @Inject constructor(
+    private val getTransactionsUseCase: GetTransactionsUseCase,
+    private val getActiveAccountIdUseCase: GetActiveAccountIdUseCase
+) {
+    private val calendar = Calendar.getInstance()
+    private val endDate = calendar.withTimeAtEndOfDay().time
+    private val startDate = calendar.withTimeAtStartOfDay().time
 
-    @Provides
-    @ViewModelScope
-    fun provideGetTransactionsUseCase(
-        transactionsRepository: TransactionsRepository,
-        categoriesRepository: CategoriesRepository,
-        accountsRepository: AccountsRepository,
-        getActiveAccountIdUseCase: GetActiveAccountIdUseCase
-    ): GetTransactionsUseCase {
-        return GetTransactionsUseCase(
-            transactionsRepository,
-            categoriesRepository,
-            accountsRepository,
-            getActiveAccountIdUseCase
+    operator fun invoke(): Flow<Result<TransactionData>> {
+        return getTransactionsUseCase(
+            startDate = startDate,
+            endDate = endDate,
+            filter = TransactionTypeFilter.INCOME
         )
     }
 
-    @Provides
-    @ViewModelScope
-    fun provideGetCategoriesUseCase(
-        repository: CategoriesRepository
-    ): GetCategoriesUseCase {
-        return GetCategoriesUseCase(repository)
-    }
-
-    @Provides
-    @ViewModelScope
-    fun provideGetActiveAccountIdUseCase(
-        accountsRepository: AccountsRepository,
-        sessionRepository: SessionRepository
-    ): GetActiveAccountIdUseCase {
-        return GetActiveAccountIdUseCase(accountsRepository, sessionRepository)
-    }
-
-    @Provides
-    @ViewModelScope
-    fun provideGetAccountUseCase(
-        repository: AccountsRepository,
-        sessionRepository: SessionRepository
-    ): GetAccountUseCase {
-        return GetAccountUseCase(repository, sessionRepository)
-    }
-
-    @Provides
-    @ViewModelScope
-    fun provideGetExpenseTransactionsUseCase(
-        getTransactionsUseCase: GetTransactionsUseCase
-    ): GetExpenseTransactionsUseCase {
-        return GetExpenseTransactionsUseCase(getTransactionsUseCase)
-    }
-
-    @Provides
-    @ViewModelScope
-    fun provideGetIncomeTransactionsUseCase(
-        getTransactionsUseCase: GetTransactionsUseCase
-    ): GetIncomeTransactionsUseCase {
-        return GetIncomeTransactionsUseCase(getTransactionsUseCase)
-    }
-
-    @Provides
-    @ViewModelScope
-    fun provideUpdateAccountUseCase(
-        repository: AccountsRepository,
-        accountUpdateManager: AccountUpdateManager
-    ): UpdateAccountUseCase {
-        return UpdateAccountUseCase(repository, accountUpdateManager)
-    }
-
-    @Provides
-    @ViewModelScope
-    fun provideCreateTransactionUseCase(
-        transactionsRepository: TransactionsRepository,
-        getActiveAccountIdUseCase: GetActiveAccountIdUseCase,
-        accountUpdateManager: AccountUpdateManager
-    ): CreateTransactionUseCase {
-        return CreateTransactionUseCase(
-            transactionsRepository,
-            getActiveAccountIdUseCase,
-            accountUpdateManager
-        )
-    }
-
-    @Provides
-    @ViewModelScope
-    fun provideUpdateTransactionUseCase(
-        transactionsRepository: TransactionsRepository,
-        accountUpdateManager: AccountUpdateManager
-    ): UpdateTransactionUseCase {
-        return UpdateTransactionUseCase(transactionsRepository, accountUpdateManager)
-    }
-
-    @Provides
-    @ViewModelScope
-    fun provideGetTransactionDetailsUseCase(
-        repository: TransactionsRepository
-    ): GetTransactionDetailsUseCase {
-        return GetTransactionDetailsUseCase(repository)
-    }
-
-    @Provides
-    @ViewModelScope
-    fun provideDeleteTransactionUseCase(
-        repository: TransactionsRepository,
-        accountUpdateManager: AccountUpdateManager
-    ): DeleteTransactionUseCase {
-        return DeleteTransactionUseCase(repository, accountUpdateManager)
+    suspend fun refresh(): Result<Unit> {
+        val accountIdResult = getActiveAccountIdUseCase()
+        return if (accountIdResult is Result.Success) {
+            getTransactionsUseCase.refresh(accountIdResult.data, startDate, endDate)
+        } else {
+            Result.Error(Exception("Active account not found"))
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.myfinances.ui.screens.common
 
-interface UiEvent {
-    data object LoadInitialData : UiEvent
+interface UiEvent
+sealed interface CommonEvent : UiEvent {
+    data object Refresh : CommonEvent
 }
