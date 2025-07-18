@@ -6,6 +6,7 @@ import com.myfinances.domain.repository.SessionRepository
 import com.myfinances.domain.repository.TransactionsRepository
 import com.myfinances.domain.usecase.GetAccountUseCase
 import com.myfinances.domain.usecase.GetActiveAccountIdUseCase
+import com.myfinances.domain.usecase.GetAnalysisDataUseCase
 import com.myfinances.domain.usecase.GetCategoriesUseCase
 import com.myfinances.domain.usecase.GetLastSyncTimeUseCase
 import com.myfinances.domain.usecase.GetTransactionsUseCase
@@ -36,6 +37,21 @@ object DomainModule {
         getActiveAccountIdUseCase: GetActiveAccountIdUseCase
     ): GetTransactionsUseCase {
         return GetTransactionsUseCase(
+            transactionsRepository,
+            categoriesRepository,
+            accountsRepository,
+            getActiveAccountIdUseCase
+        )
+    }
+
+    @Provides
+    fun provideGetAnalysisDataUseCase(
+        transactionsRepository: TransactionsRepository,
+        categoriesRepository: CategoriesRepository,
+        accountsRepository: AccountsRepository,
+        getActiveAccountIdUseCase: GetActiveAccountIdUseCase
+    ): GetAnalysisDataUseCase {
+        return GetAnalysisDataUseCase(
             transactionsRepository,
             categoriesRepository,
             accountsRepository,
