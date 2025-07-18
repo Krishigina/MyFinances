@@ -12,6 +12,7 @@ import com.myfinances.domain.util.Result
 import com.myfinances.domain.util.withTimeAtStartOfDay
 import com.myfinances.ui.mappers.TransactionDomainToUiMapper
 import com.myfinances.ui.model.HistoryUiModel
+import com.myfinances.ui.navigation.Destination
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -26,15 +27,17 @@ class HistoryViewModel @Inject constructor(
 ) : ViewModel() {
 
     private lateinit var transactionType: TransactionTypeFilter
+    private lateinit var parentRoute: String
 
     private val _uiState = MutableStateFlow<HistoryUiState>(HistoryUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
     val snackbarHostState = SnackbarHostState()
 
-    fun initialize(filter: TransactionTypeFilter) {
+    fun initialize(filter: TransactionTypeFilter, parent: String) {
         if (this::transactionType.isInitialized) return
         this.transactionType = filter
+        this.parentRoute = parent
 
         val calendar = Calendar.getInstance()
         val endDate = calendar.time
@@ -97,7 +100,7 @@ class HistoryViewModel @Inject constructor(
             endDate = data.endDate
         )
 
-        _uiState.value = HistoryUiState.Content(historyUiModel, transactionType)
+        _uiState.value = HistoryUiState.Content(historyUiModel, transactionType, parentRoute)
 
         if (items.isEmpty()) {
             showInfo("Нет транзакций за выбранный период")
@@ -117,7 +120,8 @@ class HistoryViewModel @Inject constructor(
                 HistoryUiModel(
                     emptyList(), 0.0, "₽", startDate, endDate
                 ),
-                transactionType
+                transactionType,
+                parentRoute
             )
         }
     }

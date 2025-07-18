@@ -30,13 +30,15 @@ fun BottomNavigationBar(
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+    val currentRoute = currentDestination?.route
 
     NavigationBar(
         modifier = modifier
     ) {
         destinations.forEach { destination ->
             if (destination.title != null && destination.icon != null) {
-                val selected = if (currentDestination?.route?.startsWith("history") == true) {
+                val selected = if (currentRoute?.startsWith("history") == true ||
+                    currentRoute?.startsWith("add_edit_transaction") == true) {
                     val parentRouteArg = navBackStackEntry?.arguments?.getString("parentRoute")
                     parentRouteArg == destination.route
                 } else {

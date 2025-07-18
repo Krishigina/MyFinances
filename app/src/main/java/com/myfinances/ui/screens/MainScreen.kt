@@ -71,14 +71,17 @@ fun MainScreen() {
         floatingActionButton = {
             if (scaffoldState.isFabVisible) {
                 MainFloatingActionButton {
-                    val currentRoute = mainNavController.currentDestination?.route
+                    val currentRoute = mainNavController.currentDestination?.route ?: Destination.Expenses.route
                     val type = if (currentRoute == Destination.Expenses.route) {
                         TransactionTypeFilter.EXPENSE
                     } else {
                         TransactionTypeFilter.INCOME
                     }
                     mainNavController.navigate(
-                        Destination.AddEditTransaction.createRoute(transactionType = type)
+                        Destination.AddEditTransaction.createRoute(
+                            transactionType = type,
+                            parentRoute = currentRoute
+                        )
                     )
                 }
             }

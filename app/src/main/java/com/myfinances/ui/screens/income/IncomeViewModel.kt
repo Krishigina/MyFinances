@@ -15,10 +15,6 @@ class IncomeViewModel @Inject constructor(
     mapper: TransactionDomainToUiMapper
 ) : BaseTransactionsViewModel<IncomeUiState>(accountUpdateManager, mapper) {
 
-    init {
-        loadData()
-    }
-
     override suspend fun getTransactionsUseCase(): Result<TransactionData> =
         getIncomeTransactionsUseCase()
 

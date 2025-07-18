@@ -15,10 +15,6 @@ class ExpensesViewModel @Inject constructor(
     mapper: TransactionDomainToUiMapper
 ) : BaseTransactionsViewModel<ExpensesUiState>(accountUpdateManager, mapper) {
 
-    init {
-        loadData()
-    }
-
     override suspend fun getTransactionsUseCase(): Result<TransactionData> =
         getExpenseTransactionsUseCase()
 

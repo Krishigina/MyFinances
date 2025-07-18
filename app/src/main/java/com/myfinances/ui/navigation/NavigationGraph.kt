@@ -221,17 +221,18 @@ fun NavigationGraph(
         ) { backStackEntry ->
             val viewModel: HistoryViewModel = viewModel(factory = viewModelFactory)
 
-            // Безопасно получаем аргумент
+            // Безопасно получаем аргументы
             @Suppress("DEPRECATION") // Для поддержки старых API
             val transactionType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 backStackEntry.arguments?.getSerializable("transactionType", TransactionTypeFilter::class.java)
             } else {
                 backStackEntry.arguments?.getSerializable("transactionType") as? TransactionTypeFilter
             } ?: TransactionTypeFilter.ALL
+            val parentRoute = backStackEntry.arguments?.getString("parentRoute") ?: Destination.Expenses.route
 
 
             LaunchedEffect(key1 = viewModel) {
-                viewModel.initialize(transactionType)
+                viewModel.initialize(transactionType, parentRoute)
                 onScaffoldStateChanged(
                     ScaffoldState(
                         topBarState = TopBarState(
@@ -247,7 +248,9 @@ fun NavigationGraph(
                                 }
                             )
                         ),
-                        snackbarHostState = viewModel.snackbarHostState
+                        snackbarHostState = viewModel.snackbarHostState,
+                        isBottomBarVisible = true, // Показываем нижнее меню
+                        isFabVisible = false      // Скрываем FAB
                     )
                 )
             }
@@ -265,6 +268,9 @@ fun NavigationGraph(
                 },
                 navArgument("transactionType") {
                     type = NavType.EnumType(TransactionTypeFilter::class.java)
+                },
+                navArgument("parentRoute") { // Добавляем новый аргумент
+                    type = NavType.StringType
                 }
             )
         ) { backStackEntry ->
@@ -286,7 +292,11 @@ fun NavigationGraph(
 
             LaunchedEffect(topBarState) {
                 onScaffoldStateChanged(
-                    ScaffoldState(topBarState = viewModel.topBarState.value)
+                    ScaffoldState(
+                        topBarState = viewModel.topBarState.value,
+                        isBottomBarVisible = true, // Показываем нижнее меню
+                        isFabVisible = false      // Скрываем FAB
+                    )
                 )
             }
 

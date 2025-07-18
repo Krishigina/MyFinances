@@ -49,16 +49,17 @@ sealed class Destination(
         }
     }
 
-    // Маршрут теперь использует только слэши, без вопросительных знаков
+    // Маршрут теперь включает parentRoute для подсветки нижнего меню
     data object AddEditTransaction :
-        Destination(route = "add_edit_transaction/{transactionType}/{transactionId}") {
+        Destination(route = "add_edit_transaction/{transactionType}/{transactionId}/{parentRoute}") {
         fun createRoute(
             transactionType: TransactionTypeFilter,
+            parentRoute: String,
             transactionId: Int? = null
         ): String {
             // ID для новой транзакции будет -1. Это значение по умолчанию в NavHost.
             val id = transactionId ?: -1
-            return "add_edit_transaction/${transactionType.name}/$id"
+            return "add_edit_transaction/${transactionType.name}/$id/$parentRoute"
         }
     }
 }

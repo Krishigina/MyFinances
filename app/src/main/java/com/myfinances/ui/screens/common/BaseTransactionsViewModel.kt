@@ -32,6 +32,13 @@ abstract class BaseTransactionsViewModel<T>(
         }
     }
 
+    // Новый метод для обработки событий
+    open fun onEvent(event: UiEvent) {
+        when (event) {
+            is UiEvent.LoadInitialData -> loadData()
+        }
+    }
+
     fun loadData() {
         viewModelScope.launch {
             if (!isContentState(_uiState.value)) {
