@@ -86,4 +86,9 @@
     <string name="period_end_date">Конец</string>
     <string name="period_total_amount">Сумма</string>
 
+    <!-- Analysis Screen -->
+    <string name="period_start_date_analysis">Период: начало</string>
+    <string name="period_end_date_analysis">Период: конец</string>
+    <string name="top_bar_analysis_title">Анализ</string>
+
 </resources>

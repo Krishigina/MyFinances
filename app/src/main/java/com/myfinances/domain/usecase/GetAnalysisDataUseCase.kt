@@ -55,16 +55,17 @@ class GetAnalysisDataUseCase @Inject constructor(
                     }
                 }
 
-                // Группируем транзакции по ID категории и агрегируем данные
                 val categorySpents = filteredTransactions
                     .groupBy { it.categoryId }
                     .mapNotNull { (categoryId, transactionList) ->
                         val category = categoryMap[categoryId]
                         if (category != null) {
+                            val topTransaction = transactionList.maxByOrNull { it.amount }
                             CategorySpending(
                                 category = category,
                                 amount = transactionList.sumOf { it.amount },
-                                transactionsCount = transactionList.size
+                                transactionsCount = transactionList.size,
+                                topTransactionId = topTransaction?.id
                             )
                         } else {
                             null
@@ -96,12 +97,10 @@ class GetAnalysisDataUseCase @Inject constructor(
         }
         val accountId = accountIdResult.data
 
-        // Обновляем все необходимые данные
         val transactionResult = transactionsRepository.refreshTransactions(accountId, startDate, endDate)
         val categoryResult = categoriesRepository.refreshCategories()
         val accountResult = accountsRepository.refreshAccounts()
 
-        // Проверяем результаты на ошибки
         val errors = listOf(transactionResult, categoryResult, accountResult).filterIsInstance<Result.Error>()
         if (errors.isNotEmpty()) {
             return Result.Error(errors.first().exception)

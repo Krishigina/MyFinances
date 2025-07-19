@@ -44,12 +44,17 @@ sealed class Destination(
     )
 
     data object History : Destination(route = "history/{transactionType}/{parentRoute}") {
-        fun createRoute(filter: TransactionTypeFilter, parent: Destination): String {
-            return "history/${filter.name}/${parent.route}"
+        fun createRoute(filter: TransactionTypeFilter, parentRoute: String): String {
+            return "history/${filter.name}/$parentRoute"
         }
     }
 
-    // Маршрут теперь включает parentRoute для подсветки нижнего меню
+    data object Analysis : Destination(route = "analysis/{transactionType}/{parentRoute}") {
+        fun createRoute(filter: TransactionTypeFilter, parentRoute: String): String {
+            return "analysis/${filter.name}/$parentRoute"
+        }
+    }
+
     data object AddEditTransaction :
         Destination(route = "add_edit_transaction/{transactionType}/{transactionId}/{parentRoute}") {
         fun createRoute(
@@ -57,7 +62,6 @@ sealed class Destination(
             parentRoute: String,
             transactionId: Int? = null
         ): String {
-            // ID для новой транзакции будет -1. Это значение по умолчанию в NavHost.
             val id = transactionId ?: -1
             return "add_edit_transaction/${transactionType.name}/$id/$parentRoute"
         }
