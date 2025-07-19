@@ -28,7 +28,6 @@ class SyncUpdateManager @Inject constructor(
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     val syncCompletedFlow = _syncCompletedFlow.asSharedFlow()
-
     private var lastKnownSyncTime: Long? = null
 
     init {
