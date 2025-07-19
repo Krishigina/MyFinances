@@ -5,28 +5,27 @@ import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.domain.util.Result
 import com.myfinances.domain.util.withTimeAtEndOfDay
 import com.myfinances.domain.util.withTimeAtStartOfDay
+import kotlinx.coroutines.flow.Flow
 import java.util.Calendar
 import javax.inject.Inject
 
-/**
- * Use-case для получения данных о расходах **только за сегодня**.
- * Инкапсулирует бизнес-правило "сегодняшний день" и использует более общий
- * [GetTransactionsUseCase] для выполнения основной работы.
- * Возвращает сырые, но отфильтрованные доменные данные.
- */
 class GetExpenseTransactionsUseCase @Inject constructor(
-    private val getTransactionsUseCase: GetTransactionsUseCase
+    private val getTransactionsUseCase: GetTransactionsUseCase,
+    private val getActiveAccountIdUseCase: GetActiveAccountIdUseCase
 ) {
-    suspend operator fun invoke(): Result<TransactionData> {
-        val calendar = Calendar.getInstance()
+    private val calendar = Calendar.getInstance()
+    private val endDate = calendar.withTimeAtEndOfDay().time
+    private val startDate = calendar.withTimeAtStartOfDay().time
 
-        val endDate = calendar.withTimeAtEndOfDay().time
-        val startDate = calendar.withTimeAtStartOfDay().time
-
+    operator fun invoke(): Flow<Result<TransactionData>> {
         return getTransactionsUseCase(
             startDate = startDate,
             endDate = endDate,
             filter = TransactionTypeFilter.EXPENSE
         )
+    }
+
+    suspend fun refresh(): Result<Unit> {
+        return getTransactionsUseCase.refresh(startDate, endDate)
     }
 }

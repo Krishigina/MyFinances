@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,6 +25,7 @@ import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.components.TrailingContent
 import com.myfinances.ui.model.TransactionItemUiModel
 import com.myfinances.ui.navigation.Destination
+import com.myfinances.ui.screens.common.UiEvent
 
 @Composable
 fun ExpensesScreen(
@@ -31,6 +33,7 @@ fun ExpensesScreen(
     viewModel: ExpensesViewModel
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -40,7 +43,6 @@ fun ExpensesScreen(
             is ExpensesUiState.Loading -> {
                 CircularProgressIndicator()
             }
-
             is ExpensesUiState.Content -> {
                 ExpensesScreenContent(
                     navController = navController,
@@ -82,14 +84,12 @@ private fun ExpensesScreenContent(
                         trailingContent = TrailingContent.TextWithArrow(text = model.amountFormatted),
                         showTrailingArrow = true,
                         onClick = {
-                            // <<< ОТЛАДКА
-                            Log.d("DEBUG_NAV", "[ExpensesScreen] Click on transaction with ID: ${model.id}")
                             val route = Destination.AddEditTransaction.createRoute(
                                 transactionType = TransactionTypeFilter.EXPENSE,
-                                transactionId = model.id.toInt()
+                                transactionId = model.id.toInt(),
+                                parentRoute = Destination.Expenses.route
                             )
                             Log.d("DEBUG_NAV", "[ExpensesScreen] Navigating to route: $route")
-                            // >>> ОТЛАДКА
                             navController.navigate(route)
                         }
                     )

@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,6 +25,7 @@ import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.components.TrailingContent
 import com.myfinances.ui.model.TransactionItemUiModel
 import com.myfinances.ui.navigation.Destination
+import com.myfinances.ui.screens.common.UiEvent
 
 @Composable
 fun IncomeScreen(
@@ -31,6 +33,7 @@ fun IncomeScreen(
     viewModel: IncomeViewModel
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -82,14 +85,12 @@ private fun IncomeScreenContent(
                         trailingContent = TrailingContent.TextWithArrow(text = model.amountFormatted),
                         showTrailingArrow = true,
                         onClick = {
-                            // <<< ОТЛАДКА
-                            Log.d("DEBUG_NAV", "[IncomeScreen] Click on transaction with ID: ${model.id}")
                             val route = Destination.AddEditTransaction.createRoute(
                                 transactionType = TransactionTypeFilter.INCOME,
-                                transactionId = model.id.toInt()
+                                transactionId = model.id.toInt(),
+                                parentRoute = Destination.Income.route
                             )
                             Log.d("DEBUG_NAV", "[IncomeScreen] Navigating to route: $route")
-                            // >>> ОТЛАДКА
                             navController.navigate(route)
                         }
                     )

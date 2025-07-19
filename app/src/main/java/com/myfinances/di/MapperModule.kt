@@ -1,6 +1,7 @@
 package com.myfinances.di
 
 import com.myfinances.ui.mappers.AccountDomainToUiMapper
+import com.myfinances.ui.mappers.AnalysisDomainToUiMapper
 import com.myfinances.ui.mappers.CategoryDomainToUiMapper
 import com.myfinances.ui.mappers.TransactionDomainToUiMapper
 import dagger.Module
@@ -26,5 +27,11 @@ object MapperModule {
     @Singleton
     fun provideAccountDomainToUiMapper(): AccountDomainToUiMapper {
         return AccountDomainToUiMapper()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAnalysisDomainToUiMapper(): AnalysisDomainToUiMapper {
+        return AnalysisDomainToUiMapper()
     }
 }

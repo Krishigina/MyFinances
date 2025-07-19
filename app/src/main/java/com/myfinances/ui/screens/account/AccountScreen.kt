@@ -5,14 +5,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -45,7 +44,7 @@ fun AccountScreen(
                 val background = if (state.isEditMode) {
                     MaterialTheme.colorScheme.background
                 } else {
-                    Color(0xFFF3EDF7)
+                    MaterialTheme.colorScheme.surface
                 }
                 Box(modifier = Modifier
                     .fillMaxSize()
@@ -66,6 +65,7 @@ private fun AccountViewContent(
     state: AccountUiState.Success,
     onEvent: (AccountEvent) -> Unit
 ) {
+    // Теперь здесь только блок счета и валюты
     Column(
         modifier = Modifier
             .background(
@@ -88,7 +88,7 @@ private fun AccountViewContent(
                 showTrailingArrow = true
             )
         )
-        Divider()
+        HorizontalDivider()
         ListItem(
             model = ListItemModel(
                 id = "currency_view",
@@ -99,6 +99,7 @@ private fun AccountViewContent(
                 showTrailingArrow = true
             )
         )
+        // Блок с информацией о синхронизации удален
     }
 }
 
@@ -127,7 +128,7 @@ private fun AccountEditContent(
             onValueChange = { onEvent(AccountEvent.NameChanged(it)) },
             placeholder = stringResource(R.string.account_name_placeholder)
         )
-        Divider()
+        HorizontalDivider()
 
         EditableListItem(
             model = ListItemModel(
@@ -140,7 +141,7 @@ private fun AccountEditContent(
             keyboardType = KeyboardType.Decimal,
             textAlign = TextAlign.End
         )
-        Divider()
+        HorizontalDivider()
 
         ListItem(
             model = ListItemModel(
@@ -153,6 +154,6 @@ private fun AccountEditContent(
                 onClick = { onEvent(AccountEvent.CurrencyPickerToggled) }
             )
         )
-        Divider()
+        HorizontalDivider()
     }
 }

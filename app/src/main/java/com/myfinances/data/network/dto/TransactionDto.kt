@@ -4,6 +4,8 @@ import com.google.gson.annotations.SerializedName
 import com.myfinances.domain.entity.Transaction
 import java.text.ParseException
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.format.DateTimeParseException
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
@@ -48,6 +50,7 @@ fun TransactionDto.toDomainModel(): Transaction? {
     val finalCategoryId = this.category?.id ?: this.categoryId
     val finalAccountId = this.account?.id ?: this.accountId ?: return null
     val parsedDate = parseDate(this.transactionDate) ?: return null
+    val parsedUpdatedAt = this.updatedAt?.let { parseTimestamp(it) } ?: parsedDate.time
 
     return Transaction(
         id = this.id,
@@ -55,8 +58,17 @@ fun TransactionDto.toDomainModel(): Transaction? {
         categoryId = finalCategoryId,
         amount = this.amount.toDoubleOrNull() ?: 0.0,
         comment = this.comment ?: "",
-        date = parsedDate
+        date = parsedDate,
+        lastUpdatedAt = parsedUpdatedAt
     )
+}
+
+private fun parseTimestamp(dateString: String): Long? {
+    return try {
+        Instant.parse(dateString).toEpochMilli()
+    } catch (e: DateTimeParseException) {
+        null
+    }
 }
 
 private fun parseDate(dateString: String): Date? {

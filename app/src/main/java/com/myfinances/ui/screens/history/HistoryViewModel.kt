@@ -5,6 +5,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myfinances.data.manager.AccountUpdateManager
+import com.myfinances.data.manager.SyncUpdateManager
 import com.myfinances.domain.entity.TransactionData
 import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.domain.usecase.GetTransactionsUseCase
@@ -12,8 +13,12 @@ import com.myfinances.domain.util.Result
 import com.myfinances.domain.util.withTimeAtStartOfDay
 import com.myfinances.ui.mappers.TransactionDomainToUiMapper
 import com.myfinances.ui.model.HistoryUiModel
+import com.myfinances.ui.navigation.Destination
+import com.myfinances.ui.util.formatSyncTime
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
@@ -22,19 +27,22 @@ import javax.inject.Inject
 class HistoryViewModel @Inject constructor(
     private val getTransactionsUseCase: GetTransactionsUseCase,
     private val accountUpdateManager: AccountUpdateManager,
+    private val syncUpdateManager: SyncUpdateManager,
     private val mapper: TransactionDomainToUiMapper
 ) : ViewModel() {
 
     private lateinit var transactionType: TransactionTypeFilter
+    private lateinit var parentRoute: String
 
     private val _uiState = MutableStateFlow<HistoryUiState>(HistoryUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
     val snackbarHostState = SnackbarHostState()
 
-    fun initialize(filter: TransactionTypeFilter) {
+    fun initialize(filter: TransactionTypeFilter, parent: String) {
         if (this::transactionType.isInitialized) return
         this.transactionType = filter
+        this.parentRoute = parent
 
         val calendar = Calendar.getInstance()
         val endDate = calendar.time
@@ -72,16 +80,27 @@ class HistoryViewModel @Inject constructor(
 
     private fun loadData(startDate: Date, endDate: Date) {
         viewModelScope.launch {
-            if (_uiState.value !is HistoryUiState.Content) {
-                _uiState.value = HistoryUiState.Loading
-            }
-
-            when (val result = getTransactionsUseCase(startDate, endDate, transactionType)) {
-                is Result.Success -> processSuccess(result.data)
-                is Result.Error -> showError(result.exception.message ?: "Неизвестная ошибка")
-                is Result.NetworkError -> showError("Ошибка сети. Проверьте подключение.")
+            accountUpdateManager.accountUpdateFlow.collect {
+                (_uiState.value as? HistoryUiState.Content)?.let {
+                    loadData(it.uiModel.startDate, it.uiModel.endDate)
+                }
             }
         }
+
+        viewModelScope.launch {
+            syncUpdateManager.syncCompletedFlow.collect { syncTime ->
+                showInfo("Синхронизация завершена: ${formatSyncTime(syncTime)}")
+            }
+        }
+
+        getTransactionsUseCase(startDate, endDate, transactionType)
+            .onEach { result ->
+                when (result) {
+                    is Result.Success -> processSuccess(result.data)
+                    is Result.Error -> showError(result.exception.message ?: "Неизвестная ошибка")
+                    is Result.NetworkError -> showError("Ошибка сети. Проверьте подключение.")
+                }
+            }.launchIn(viewModelScope)
     }
 
     private fun processSuccess(data: TransactionData) {
@@ -97,7 +116,7 @@ class HistoryViewModel @Inject constructor(
             endDate = data.endDate
         )
 
-        _uiState.value = HistoryUiState.Content(historyUiModel, transactionType)
+        _uiState.value = HistoryUiState.Content(historyUiModel, transactionType, parentRoute)
 
         if (items.isEmpty()) {
             showInfo("Нет транзакций за выбранный период")
@@ -117,7 +136,8 @@ class HistoryViewModel @Inject constructor(
                 HistoryUiModel(
                     emptyList(), 0.0, "₽", startDate, endDate
                 ),
-                transactionType
+                transactionType,
+                parentRoute
             )
         }
     }

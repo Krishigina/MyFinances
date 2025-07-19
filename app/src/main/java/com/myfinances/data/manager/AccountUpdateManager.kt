@@ -1,5 +1,6 @@
 package com.myfinances.data.manager
 
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import javax.inject.Inject
@@ -11,7 +12,10 @@ import javax.inject.Singleton
  */
 @Singleton
 class AccountUpdateManager @Inject constructor() {
-    private val _accountUpdateFlow = MutableSharedFlow<Unit>()
+    private val _accountUpdateFlow = MutableSharedFlow<Unit>(
+        replay = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
     val accountUpdateFlow = _accountUpdateFlow.asSharedFlow()
 
     suspend fun notifyAccountUpdated() {

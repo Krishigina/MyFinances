@@ -13,5 +13,6 @@ data class Transaction(
     val categoryId: Int? = null,
     val amount: Double,
     val comment: String,
-    val date: Date
+    val date: Date,
+    val lastUpdatedAt: Long
 )

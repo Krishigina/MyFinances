@@ -57,6 +57,7 @@ fun HistoryScreen(
                 HistoryScreenContent(
                     navController = navController,
                     transactionType = state.transactionType,
+                    parentRoute = state.parentRoute,
                     uiModel = state.uiModel,
                     onStartDateClick = { showStartDatePicker = true },
                     onEndDateClick = { showEndDatePicker = true }
@@ -108,6 +109,7 @@ fun HistoryScreen(
 private fun HistoryScreenContent(
     navController: NavController,
     transactionType: TransactionTypeFilter,
+    parentRoute: String,
     uiModel: HistoryUiModel,
     onStartDateClick: () -> Unit,
     onEndDateClick: () -> Unit
@@ -138,10 +140,10 @@ private fun HistoryScreenContent(
                     ),
                     showTrailingArrow = true,
                     onClick = {
-                        Log.d("DEBUG_NAV", "[HistoryScreen] Click on transaction with ID: ${model.id}")
                         val route = Destination.AddEditTransaction.createRoute(
                             transactionType = transactionType,
-                            transactionId = model.id.toInt()
+                            transactionId = model.id.toInt(),
+                            parentRoute = parentRoute
                         )
                         Log.d("DEBUG_NAV", "[HistoryScreen] Navigating to route: $route")
                         navController.navigate(route)

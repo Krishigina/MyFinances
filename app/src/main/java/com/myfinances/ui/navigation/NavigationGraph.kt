@@ -33,6 +33,8 @@ import com.myfinances.ui.screens.account.AccountUiState
 import com.myfinances.ui.screens.account.AccountViewModel
 import com.myfinances.ui.screens.add_edit_transaction.AddEditTransactionScreen
 import com.myfinances.ui.screens.add_edit_transaction.AddEditTransactionViewModel
+import com.myfinances.ui.screens.analysis.AnalysisScreen
+import com.myfinances.ui.screens.analysis.AnalysisViewModel
 import com.myfinances.ui.screens.articles.ArticlesScreen
 import com.myfinances.ui.screens.articles.ArticlesViewModel
 import com.myfinances.ui.screens.expenses.ExpensesScreen
@@ -81,7 +83,7 @@ fun NavigationGraph(
                                             navController.navigate(
                                                 Destination.History.createRoute(
                                                     filter = TransactionTypeFilter.EXPENSE,
-                                                    parent = Destination.Expenses
+                                                    parentRoute = Destination.Expenses.route
                                                 )
                                             )
                                         },
@@ -117,7 +119,7 @@ fun NavigationGraph(
                                             navController.navigate(
                                                 Destination.History.createRoute(
                                                     filter = TransactionTypeFilter.INCOME,
-                                                    parent = Destination.Income
+                                                    parentRoute = Destination.Income.route
                                                 )
                                             )
                                         },
@@ -221,17 +223,17 @@ fun NavigationGraph(
         ) { backStackEntry ->
             val viewModel: HistoryViewModel = viewModel(factory = viewModelFactory)
 
-            // Безопасно получаем аргумент
-            @Suppress("DEPRECATION") // Для поддержки старых API
+            @Suppress("DEPRECATION")
             val transactionType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 backStackEntry.arguments?.getSerializable("transactionType", TransactionTypeFilter::class.java)
             } else {
                 backStackEntry.arguments?.getSerializable("transactionType") as? TransactionTypeFilter
             } ?: TransactionTypeFilter.ALL
+            val parentRoute = backStackEntry.arguments?.getString("parentRoute") ?: Destination.Expenses.route
 
 
             LaunchedEffect(key1 = viewModel) {
-                viewModel.initialize(transactionType)
+                viewModel.initialize(transactionType, parentRoute)
                 onScaffoldStateChanged(
                     ScaffoldState(
                         topBarState = TopBarState(
@@ -245,13 +247,105 @@ fun NavigationGraph(
                                         contentDescription = stringResource(id = R.string.action_back)
                                     )
                                 }
+                            ),
+                            actions = listOf(
+                                com.myfinances.ui.viewmodel.TopBarAction(
+                                    id = "analysis",
+                                    onAction = {
+                                        navController.navigate(
+                                            Destination.Analysis.createRoute(
+                                                filter = transactionType,
+                                                parentRoute = parentRoute
+                                            )
+                                        ) {
+                                            popUpTo(backStackEntry.destination.id) { inclusive = true }
+                                        }
+                                    },
+                                    content = {
+                                        Icon(
+                                            painterResource(R.drawable.ic_history_analysis),
+                                            contentDescription = stringResource(id = R.string.top_bar_analysis_title)
+                                        )
+                                    }
+                                )
                             )
                         ),
-                        snackbarHostState = viewModel.snackbarHostState
+                        snackbarHostState = viewModel.snackbarHostState,
+                        isBottomBarVisible = true,
+                        isFabVisible = false
                     )
                 )
             }
             HistoryScreen(
+                navController = navController,
+                viewModel = viewModel
+            )
+        }
+        composable(
+            route = Destination.Analysis.route,
+            arguments = listOf(
+                navArgument("transactionType") {
+                    type = NavType.EnumType(TransactionTypeFilter::class.java)
+                },
+                navArgument("parentRoute") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val viewModel: AnalysisViewModel = viewModel(factory = viewModelFactory)
+
+            @Suppress("DEPRECATION")
+            val transactionType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                backStackEntry.arguments?.getSerializable("transactionType", TransactionTypeFilter::class.java)
+            } else {
+                backStackEntry.arguments?.getSerializable("transactionType") as? TransactionTypeFilter
+            } ?: TransactionTypeFilter.ALL
+            val parentRoute = backStackEntry.arguments?.getString("parentRoute") ?: Destination.Expenses.route
+
+
+            LaunchedEffect(key1 = viewModel) {
+                viewModel.initialize(transactionType, parentRoute)
+                onScaffoldStateChanged(
+                    ScaffoldState(
+                        topBarState = TopBarState(
+                            title = navController.context.getString(R.string.top_bar_analysis_title),
+                            navigationAction = com.myfinances.ui.viewmodel.TopBarAction(
+                                id = "back",
+                                onAction = { navController.popBackStack() },
+                                content = {
+                                    Icon(
+                                        Icons.Default.ArrowBack,
+                                        contentDescription = stringResource(id = R.string.action_back)
+                                    )
+                                }
+                            ),
+                            actions = listOf(
+                                com.myfinances.ui.viewmodel.TopBarAction(
+                                    id = "history",
+                                    onAction = {
+                                        navController.navigate(
+                                            Destination.History.createRoute(
+                                                filter = transactionType,
+                                                parentRoute = parentRoute
+                                            )
+                                        ) {
+                                            popUpTo(backStackEntry.destination.id) { inclusive = true }
+                                        }
+                                    },
+                                    content = {
+                                        Icon(
+                                            painterResource(R.drawable.ic_top_bar_history),
+                                            contentDescription = stringResource(id = R.string.top_bar_icon_history)
+                                        )
+                                    }
+                                )
+                            )
+                        ),
+                        snackbarHostState = viewModel.snackbarHostState,
+                        isBottomBarVisible = true,
+                        isFabVisible = false
+                    )
+                )
+            }
+            AnalysisScreen(
                 navController = navController,
                 viewModel = viewModel
             )
@@ -265,6 +359,9 @@ fun NavigationGraph(
                 },
                 navArgument("transactionType") {
                     type = NavType.EnumType(TransactionTypeFilter::class.java)
+                },
+                navArgument("parentRoute") {
+                    type = NavType.StringType
                 }
             )
         ) { backStackEntry ->
@@ -286,7 +383,11 @@ fun NavigationGraph(
 
             LaunchedEffect(topBarState) {
                 onScaffoldStateChanged(
-                    ScaffoldState(topBarState = viewModel.topBarState.value)
+                    ScaffoldState(
+                        topBarState = viewModel.topBarState.value,
+                        isBottomBarVisible = true,
+                        isFabVisible = false
+                    )
                 )
             }
 
