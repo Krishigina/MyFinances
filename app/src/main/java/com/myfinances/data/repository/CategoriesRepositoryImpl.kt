@@ -21,41 +21,35 @@ class CategoriesRepositoryImpl @Inject constructor(
 ) : CategoriesRepository {
 
     override fun getCategories(): Flow<List<Category>> {
-        // Возвращаем Flow из DAO, который будет автоматически обновлять UI
-        // при изменениях в таблице 'categories'.
         return categoryDao.getCategories().map { entities ->
             entities.map { it.toDomainModel() }
         }
     }
 
     override suspend fun refreshCategories(): Result<Unit> {
-        // Проверяем, есть ли интернет
         if (!connectivityManager.isNetworkAvailable.first()) {
-            return Result.NetworkError
+            return Result.Failure.NetworkError
         }
 
         return try {
-            // Выполняем сетевой запрос
             val response = apiService.getCategories()
 
             if (response.isSuccessful) {
                 val dtos = response.body()
                 if (dtos != null) {
-                    // Если данные получены успешно, преобразуем их в Entity
-                    // и сохраняем в базу данных.
                     val entities = dtos.map { it.toDomainModel().toEntity() }
                     categoryDao.upsertAll(entities)
                     Result.Success(Unit)
                 } else {
-                    Result.Error(Exception("Empty response body"))
+                    Result.Failure.GenericError(Exception("Empty response body"))
                 }
             } else {
-                Result.Error(Exception("API Error: ${response.code()} ${response.message()}"))
+                Result.Failure.GenericError(Exception("API Error: ${response.code()} ${response.message()}"))
             }
         } catch (e: IOException) {
-            Result.NetworkError
+            Result.Failure.NetworkError
         } catch (e: Exception) {
-            Result.Error(e)
+            Result.Failure.GenericError(e)
         }
     }
 }

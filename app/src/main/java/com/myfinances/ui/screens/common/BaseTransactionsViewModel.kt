@@ -49,37 +49,38 @@ abstract class BaseTransactionsViewModel<T, E : UiEvent>(
     }
 
     private fun collectData() {
-        dataCollectionJob?.cancel() // Отменяем предыдущую подписку
+        dataCollectionJob?.cancel()
         dataCollectionJob = getDataFlow()
             .onEach { result ->
                 when (result) {
                     is Result.Success -> processSuccess(result.data)
-                    is Result.Error -> {
-                        // Ошибки от Flow (например, не найден счет)
+                    is Result.Failure.GenericError -> {
                         showError(result.exception.message ?: "Неизвестная ошибка")
                     }
-                    // NetworkError не обрабатывается здесь, так как Flow читает из базы
-                    is Result.NetworkError -> { /* Ignore */ }
+                    else -> { }
                 }
             }
             .launchIn(viewModelScope)
 
-        // При первой подписке или принудительном обновлении - запрашиваем данные из сети
         refreshData()
     }
 
     private fun refreshData() {
         viewModelScope.launch {
-            // Показываем индикатор загрузки, только если сейчас не контент
             if (!isContentState(_uiState.value)) {
                 _uiState.value = getLoadingState()
             }
 
-            // Вызываем suspend функцию refresh из use case
             when (val refreshResult = refreshDataUseCase()) {
-                is Result.Error -> showError(refreshResult.exception.message ?: "Ошибка обновления")
-                is Result.NetworkError -> showInfo("Нет подключения к сети. Отображаются последние данные.")
-                is Result.Success -> { /* Данные обновятся через Flow */ }
+                is Result.Success -> { }
+                is Result.Failure -> {
+                    val message = when (refreshResult) {
+                        is Result.Failure.ApiError -> "Ошибка API: ${refreshResult.message}"
+                        is Result.Failure.GenericError -> refreshResult.exception.message ?: "Ошибка обновления"
+                        is Result.Failure.NetworkError -> "Нет подключения к сети. Отображаются последние данные."
+                    }
+                    showInfo(message)
+                }
             }
         }
     }
@@ -98,9 +99,9 @@ abstract class BaseTransactionsViewModel<T, E : UiEvent>(
 
     private fun showError(message: String) {
         viewModelScope.launch { snackbarHostState.showSnackbar(message = message) }
-        // Если была ошибка, переводим в состояние контента с пустыми данными,
-        // чтобы пользователь видел пустой экран, а не вечную загрузку.
-        _uiState.value = createContentState(emptyList(), formatCurrency(0.0, "RUB"))
+        if (!isContentState(_uiState.value)) {
+            _uiState.value = createContentState(emptyList(), formatCurrency(0.0, "RUB"))
+        }
     }
 
     private fun showInfo(message: String) {
@@ -108,15 +109,11 @@ abstract class BaseTransactionsViewModel<T, E : UiEvent>(
             snackbarHostState.showSnackbar(message = message, duration = SnackbarDuration.Short)
         }
     }
-
-    // Абстрактные методы, которые должны реализовать наследники
     protected abstract fun getInitialState(): T
     protected abstract fun getLoadingState(): T
     protected abstract fun isContentState(state: T): Boolean
     protected abstract fun createContentState(items: List<TransactionItemUiModel>, total: String): T
     protected abstract fun getEmptyDataMessage(): String
-
-    // Абстрактные методы для связи с UseCases
     protected abstract fun getDataFlow(): Flow<Result<TransactionData>>
     protected abstract suspend fun refreshDataUseCase(): Result<Unit>
 }

@@ -55,7 +55,7 @@ class SyncRepositoryImpl @Inject constructor(
 
     override suspend fun syncData(): Result<Unit> {
         if (!connectivityManager.isNetworkAvailable.first()) {
-            return Result.NetworkError
+            return Result.Failure.NetworkError
         }
 
         return try {
@@ -71,10 +71,10 @@ class SyncRepositoryImpl @Inject constructor(
             Result.Success(Unit)
         } catch (e: IOException) {
             Log.e("SyncWorker", "Network error during sync", e)
-            Result.NetworkError
+            Result.Failure.NetworkError
         } catch (e: Exception) {
             Log.e("SyncWorker", "Generic error during sync", e)
-            Result.Error(e)
+            Result.Failure.GenericError(e)
         }
     }
 
@@ -118,7 +118,7 @@ class SyncRepositoryImpl @Inject constructor(
                         Log.e("SyncWorker", "Failed to create transaction on server. Code: ${response.code()}")
                     }
                 }
-                else -> { // Логика разрешения конфликтов для измененных транзакций
+                else -> {
                     try {
                         val serverResponse = apiService.getTransactionById(transactionEntity.id)
                         if (!serverResponse.isSuccessful || serverResponse.body() == null) {
@@ -144,10 +144,9 @@ class SyncRepositoryImpl @Inject constructor(
                             )
                             val updateResponse = apiService.updateTransaction(transactionEntity.id, request)
                             if (updateResponse.isSuccessful) {
-                                // После успешного обновления, обновляем lastUpdatedAt и isSynced
                                 val updatedEntity = transactionEntity.copy(
                                     isSynced = true,
-                                    lastUpdatedAt = System.currentTimeMillis() // Можно взять с ответа сервера, если он возвращает
+                                    lastUpdatedAt = System.currentTimeMillis()
                                 )
                                 transactionDao.upsert(updatedEntity)
                                 Log.d("SyncWorker", "Updated transaction ${transactionEntity.id} on server.")

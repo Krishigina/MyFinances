@@ -23,14 +23,16 @@ class SyncWorker(
                 Log.i("SyncWorker", "Sync successful.")
                 Result.success()
             }
-            is com.myfinances.domain.util.Result.NetworkError -> {
+            is com.myfinances.domain.util.Result.Failure.NetworkError -> {
                 Log.w("SyncWorker", "Sync failed due to network error, will retry.")
                 Result.retry()
             }
-            is com.myfinances.domain.util.Result.Error -> {
+            is com.myfinances.domain.util.Result.Failure.GenericError -> {
                 Log.e("SyncWorker", "Sync failed with an error, will retry.")
                 Result.retry()
             }
+
+            is com.myfinances.domain.util.Result.Failure.ApiError -> TODO()
         }
     }
 }

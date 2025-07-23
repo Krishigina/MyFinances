@@ -13,8 +13,8 @@ import com.myfinances.domain.util.Result
 import com.myfinances.domain.util.withTimeAtStartOfDay
 import com.myfinances.ui.mappers.TransactionDomainToUiMapper
 import com.myfinances.ui.model.HistoryUiModel
-import com.myfinances.ui.navigation.Destination
 import com.myfinances.ui.util.formatSyncTime
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -38,6 +38,7 @@ class HistoryViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     val snackbarHostState = SnackbarHostState()
+    private var dataCollectionJob: Job? = null
 
     fun initialize(filter: TransactionTypeFilter, parent: String) {
         if (this::transactionType.isInitialized) return
@@ -55,6 +56,12 @@ class HistoryViewModel @Inject constructor(
                 (_uiState.value as? HistoryUiState.Content)?.let {
                     loadData(it.uiModel.startDate, it.uiModel.endDate)
                 }
+            }
+        }
+
+        viewModelScope.launch {
+            syncUpdateManager.syncCompletedFlow.collect { syncTime ->
+                showInfo("Синхронизация завершена: ${formatSyncTime(syncTime)}")
             }
         }
     }
@@ -79,26 +86,20 @@ class HistoryViewModel @Inject constructor(
     }
 
     private fun loadData(startDate: Date, endDate: Date) {
-        viewModelScope.launch {
-            accountUpdateManager.accountUpdateFlow.collect {
-                (_uiState.value as? HistoryUiState.Content)?.let {
-                    loadData(it.uiModel.startDate, it.uiModel.endDate)
-                }
-            }
-        }
-
-        viewModelScope.launch {
-            syncUpdateManager.syncCompletedFlow.collect { syncTime ->
-                showInfo("Синхронизация завершена: ${formatSyncTime(syncTime)}")
-            }
-        }
-
-        getTransactionsUseCase(startDate, endDate, transactionType)
+        dataCollectionJob?.cancel()
+        dataCollectionJob = getTransactionsUseCase(startDate, endDate, transactionType)
             .onEach { result ->
                 when (result) {
                     is Result.Success -> processSuccess(result.data)
-                    is Result.Error -> showError(result.exception.message ?: "Неизвестная ошибка")
-                    is Result.NetworkError -> showError("Ошибка сети. Проверьте подключение.")
+                    // <- Изменение здесь
+                    is Result.Failure -> {
+                        val message = when(result) {
+                            is Result.Failure.ApiError -> "Ошибка API: ${result.code}"
+                            is Result.Failure.GenericError -> result.exception.message ?: "Неизвестная ошибка"
+                            is Result.Failure.NetworkError -> "Ошибка сети. Проверьте подключение."
+                        }
+                        showError(message)
+                    }
                 }
             }.launchIn(viewModelScope)
     }

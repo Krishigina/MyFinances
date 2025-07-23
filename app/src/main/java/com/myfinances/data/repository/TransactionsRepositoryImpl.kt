@@ -57,7 +57,7 @@ class TransactionsRepositoryImpl @Inject constructor(
         endDate: Date
     ): Result<Unit> {
         if (!connectivityManager.isNetworkAvailable.first()) {
-            return Result.NetworkError
+            return Result.Failure.NetworkError
         }
 
         return try {
@@ -75,15 +75,15 @@ class TransactionsRepositoryImpl @Inject constructor(
                     transactionDao.upsertAll(entities)
                     Result.Success(Unit)
                 } else {
-                    Result.Error(Exception("Empty response body"))
+                    Result.Failure.GenericError(Exception("Empty response body"))
                 }
             } else {
-                Result.Error(Exception("API Error: ${response.code()} ${response.message()}"))
+                Result.Failure.GenericError(Exception("API Error: ${response.code()} ${response.message()}"))
             }
         } catch (e: IOException) {
-            Result.NetworkError
+            Result.Failure.NetworkError
         } catch (e: Exception) {
-            Result.Error(e)
+            Result.Failure.GenericError(e)
         }
     }
 
@@ -94,7 +94,7 @@ class TransactionsRepositoryImpl @Inject constructor(
         }
 
         if (!connectivityManager.isNetworkAvailable.first()) {
-            return Result.Error(Exception("Transaction not found locally and no network"))
+            return Result.Failure.GenericError(Exception("Transaction not found locally and no network"))
         }
 
         return try {
@@ -105,15 +105,15 @@ class TransactionsRepositoryImpl @Inject constructor(
                     transactionDao.upsert(domainModel.toEntity())
                     Result.Success(domainModel)
                 } else {
-                    Result.Error(IllegalStateException("Failed to parse transaction data"))
+                    Result.Failure.GenericError(IllegalStateException("Failed to parse transaction data"))
                 }
             } else {
-                Result.Error(Exception("API Error: ${response.code()} ${response.message()}"))
+                Result.Failure.GenericError(Exception("API Error: ${response.code()} ${response.message()}"))
             }
         } catch (e: IOException) {
-            Result.NetworkError
+            Result.Failure.NetworkError
         } catch (e: Exception) {
-            Result.Error(e)
+            Result.Failure.GenericError(e)
         }
     }
 
@@ -167,7 +167,7 @@ class TransactionsRepositoryImpl @Inject constructor(
 
     override suspend fun deleteTransaction(transactionId: Int): Result<Unit> {
         val transaction = transactionDao.getTransactionById(transactionId)
-            ?: return Result.Error(Exception("Transaction not found"))
+            ?: return Result.Failure.GenericError(Exception("Transaction not found"))
 
         if (transaction.id < 0) {
             transactionDao.deleteById(transaction.id)

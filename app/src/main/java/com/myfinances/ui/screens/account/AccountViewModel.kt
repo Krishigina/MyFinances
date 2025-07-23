@@ -23,7 +23,7 @@ import javax.inject.Inject
 class AccountViewModel @Inject constructor(
     private val getAccountUseCase: GetAccountUseCase,
     private val updateAccountUseCase: UpdateAccountUseCase,
-    private val syncUpdateManager: SyncUpdateManager, // <-- Добавлена зависимость
+    private val syncUpdateManager: SyncUpdateManager,
     private val accountMapper: AccountDomainToUiMapper
 ) : ViewModel() {
 
@@ -41,7 +41,6 @@ class AccountViewModel @Inject constructor(
 
     init {
         loadAccount()
-        // Слушаем события успешной синхронизации
         viewModelScope.launch {
             syncUpdateManager.syncCompletedFlow.collect { syncTime ->
                 showInfo("Синхронизация завершена: ${formatSyncTime(syncTime)}")
@@ -99,7 +98,7 @@ class AccountViewModel @Inject constructor(
         if (forceReload) {
             viewModelScope.launch {
                 _uiState.value = AccountUiState.Loading
-                getAccountUseCase.refresh() // Этот метод запустит SyncWorker, если нужно
+                getAccountUseCase.refresh()
             }
         }
 
@@ -115,10 +114,14 @@ class AccountViewModel @Inject constructor(
                         availableCurrencies = availableCurrencies
                     )
                 }
-                is Result.Error -> showError(
-                    result.exception.message ?: "Не удалось загрузить счет"
-                )
-                is Result.NetworkError -> showError("Ошибка сети. Проверьте подключение.")
+
+                is Result.Failure -> {
+                    when(result) {
+                        is Result.Failure.ApiError -> showError("Ошибка API: ${result.code}")
+                        is Result.Failure.GenericError -> showError(result.exception.message ?: "Не удалось загрузить счет")
+                        is Result.Failure.NetworkError -> showError("Ошибка сети. Проверьте подключение.")
+                    }
+                }
             }
         }.launchIn(viewModelScope)
     }
@@ -154,11 +157,12 @@ class AccountViewModel @Inject constructor(
                         }
                     }
                 }
-                is Result.Error -> {
-                    showError(result.exception.message ?: "Ошибка сохранения")
-                }
-                is Result.NetworkError -> {
-                    showError("Ошибка сети. Проверьте подключение.")
+                is Result.Failure -> {
+                    when(result) {
+                        is Result.Failure.ApiError -> showError("Ошибка сохранения: ${result.message}")
+                        is Result.Failure.GenericError -> showError(result.exception.message ?: "Ошибка сохранения")
+                        is Result.Failure.NetworkError -> showError("Ошибка сети. Проверьте подключение.")
+                    }
                 }
             }
         }

@@ -11,7 +11,6 @@ import com.myfinances.domain.usecase.GetAnalysisDataUseCase
 import com.myfinances.domain.util.Result
 import com.myfinances.domain.util.withTimeAtStartOfDay
 import com.myfinances.ui.mappers.AnalysisDomainToUiMapper
-import com.myfinances.ui.model.AnalysisUiModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -78,13 +77,19 @@ class AnalysisViewModel @Inject constructor(
 
     private fun loadData(startDate: Date, endDate: Date) {
         dataCollectionJob?.cancel()
+        _uiState.value = AnalysisUiState.Loading
 
         viewModelScope.launch {
-            _uiState.value = AnalysisUiState.Loading
             when (val refreshResult = getAnalysisDataUseCase.refresh(startDate, endDate)) {
-                is Result.Error -> showError(refreshResult.exception.message ?: "Ошибка обновления")
-                is Result.NetworkError -> showInfo("Нет подключения к сети. Отображаются последние данные.")
-                is Result.Success -> { }
+                is Result.Success -> {}
+                is Result.Failure -> {
+                    val message = when (refreshResult) {
+                        is Result.Failure.ApiError -> "Ошибка API при обновлении"
+                        is Result.Failure.GenericError -> refreshResult.exception.message ?: "Ошибка обновления"
+                        is Result.Failure.NetworkError -> "Нет сети. Отображены локальные данные."
+                    }
+                    showInfo(message)
+                }
             }
         }
 
@@ -92,8 +97,14 @@ class AnalysisViewModel @Inject constructor(
             .onEach { result ->
                 when (result) {
                     is Result.Success -> processSuccess(result.data)
-                    is Result.Error -> showError(result.exception.message ?: "Неизвестная ошибка")
-                    is Result.NetworkError -> showError("Ошибка сети. Проверьте подключение.")
+                    is Result.Failure -> {
+                        val message = when (result) {
+                            is Result.Failure.ApiError -> "Ошибка API: ${result.code}"
+                            is Result.Failure.GenericError -> result.exception.message ?: "Неизвестная ошибка"
+                            is Result.Failure.NetworkError -> "Ошибка сети. Проверьте подключение."
+                        }
+                        showError(message)
+                    }
                 }
             }.launchIn(viewModelScope)
     }
@@ -108,8 +119,8 @@ class AnalysisViewModel @Inject constructor(
     }
 
     private fun showError(message: String) {
-        viewModelScope.launch { snackbarHostState.showSnackbar(message) }
         _uiState.value = AnalysisUiState.Error(message)
+        viewModelScope.launch { snackbarHostState.showSnackbar(message) }
     }
 
     private fun showInfo(message: String) {

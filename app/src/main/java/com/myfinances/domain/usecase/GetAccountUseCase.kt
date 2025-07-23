@@ -16,18 +16,14 @@ class GetAccountUseCase(
     operator fun invoke(): Flow<Result<Account>> {
         return sessionRepository.getActiveAccountId().flatMapLatest { activeId ->
             if (activeId == null) {
-                // Если ID не найден, пытаемся получить его (логика в GetActiveAccountIdUseCase)
-                // Этот сценарий маловероятен, если ViewModel сначала вызывает GetActiveAccountIdUseCase
-                // но является защитой.
-                // Для простоты здесь вернем ошибку, т.к. инициализация - задача ViewModel.
-                kotlinx.coroutines.flow.flowOf(Result.Error(IllegalStateException("Активный счет не установлен")))
+                kotlinx.coroutines.flow.flowOf(Result.Failure.GenericError(IllegalStateException("Активный счет не установлен")))
             } else {
                 repository.getAccounts().map { accounts ->
                     val account = accounts.find { it.id == activeId }
                     if (account != null) {
                         Result.Success(account)
                     } else {
-                        Result.Error(Exception("Счет с ID $activeId не найден"))
+                        Result.Failure.GenericError(Exception("Счет с ID $activeId не найден"))
                     }
                 }
             }

@@ -1,5 +1,6 @@
 package com.myfinances.ui.screens.articles
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myfinances.domain.entity.Category
@@ -52,17 +53,33 @@ class ArticlesViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = ArticlesUiState.Loading
 
-            // Принудительно обновляем с сервера
-            getCategoriesUseCase.refresh()
+            val refreshResult = getCategoriesUseCase.refresh()
+            val categoriesFromDb = getCategoriesUseCase().first()
 
-            // Получаем данные из Flow (из базы)
-            val categories = getCategoriesUseCase().first()
-            originalCategories = categories
-            val uiItems = categories.map { mapper.mapToUiModel(it) }
-            _uiState.value = ArticlesUiState.Success(
-                query = "",
-                articlesModel = ArticlesUiModel(categoryItems = uiItems)
-            )
+            if (categoriesFromDb.isNotEmpty()) {
+                originalCategories = categoriesFromDb
+                val uiItems = categoriesFromDb.map { mapper.mapToUiModel(it) }
+                _uiState.value = ArticlesUiState.Success(
+                    query = "",
+                    articlesModel = ArticlesUiModel(categoryItems = uiItems)
+                )
+                if (refreshResult is Result.Failure.NetworkError) {
+                    Log.w("ArticlesViewModel", "Network error during refresh, showing cached data.")
+                }
+            } else {
+                when (refreshResult) {
+                    is Result.Success -> {
+                        originalCategories = emptyList()
+                        _uiState.value = ArticlesUiState.Success(
+                            query = "",
+                            articlesModel = ArticlesUiModel(emptyList())
+                        )
+                    }
+                    is Result.Failure.NetworkError -> _uiState.value = ArticlesUiState.NoInternet
+                    is Result.Failure.ApiError -> _uiState.value = ArticlesUiState.Error("Ошибка сервера: ${refreshResult.code}")
+                    is Result.Failure.GenericError -> _uiState.value = ArticlesUiState.Error(refreshResult.exception.message ?: "Не удалось загрузить категории")
+                }
+            }
         }
     }
 }

@@ -29,7 +29,7 @@ class AccountsRepositoryImpl @Inject constructor(
 
     override suspend fun refreshAccounts(): Result<Unit> {
         if (!connectivityManager.isNetworkAvailable.first()) {
-            return Result.NetworkError
+            return Result.Failure.NetworkError
         }
 
         return try {
@@ -41,15 +41,15 @@ class AccountsRepositoryImpl @Inject constructor(
                     accountDao.upsertAll(entities)
                     Result.Success(Unit)
                 } else {
-                    Result.Error(Exception("Empty response body"))
+                    Result.Failure.GenericError(Exception("Empty response body"))
                 }
             } else {
-                Result.Error(Exception("API Error: ${response.code()} ${response.message()}"))
+                Result.Failure.ApiError(response.code(), response.message())
             }
         } catch (e: IOException) {
-            Result.NetworkError
+            Result.Failure.NetworkError
         } catch (e: Exception) {
-            Result.Error(e)
+            Result.Failure.GenericError(e)
         }
     }
 
@@ -62,7 +62,7 @@ class AccountsRepositoryImpl @Inject constructor(
         if (!connectivityManager.isNetworkAvailable.first()) {
             // TODO: В будущем здесь нужно будет сохранять изменения локально
             // и синхронизировать их позже. Пока просто возвращаем ошибку.
-            return Result.NetworkError
+            return Result.Failure.NetworkError
         }
 
         val request = UpdateAccountRequest(
@@ -78,12 +78,12 @@ class AccountsRepositoryImpl @Inject constructor(
                 accountDao.upsertAll(listOf(updatedAccount.toEntity()))
                 Result.Success(updatedAccount)
             } else {
-                Result.Error(Exception("API Error: ${response.code()} ${response.message()}"))
+                Result.Failure.ApiError(response.code(), response.message())
             }
         } catch (e: IOException) {
-            Result.NetworkError
+            Result.Failure.NetworkError
         } catch (e: Exception) {
-            Result.Error(e)
+            Result.Failure.GenericError(e)
         }
     }
 }

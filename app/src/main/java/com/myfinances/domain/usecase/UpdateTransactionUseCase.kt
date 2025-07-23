@@ -7,10 +7,6 @@ import com.myfinances.domain.util.Result
 import java.util.Date
 import javax.inject.Inject
 
-/**
- * Use-case для обновления существующей транзакции.
- * Выполняет валидацию входных данных перед отправкой в репозиторий.
- */
 class UpdateTransactionUseCase @Inject constructor(
     private val transactionsRepository: TransactionsRepository,
     private val accountUpdateManager: AccountUpdateManager
@@ -25,7 +21,7 @@ class UpdateTransactionUseCase @Inject constructor(
     ): Result<Transaction> {
         val amountAsDouble = amount.replace(',', '.').toDoubleOrNull()
         if (amountAsDouble == null || amountAsDouble <= 0) {
-            return Result.Error(IllegalArgumentException("Сумма должна быть положительным числом"))
+            return Result.Failure.GenericError(IllegalArgumentException("Сумма должна быть положительным числом"))
         }
 
         val result = transactionsRepository.updateTransaction(
