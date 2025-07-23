@@ -9,7 +9,8 @@ data class AccountEntity(
     @PrimaryKey val id: Int,
     val name: String,
     val balance: Double,
-    val currency: String
+    val currency: String,
+    val isSynced: Boolean = true
 ) {
     fun toDomainModel(emoji: String = "💰"): Account {
         return Account(
@@ -22,11 +23,12 @@ data class AccountEntity(
     }
 }
 
-fun Account.toEntity(): AccountEntity {
+fun Account.toEntity(isSynced: Boolean = true): AccountEntity {
     return AccountEntity(
         id = this.id,
         name = this.name,
         balance = this.balance,
-        currency = this.currency
+        currency = this.currency,
+        isSynced = isSynced
     )
 }

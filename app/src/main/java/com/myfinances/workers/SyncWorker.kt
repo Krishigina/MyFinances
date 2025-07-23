@@ -32,7 +32,10 @@ class SyncWorker(
                 Result.retry()
             }
 
-            is com.myfinances.domain.util.Result.Failure.ApiError -> TODO()
+            is com.myfinances.domain.util.Result.Failure.ApiError -> {
+                Log.e("SyncWorker", "Sync failed with an API error, will retry.")
+                Result.retry()
+            }
         }
     }
 }

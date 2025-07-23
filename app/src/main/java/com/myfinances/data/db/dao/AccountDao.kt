@@ -16,4 +16,7 @@ interface AccountDao {
 
     @Query("DELETE FROM accounts")
     suspend fun clearAll()
+
+    @Query("SELECT * FROM accounts WHERE isSynced = 0")
+    suspend fun getUnsyncedAccounts(): List<AccountEntity>
 }

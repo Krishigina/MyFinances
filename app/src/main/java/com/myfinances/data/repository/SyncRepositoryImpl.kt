@@ -9,6 +9,7 @@ import com.myfinances.data.db.entity.toEntity
 import com.myfinances.data.network.ApiService
 import com.myfinances.data.network.ConnectivityManagerSource
 import com.myfinances.data.network.CreateTransactionRequest
+import com.myfinances.data.network.dto.UpdateAccountRequest
 import com.myfinances.data.network.dto.UpdateTransactionRequest
 import com.myfinances.data.network.dto.toDomainModel
 import com.myfinances.domain.repository.SessionRepository
@@ -39,11 +40,6 @@ class SyncRepositoryImpl @Inject constructor(
     private val sessionRepository: SessionRepository
 ) : SyncRepository {
 
-    private val apiDateFormat =
-        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).apply {
-            timeZone = TimeZone.getTimeZone("UTC")
-        }
-
     private val transactionsRepository: TransactionsRepositoryImpl by lazy {
         TransactionsRepositoryImpl(
             context = context,
@@ -61,10 +57,8 @@ class SyncRepositoryImpl @Inject constructor(
         return try {
             coroutineScope {
                 Log.d("SyncWorker", "Starting data synchronization...")
-                val localSyncJob = launch { syncLocalChangesToServer() }
-                localSyncJob.join()
-                val remoteRefreshJob = launch { refreshAllDataFromServer() }
-                remoteRefreshJob.join()
+                launch { syncLocalChangesToServer() }.join()
+                launch { refreshAllDataFromServer() }.join()
             }
             sessionRepository.setLastSyncTime(System.currentTimeMillis())
             Log.d("SyncWorker", "Synchronization finished successfully.")
@@ -85,80 +79,31 @@ class SyncRepositoryImpl @Inject constructor(
             return
         }
 
-        Log.d("SyncWorker", "Found ${unsyncedTransactions.size} unsynced transactions.")
-
-        for (transactionEntity in unsyncedTransactions) {
-            when {
-                transactionEntity.isDeletedLocally -> {
-                    val response = apiService.deleteTransaction(transactionEntity.id)
-                    if (response.isSuccessful) {
-                        transactionDao.deleteById(transactionEntity.id)
-                        Log.d("SyncWorker", "Deleted transaction ${transactionEntity.id} from server and local DB.")
-                    } else {
-                        Log.e("SyncWorker", "Failed to delete transaction ${transactionEntity.id} on server. Code: ${response.code()}")
-                    }
-                }
-                transactionEntity.id < 0 -> {
-                    val request = CreateTransactionRequest(
-                        accountId = transactionEntity.accountId,
-                        categoryId = transactionEntity.categoryId ?: 0,
-                        amount = transactionEntity.amount.toString(),
-                        transactionDate = apiDateFormat.format(transactionEntity.date),
-                        comment = transactionEntity.comment
+        val unsyncedAccounts = accountDao.getUnsyncedAccounts()
+        if (unsyncedAccounts.isNotEmpty()) {
+            Log.d("SyncWorker", "Found ${unsyncedAccounts.size} unsynced accounts.")
+            for (accountEntity in unsyncedAccounts) {
+                try {
+                    val request = UpdateAccountRequest(
+                        name = accountEntity.name,
+                        balance = accountEntity.balance.toString(),
+                        currency = accountEntity.currency
                     )
-                    val response = apiService.createTransaction(request)
-                    if (response.isSuccessful && response.body() != null) {
-                        val newTransaction = response.body()!!.toDomainModel()
-                        if (newTransaction != null) {
-                            transactionDao.deleteById(transactionEntity.id)
-                            transactionDao.upsert(newTransaction.toEntity(isSynced = true))
-                            Log.d("SyncWorker", "Created new transaction. Local ID ${transactionEntity.id} replaced with server ID ${newTransaction.id}.")
-                        }
+                    val response = apiService.updateAccount(accountEntity.id, request)
+                    if (response.isSuccessful) {
+                        accountDao.upsertAll(listOf(accountEntity.copy(isSynced = true)))
+                        Log.d("SyncWorker", "Synced account ${accountEntity.id} to server.")
                     } else {
-                        Log.e("SyncWorker", "Failed to create transaction on server. Code: ${response.code()}")
+                        Log.e("SyncWorker", "Failed to sync account ${accountEntity.id}. Code: ${response.code()}")
                     }
-                }
-                else -> {
-                    try {
-                        val serverResponse = apiService.getTransactionById(transactionEntity.id)
-                        if (!serverResponse.isSuccessful || serverResponse.body() == null) {
-                            Log.e("SyncWorker", "Failed to fetch transaction ${transactionEntity.id} for conflict check.")
-                            continue
-                        }
-
-                        val serverTransactionDto = serverResponse.body()!!
-                        val serverUpdatedAt = serverTransactionDto.updatedAt?.let { parseTimestamp(it) } ?: 0L
-
-                        if (serverUpdatedAt > transactionEntity.lastUpdatedAt) {
-                            Log.w("SyncWorker", "Conflict detected for transaction ${transactionEntity.id}. Server is newer. Discarding local changes.")
-                            serverTransactionDto.toDomainModel()?.let {
-                                transactionDao.upsert(it.toEntity(isSynced = true))
-                            }
-                        } else {
-                            val request = UpdateTransactionRequest(
-                                accountId = transactionEntity.accountId,
-                                categoryId = transactionEntity.categoryId ?: 0,
-                                amount = transactionEntity.amount.toString(),
-                                transactionDate = apiDateFormat.format(transactionEntity.date),
-                                comment = transactionEntity.comment
-                            )
-                            val updateResponse = apiService.updateTransaction(transactionEntity.id, request)
-                            if (updateResponse.isSuccessful) {
-                                val updatedEntity = transactionEntity.copy(
-                                    isSynced = true,
-                                    lastUpdatedAt = System.currentTimeMillis()
-                                )
-                                transactionDao.upsert(updatedEntity)
-                                Log.d("SyncWorker", "Updated transaction ${transactionEntity.id} on server.")
-                            } else {
-                                Log.e("SyncWorker", "Failed to update transaction ${transactionEntity.id} on server. Code: ${updateResponse.code()}")
-                            }
-                        }
-                    } catch (e: Exception) {
-                        Log.e("SyncWorker", "Error processing update for transaction ${transactionEntity.id}", e)
-                    }
+                } catch (e: Exception) {
+                    Log.e("SyncWorker", "Error syncing account ${accountEntity.id}", e)
                 }
             }
+        }
+
+        if (unsyncedTransactions.isEmpty() && unsyncedAccounts.isEmpty()) {
+            Log.d("SyncWorker", "No local changes to sync.")
         }
     }
 
@@ -168,11 +113,10 @@ class SyncRepositoryImpl @Inject constructor(
             val accountsResponse = apiService.getAccounts()
             if (accountsResponse.isSuccessful) {
                 accountsResponse.body()?.let { dtos ->
-                    val entities = dtos.map { it.toDomainModel().toEntity() }
+                    val entities = dtos.map { it.toDomainModel().toEntity(isSynced = true) }
                     accountDao.upsertAll(entities)
                 }
             }
-
             val categoriesResponse = apiService.getCategories()
             if (categoriesResponse.isSuccessful) {
                 categoriesResponse.body()?.let { dtos ->
@@ -191,16 +135,9 @@ class SyncRepositoryImpl @Inject constructor(
                 transactionsRepository.refreshTransactions(account.id, startDate, endDate)
             }
             Log.d("SyncWorker", "Refreshed accounts, categories, and recent transactions.")
-        } catch(e: Exception) {
+        } catch (e: Exception) {
             Log.e("SyncWorker", "Error refreshing data from server", e)
-        }
-    }
-
-    private fun parseTimestamp(dateString: String): Long? {
-        return try {
-            Instant.parse(dateString).toEpochMilli()
-        } catch (e: DateTimeParseException) {
-            null
+            throw e
         }
     }
 }
