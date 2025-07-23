@@ -5,10 +5,6 @@ import androidx.annotation.StringRes
 import com.myfinances.R
 import com.myfinances.domain.entity.TransactionTypeFilter
 
-/**
- * Герметичный класс, определяющий все возможные экраны и навигационные графы в приложении.
- * Инкапсулирует маршрут (route), заголовок и иконку для каждого пункта назначения.
- */
 sealed class Destination(
     val route: String,
     @StringRes val title: Int? = null,
