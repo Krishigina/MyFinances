@@ -3,6 +3,7 @@ package com.myfinances.di
 import android.content.Context
 import androidx.room.Room
 import com.myfinances.data.db.AppDatabase
+import com.myfinances.data.db.Migrations
 import com.myfinances.data.db.dao.AccountDao
 import com.myfinances.data.db.dao.CategoryDao
 import com.myfinances.data.db.dao.TransactionDao
@@ -22,6 +23,7 @@ object DatabaseModule {
             "my_finances.db"
         )
             .fallbackToDestructiveMigration()
+            .addMigrations(Migrations.MIGRATION_2_3)
             .build()
     }
 

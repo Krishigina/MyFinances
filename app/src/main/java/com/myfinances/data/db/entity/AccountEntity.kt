@@ -10,25 +10,29 @@ data class AccountEntity(
     val name: String,
     val balance: Double,
     val currency: String,
-    val isSynced: Boolean = true
-) {
-    fun toDomainModel(emoji: String = "💰"): Account {
-        return Account(
+    val isSynced: Boolean = true,
+    val lastUpdatedAt: Long
+)
+    {
+        fun toDomainModel(emoji: String = "💰"): Account {
+            return Account(
+                id = this.id,
+                name = this.name,
+                balance = this.balance,
+                currency = this.currency,
+                emoji = emoji,
+                lastUpdatedAt = this.lastUpdatedAt
+            )
+        }
+    }
+
+    fun Account.toEntity(isSynced: Boolean = true): AccountEntity {
+        return AccountEntity(
             id = this.id,
             name = this.name,
             balance = this.balance,
             currency = this.currency,
-            emoji = emoji
+            isSynced = isSynced,
+            lastUpdatedAt = this.lastUpdatedAt
         )
     }
-}
-
-fun Account.toEntity(isSynced: Boolean = true): AccountEntity {
-    return AccountEntity(
-        id = this.id,
-        name = this.name,
-        balance = this.balance,
-        currency = this.currency,
-        isSynced = isSynced
-    )
-}

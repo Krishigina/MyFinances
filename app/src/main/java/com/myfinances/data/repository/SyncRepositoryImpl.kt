@@ -5,6 +5,7 @@ import android.util.Log
 import com.myfinances.data.db.dao.AccountDao
 import com.myfinances.data.db.dao.CategoryDao
 import com.myfinances.data.db.dao.TransactionDao
+import com.myfinances.data.db.entity.AccountEntity
 import com.myfinances.data.db.entity.toEntity
 import com.myfinances.data.network.ApiService
 import com.myfinances.data.network.ConnectivityManagerSource
@@ -84,17 +85,32 @@ class SyncRepositoryImpl @Inject constructor(
             Log.d("SyncWorker", "Found ${unsyncedAccounts.size} unsynced accounts.")
             for (accountEntity in unsyncedAccounts) {
                 try {
-                    val request = UpdateAccountRequest(
-                        name = accountEntity.name,
-                        balance = accountEntity.balance.toString(),
-                        currency = accountEntity.currency
-                    )
-                    val response = apiService.updateAccount(accountEntity.id, request)
-                    if (response.isSuccessful) {
-                        accountDao.upsertAll(listOf(accountEntity.copy(isSynced = true)))
-                        Log.d("SyncWorker", "Synced account ${accountEntity.id} to server.")
+                    val serverResponse = apiService.getAccountById(accountEntity.id)
+                    if (!serverResponse.isSuccessful || serverResponse.body() == null) {
+                        Log.e("SyncWorker", "Failed to fetch account ${accountEntity.id} for conflict check.")
+                        continue
+                    }
+
+                    val serverAccountDto = serverResponse.body()!!
+                    val serverUpdatedAt = parseTimestamp(serverAccountDto.updatedAt) ?: 0L
+
+                    if (serverUpdatedAt > accountEntity.lastUpdatedAt) {
+                        Log.w("SyncWorker", "Conflict for account ${accountEntity.id}. Server is newer. Discarding local changes.")
+                        accountDao.upsertAll(listOf(serverAccountDto.toDomainModel().toEntity(isSynced = true)))
                     } else {
-                        Log.e("SyncWorker", "Failed to sync account ${accountEntity.id}. Code: ${response.code()}")
+                        val request = UpdateAccountRequest(
+                            name = accountEntity.name,
+                            balance = accountEntity.balance.toString(),
+                            currency = accountEntity.currency
+                        )
+                        val updateResponse = apiService.updateAccount(accountEntity.id, request)
+                        if (updateResponse.isSuccessful && updateResponse.body() != null) {
+                            val updatedDto = updateResponse.body()!!
+                            accountDao.upsertAll(listOf(updatedDto.toDomainModel().toEntity(isSynced = true)))
+                            Log.d("SyncWorker", "Synced account ${accountEntity.id} to server.")
+                        } else {
+                            Log.e("SyncWorker", "Failed to sync account ${accountEntity.id}. Code: ${updateResponse.code()}")
+                        }
                     }
                 } catch (e: Exception) {
                     Log.e("SyncWorker", "Error syncing account ${accountEntity.id}", e)
@@ -113,10 +129,30 @@ class SyncRepositoryImpl @Inject constructor(
             val accountsResponse = apiService.getAccounts()
             if (accountsResponse.isSuccessful) {
                 accountsResponse.body()?.let { dtos ->
-                    val entities = dtos.map { it.toDomainModel().toEntity(isSynced = true) }
-                    accountDao.upsertAll(entities)
+                    val localAccountsMap = accountDao.getAccounts().first().associateBy { it.id }
+                    val accountsToUpsert = mutableListOf<AccountEntity>()
+
+                    for (dto in dtos) {
+                        val serverDomainModel = dto.toDomainModel()
+                        val serverEntity = serverDomainModel.toEntity(isSynced = true)
+                        val localEntity = localAccountsMap[serverEntity.id]
+
+                        if (localEntity == null) {
+                            accountsToUpsert.add(serverEntity)
+                        } else {
+                            if (serverEntity.lastUpdatedAt > localEntity.lastUpdatedAt) {
+                                accountsToUpsert.add(serverEntity)
+                            }
+                        }
+                    }
+
+                    if (accountsToUpsert.isNotEmpty()) {
+                        Log.d("SyncWorker", "Upserting ${accountsToUpsert.size} accounts from server.")
+                        accountDao.upsertAll(accountsToUpsert)
+                    }
                 }
             }
+
             val categoriesResponse = apiService.getCategories()
             if (categoriesResponse.isSuccessful) {
                 categoriesResponse.body()?.let { dtos ->
@@ -137,7 +173,14 @@ class SyncRepositoryImpl @Inject constructor(
             Log.d("SyncWorker", "Refreshed accounts, categories, and recent transactions.")
         } catch (e: Exception) {
             Log.e("SyncWorker", "Error refreshing data from server", e)
-            throw e
         }
+    }
+}
+
+private fun parseTimestamp(dateString: String): Long? {
+    return try {
+        Instant.parse(dateString).toEpochMilli()
+    } catch (e: DateTimeParseException) {
+        null
     }
 }

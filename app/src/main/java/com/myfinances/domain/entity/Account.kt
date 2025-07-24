@@ -10,5 +10,6 @@ data class Account(
     val name: String,
     val balance: Double,
     val currency: String,
-    val emoji: String
+    val emoji: String,
+    val lastUpdatedAt: Long
 )

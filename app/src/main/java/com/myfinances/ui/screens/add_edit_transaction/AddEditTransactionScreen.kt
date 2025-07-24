@@ -197,14 +197,12 @@ private fun AmountItem(
     onAmountChange: (String) -> Unit
 ) {
     val dimensions = LocalDimensions.current
-    // 1. Создаем FocusRequester
     val focusRequester = remember { FocusRequester() }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(dimensions.listItem.heightTotal)
-            // 2. Делаем всю строку кликабельной, чтобы запросить фокус
             .clickable { focusRequester.requestFocus() }
             .padding(horizontal = dimensions.spacing.paddingLarge),
         verticalAlignment = Alignment.CenterVertically,
@@ -218,7 +216,6 @@ private fun AmountItem(
             BasicTextField(
                 value = amount,
                 onValueChange = onAmountChange,
-                // 3. Привязываем FocusRequester и добавляем исходные модификаторы
                 modifier = Modifier
                     .width(140.dp)
                     .focusRequester(focusRequester),
@@ -244,14 +241,12 @@ private fun AmountItem(
 @Composable
 private fun CommentItem(comment: String, onCommentChange: (String) -> Unit) {
     val dimensions = LocalDimensions.current
-    // 1. Создаем FocusRequester
     val focusRequester = remember { FocusRequester() }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(dimensions.listItem.heightTotal)
-            // 2. Делаем Box кликабельным, чтобы запросить фокус
             .clickable { focusRequester.requestFocus() }
             .padding(horizontal = dimensions.spacing.paddingLarge),
         contentAlignment = Alignment.CenterStart
@@ -259,7 +254,6 @@ private fun CommentItem(comment: String, onCommentChange: (String) -> Unit) {
         BasicTextField(
             value = comment,
             onValueChange = onCommentChange,
-            // 3. Привязываем FocusRequester и добавляем исходные модификаторы
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(focusRequester),

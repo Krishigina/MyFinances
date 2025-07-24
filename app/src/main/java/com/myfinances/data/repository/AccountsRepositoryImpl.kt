@@ -74,7 +74,8 @@ class AccountsRepositoryImpl @Inject constructor(
                 name = name,
                 balance = balance,
                 currency = currency,
-                emoji = currentAccount?.emoji ?: "💰"
+                emoji = currentAccount?.emoji ?: "💰",
+                lastUpdatedAt = System.currentTimeMillis()
             )
 
             accountDao.upsertAll(listOf(updatedAccount.toEntity(isSynced = false)))

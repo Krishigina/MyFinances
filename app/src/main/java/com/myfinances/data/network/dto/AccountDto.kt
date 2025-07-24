@@ -2,6 +2,9 @@ package com.myfinances.data.network.dto
 
 import com.google.gson.annotations.SerializedName
 import com.myfinances.domain.entity.Account
+import java.time.Instant
+import java.time.format.DateTimeParseException
+import java.util.Date
 
 /**
  * Data Transfer Object для сущности "Счет".
@@ -20,11 +23,22 @@ data class AccountDto(
 )
 
 fun AccountDto.toDomainModel(): Account {
+    val parsedUpdatedAt = this.updatedAt.let { parseTimestamp(it) } ?: Date().time
+
     return Account(
         id = this.id,
         name = this.name,
         balance = this.balance.toDoubleOrNull() ?: 0.0,
         currency = this.currency,
-        emoji = "💰"
+        emoji = "💰",
+        lastUpdatedAt = parsedUpdatedAt
     )
+}
+
+private fun parseTimestamp(dateString: String): Long? {
+    return try {
+        Instant.parse(dateString).toEpochMilli()
+    } catch (e: DateTimeParseException) {
+        null
+    }
 }
