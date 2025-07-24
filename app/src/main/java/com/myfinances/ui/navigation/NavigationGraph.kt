@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.myfinances.data.manager.HapticFeedbackManager
 import com.myfinances.data.manager.SnackbarManager
 import com.myfinances.di.ViewModelFactory
 import com.myfinances.domain.entity.TransactionTypeFilter
@@ -35,6 +36,7 @@ fun NavigationGraph(
     navController: NavHostController,
     viewModelFactory: ViewModelFactory,
     snackbarManager: SnackbarManager,
+    hapticFeedbackManager: HapticFeedbackManager
 ) {
     var scaffoldState by remember { mutableStateOf(ScaffoldState()) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -87,6 +89,7 @@ fun NavigationGraph(
             if (isBottomBarVisible) {
                 BottomNavigationBar(
                     navController = navController,
+                    hapticFeedbackManager = hapticFeedbackManager,
                     modifier = Modifier.navigationBarsPadding()
                 )
             }
@@ -94,6 +97,7 @@ fun NavigationGraph(
         floatingActionButton = {
             if (scaffoldState.isFabVisible) {
                 MainFloatingActionButton {
+                    hapticFeedbackManager.performHapticFeedback()
                     val type = if (currentRoute == Destination.Expenses.route) {
                         TransactionTypeFilter.EXPENSE
                     } else {

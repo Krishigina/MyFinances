@@ -18,10 +18,14 @@ fun MainScreen() {
     val snackbarManager = remember {
         appComponent.provideSnackbarManager()
     }
+    val hapticFeedbackManager = remember {
+        appComponent.provideHapticFeedbackManager()
+    }
 
     NavigationGraph(
         navController = mainNavController,
         viewModelFactory = viewModelFactory,
-        snackbarManager = snackbarManager
+        snackbarManager = snackbarManager,
+        hapticFeedbackManager = hapticFeedbackManager
     )
 }

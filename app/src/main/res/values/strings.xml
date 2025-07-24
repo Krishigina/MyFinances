@@ -55,7 +55,7 @@
     <string name="dark_theme">Темная тема</string>
     <string name="primary_color">Основной цвет</string>
     <string name="sounds">Звуки</string>
-    <string name="haptics">Виброотклик</string>
+    <string name="haptics">Хаптики</string>
     <string name="passcode">Код-пароль</string>
     <string name="sync">Синхронизация</string>
     <string name="language">Язык</string>
@@ -69,6 +69,13 @@
     <string name="palette_pink">Розовый</string>
     <string name="palette_blue">Голубой</string>
     <string name="palette_beige">Бежевый</string>
+    <string name="top_bar_haptics_title">Хаптики</string>
+    <string name="haptics_enable">Включить хаптики</string>
+    <string name="haptic_effect_title">Эффект вибрации</string>
+    <string name="haptic_effect_click">Клик</string>
+    <string name="haptic_effect_double_click">Двойной клик</string>
+    <string name="haptic_effect_tick">Тик</string>
+    <string name="haptic_effect_selected">Выбрано</string>
 
     <!-- Transaction Summary -->
     <string name="total_amount_card">Итого</string>

@@ -136,6 +136,9 @@ fun ListItem(model: ListItemModel) {
                         checked = content.isChecked,
                         onCheckedChange = content.onToggle
                     )
+                    is TrailingContent.Custom -> {
+                        content.content()
+                    }
                 }
 
                 if (model.showTrailingArrow) {

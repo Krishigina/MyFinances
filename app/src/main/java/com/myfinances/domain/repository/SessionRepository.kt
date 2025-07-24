@@ -1,6 +1,7 @@
 package com.myfinances.domain.repository
 
 import com.myfinances.domain.entity.ColorPalette
+import com.myfinances.domain.entity.HapticEffect
 import com.myfinances.domain.entity.ThemeSetting
 import kotlinx.coroutines.flow.Flow
 
@@ -16,4 +17,10 @@ interface SessionRepository {
 
     fun getColorPalette(): Flow<ColorPalette>
     suspend fun setColorPalette(palette: ColorPalette)
+
+    fun getHapticsEnabled(): Flow<Boolean>
+    suspend fun setHapticsEnabled(enabled: Boolean)
+
+    fun getHapticEffect(): Flow<HapticEffect>
+    suspend fun setHapticEffect(effect: HapticEffect)
 }

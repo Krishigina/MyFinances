@@ -7,6 +7,7 @@ import com.myfinances.ui.screens.analysis.AnalysisViewModel
 import com.myfinances.ui.screens.articles.ArticlesViewModel
 import com.myfinances.ui.screens.color_palette.ColorPaletteViewModel
 import com.myfinances.ui.screens.expenses.ExpensesViewModel
+import com.myfinances.ui.screens.haptics.HapticsScreenViewModel
 import com.myfinances.ui.screens.history.HistoryViewModel
 import com.myfinances.ui.screens.income.IncomeViewModel
 import com.myfinances.ui.screens.settings.SettingsViewModel
@@ -61,4 +62,9 @@ abstract class ViewModelModule {
     @IntoMap
     @ViewModelKey(ColorPaletteViewModel::class)
     abstract fun bindColorPaletteViewModel(viewModel: ColorPaletteViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(HapticsScreenViewModel::class)
+    abstract fun bindHapticsScreenViewModel(viewModel: HapticsScreenViewModel): ViewModel
 }

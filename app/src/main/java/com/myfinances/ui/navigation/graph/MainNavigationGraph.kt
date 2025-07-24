@@ -33,6 +33,8 @@ import com.myfinances.ui.screens.color_palette.ColorPaletteScreen
 import com.myfinances.ui.screens.color_palette.ColorPaletteViewModel
 import com.myfinances.ui.screens.expenses.ExpensesScreen
 import com.myfinances.ui.screens.expenses.ExpensesViewModel
+import com.myfinances.ui.screens.haptics.HapticsScreen
+import com.myfinances.ui.screens.haptics.HapticsScreenViewModel
 import com.myfinances.ui.screens.income.IncomeScreen
 import com.myfinances.ui.screens.income.IncomeViewModel
 import com.myfinances.ui.screens.settings.SettingsScreen
@@ -147,14 +149,27 @@ fun NavGraphBuilder.mainGraph(
                                     id = "edit_save",
                                     isEnabled = !isSaving,
                                     onAction = {
-                                        val event = if (isEditMode) AccountEvent.SaveChanges else AccountEvent.EditModeToggled
+                                        val event =
+                                            if (isEditMode) AccountEvent.SaveChanges else AccountEvent.EditModeToggled
                                         viewModel.onEvent(event)
                                     },
                                     content = {
                                         when {
-                                            isSaving -> CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                                            isEditMode -> Icon(Icons.Default.Check, contentDescription = stringResource(R.string.action_save))
-                                            else -> Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.top_bar_icon_edit))
+                                            isSaving -> CircularProgressIndicator(
+                                                modifier = Modifier.size(
+                                                    24.dp
+                                                )
+                                            )
+
+                                            isEditMode -> Icon(
+                                                Icons.Default.Check,
+                                                contentDescription = stringResource(R.string.action_save)
+                                            )
+
+                                            else -> Icon(
+                                                Icons.Default.Edit,
+                                                contentDescription = stringResource(R.string.top_bar_icon_edit)
+                                            )
                                         }
                                     }
                                 )
@@ -192,6 +207,9 @@ fun NavGraphBuilder.mainGraph(
                 viewModel = viewModel,
                 onNavigateToColorPalette = {
                     navController.navigate(Destination.ColorPaletteSelection.route)
+                },
+                onNavigateToHaptics = {
+                    navController.navigate(Destination.Haptics.route)
                 }
             )
         }
@@ -219,6 +237,30 @@ fun NavGraphBuilder.mainGraph(
                 )
             }
             ColorPaletteScreen(viewModel = viewModel)
+        }
+        composable(Destination.Haptics.route) {
+            val viewModel: HapticsScreenViewModel = viewModel(factory = viewModelFactory)
+            LaunchedEffect(Unit) {
+                onScaffoldStateChanged(
+                    ScaffoldState(
+                        topBarState = TopBarState(
+                            title = navController.context.getString(R.string.top_bar_haptics_title),
+                            navigationAction = TopBarAction(
+                                id = "back",
+                                onAction = { navController.popBackStack() },
+                                content = {
+                                    Icon(
+                                        Icons.Default.ArrowBack,
+                                        contentDescription = stringResource(id = R.string.action_back)
+                                    )
+                                }
+                            )
+                        ),
+                        isBottomBarVisible = false
+                    )
+                )
+            }
+            HapticsScreen(viewModel = viewModel)
         }
     }
 }

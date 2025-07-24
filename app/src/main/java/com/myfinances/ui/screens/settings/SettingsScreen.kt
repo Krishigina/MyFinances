@@ -20,7 +20,8 @@ import com.myfinances.ui.components.TrailingContent
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
-    onNavigateToColorPalette: () -> Unit
+    onNavigateToColorPalette: () -> Unit,
+    onNavigateToHaptics: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -59,7 +60,8 @@ fun SettingsScreen(
             type = ItemType.SETTING,
             title = stringResource(id = R.string.haptics),
             trailingContent = TrailingContent.ArrowOnly(customIconRes = R.drawable.ic_settings_arrow),
-            showTrailingArrow = false
+            showTrailingArrow = false,
+            onClick = onNavigateToHaptics
         ),
         ListItemModel(
             id = "passcode",

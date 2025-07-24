@@ -2,6 +2,7 @@ package com.myfinances.di
 
 import android.content.Context
 import com.myfinances.MainActivity
+import com.myfinances.data.manager.HapticFeedbackManager
 import com.myfinances.data.manager.SnackbarManager
 import dagger.BindsInstance
 import dagger.Component
@@ -30,6 +31,8 @@ interface AppComponent {
     fun customWorkerFactory(): CustomWorkerFactory
 
     fun provideSnackbarManager(): SnackbarManager
+
+    fun provideHapticFeedbackManager(): HapticFeedbackManager
 
     fun inject(activity: MainActivity)
 }

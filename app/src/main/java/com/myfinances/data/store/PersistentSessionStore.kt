@@ -3,12 +3,14 @@ package com.myfinances.data.store
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.myfinances.domain.entity.ColorPalette
+import com.myfinances.domain.entity.HapticEffect
 import com.myfinances.domain.entity.ThemeSetting
 import com.myfinances.domain.repository.SessionRepository
 import kotlinx.coroutines.flow.Flow
@@ -28,6 +30,8 @@ class PersistentSessionStore @Inject constructor(
         val LAST_SYNC_TIME = longPreferencesKey("last_sync_time")
         val THEME_SETTING = stringPreferencesKey("theme_setting")
         val COLOR_PALETTE = stringPreferencesKey("color_palette")
+        val HAPTICS_ENABLED = booleanPreferencesKey("haptics_enabled")
+        val HAPTIC_EFFECT = stringPreferencesKey("haptic_effect")
     }
 
     override fun getActiveAccountId(): Flow<Int?> = context.dataStore.data
@@ -79,6 +83,33 @@ class PersistentSessionStore @Inject constructor(
     override suspend fun setColorPalette(palette: ColorPalette) {
         context.dataStore.edit { settings ->
             settings[COLOR_PALETTE] = palette.name
+        }
+    }
+
+    override fun getHapticsEnabled(): Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[HAPTICS_ENABLED] ?: true
+        }
+
+    override suspend fun setHapticsEnabled(enabled: Boolean) {
+        context.dataStore.edit { settings ->
+            settings[HAPTICS_ENABLED] = enabled
+        }
+    }
+
+    override fun getHapticEffect(): Flow<HapticEffect> = context.dataStore.data
+        .map { preferences ->
+            val effectName = preferences[HAPTIC_EFFECT]
+            try {
+                if (effectName != null) HapticEffect.valueOf(effectName) else HapticEffect.default
+            } catch (e: IllegalArgumentException) {
+                HapticEffect.default
+            }
+        }
+
+    override suspend fun setHapticEffect(effect: HapticEffect) {
+        context.dataStore.edit { settings ->
+            settings[HAPTIC_EFFECT] = effect.name
         }
     }
 }
