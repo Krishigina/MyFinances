@@ -15,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.myfinances.ui.theme.BrightBlack
 
 @Composable
 fun AppSnackbar(snackbarData: SnackbarData) {
@@ -35,7 +34,7 @@ fun AppSnackbar(snackbarData: SnackbarData) {
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = snackbarData.visuals.message,
-                color = BrightBlack
+                color = MaterialTheme.colorScheme.onSecondaryContainer
             )
         }
     }

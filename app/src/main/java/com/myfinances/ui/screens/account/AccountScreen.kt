@@ -65,14 +65,12 @@ private fun AccountViewContent(
     state: AccountUiState.Success,
     onEvent: (AccountEvent) -> Unit
 ) {
-    // Теперь здесь только блок счета и валюты
     Column(
         modifier = Modifier
             .background(
                 MaterialTheme.colorScheme.secondary,
                 shape = MaterialTheme.shapes.medium
             )
-            .clip(MaterialTheme.shapes.medium)
     ) {
         ListItem(
             model = ListItemModel(
@@ -99,7 +97,6 @@ private fun AccountViewContent(
                 showTrailingArrow = true
             )
         )
-        // Блок с информацией о синхронизации удален
     }
 }
 

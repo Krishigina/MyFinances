@@ -1,3 +1,5 @@
+// app/src/main/java/com/myfinances/ui/theme/Theme.kt
+
 package com.myfinances.ui.theme
 
 import android.os.Build
@@ -9,24 +11,25 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
     primary = DarkThemePrimary,
-    secondary = DarkThemeSecondary,
-    tertiary = DarkThemeTertiary,
-    background = DarkThemeBackground,
-    surface = DarkThemeSurface,
     onPrimary = DarkThemeOnPrimary,
-    onSecondary = Color.Black,
-    onTertiary = Color.Black,
+    secondary = DarkThemeSecondary,
+    onSecondary = DarkThemeOnSecondary,
+    tertiary = DarkThemeTertiary,
+    onTertiary = DarkThemeOnSurface,
+    background = DarkThemeBackground,
     onBackground = DarkThemeOnSurface,
+    surface = DarkThemeSurface,
     onSurface = DarkThemeOnSurface,
-    onSurfaceVariant = LightGrey,
+    surfaceVariant = DarkThemeSurfaceVariant,
+    onSurfaceVariant = DarkThemeOnSurface,
     secondaryContainer = DarkThemeSecondary,
     onSecondaryContainer = DarkThemeOnSecondaryContainer,
-    outline = DarkThemeOutline
+    outline = DarkThemeOutline,
+    outlineVariant = DarkThemeOutline
 )
 
 private val LightColorScheme = lightColorScheme(

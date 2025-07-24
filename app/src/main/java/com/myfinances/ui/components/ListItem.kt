@@ -24,8 +24,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.myfinances.R
-import com.myfinances.ui.theme.BrightBlack
-import com.myfinances.ui.theme.LightBlack
 import com.myfinances.ui.theme.LocalDimensions
 
 /**
@@ -99,7 +97,7 @@ fun ListItem(model: ListItemModel) {
                     Text(
                         text = it,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = LightBlack
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -129,7 +127,7 @@ fun ListItem(model: ListItemModel) {
                                 Text(
                                     text = it,
                                     style = MaterialTheme.typography.bodyLarge,
-                                    color = BrightBlack
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }

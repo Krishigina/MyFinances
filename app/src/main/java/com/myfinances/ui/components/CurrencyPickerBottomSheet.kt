@@ -1,3 +1,5 @@
+// app/src/main/java/com/myfinances/ui/components/CurrencyPickerBottomSheet.kt
+
 package com.myfinances.ui.components
 
 import androidx.compose.foundation.background
@@ -22,15 +24,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.myfinances.R
 
-/**
- * Модальное окно (BottomSheet) для выбора валюты.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CurrencyPickerBottomSheet(
@@ -83,7 +81,7 @@ fun CurrencyPickerBottomSheet(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(72.dp)
-                        .background(Color(0xFFE46962))
+                        .background(MaterialTheme.colorScheme.error)
                         .clickable { onDismiss() }
                         .padding(horizontal = 24.dp),
                     horizontalArrangement = Arrangement.Start,
@@ -92,12 +90,12 @@ fun CurrencyPickerBottomSheet(
                     Icon(
                         painter = painterResource(R.drawable.ic_account_exit),
                         contentDescription = stringResource(R.string.action_cancel),
-                        tint = Color.White
+                        tint = MaterialTheme.colorScheme.onError
                     )
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(
                         text = stringResource(R.string.action_cancel),
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onError,
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
