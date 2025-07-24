@@ -3,7 +3,9 @@ package com.myfinances.di
 import com.myfinances.ui.mappers.AccountDomainToUiMapper
 import com.myfinances.ui.mappers.AnalysisDomainToUiMapper
 import com.myfinances.ui.mappers.CategoryDomainToUiMapper
+import com.myfinances.ui.mappers.ColorPaletteDomainToUiMapper
 import com.myfinances.ui.mappers.TransactionDomainToUiMapper
+import com.myfinances.ui.util.ResourceProvider
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton
@@ -33,5 +35,11 @@ object MapperModule {
     @Singleton
     fun provideAnalysisDomainToUiMapper(): AnalysisDomainToUiMapper {
         return AnalysisDomainToUiMapper()
+    }
+
+    @Provides
+    @Singleton
+    fun provideColorPaletteDomainToUiMapper(resourceProvider: ResourceProvider): ColorPaletteDomainToUiMapper {
+        return ColorPaletteDomainToUiMapper(resourceProvider)
     }
 }

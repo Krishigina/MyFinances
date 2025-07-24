@@ -29,11 +29,14 @@ import com.myfinances.ui.screens.account.AccountUiState
 import com.myfinances.ui.screens.account.AccountViewModel
 import com.myfinances.ui.screens.articles.ArticlesScreen
 import com.myfinances.ui.screens.articles.ArticlesViewModel
+import com.myfinances.ui.screens.color_palette.ColorPaletteScreen
+import com.myfinances.ui.screens.color_palette.ColorPaletteViewModel
 import com.myfinances.ui.screens.expenses.ExpensesScreen
 import com.myfinances.ui.screens.expenses.ExpensesViewModel
 import com.myfinances.ui.screens.income.IncomeScreen
 import com.myfinances.ui.screens.income.IncomeViewModel
 import com.myfinances.ui.screens.settings.SettingsScreen
+import com.myfinances.ui.screens.settings.SettingsViewModel
 import com.myfinances.ui.viewmodel.ScaffoldState
 import com.myfinances.ui.viewmodel.TopBarAction
 import com.myfinances.ui.viewmodel.TopBarState
@@ -176,6 +179,7 @@ fun NavGraphBuilder.mainGraph(
             ArticlesScreen(viewModel = viewModel)
         }
         composable(Destination.Settings.route) {
+            val viewModel: SettingsViewModel = viewModel(factory = viewModelFactory)
             LaunchedEffect(Unit) {
                 onScaffoldStateChanged(
                     ScaffoldState(
@@ -184,7 +188,37 @@ fun NavGraphBuilder.mainGraph(
                     )
                 )
             }
-            SettingsScreen(factory = viewModelFactory)
+            SettingsScreen(
+                viewModel = viewModel,
+                onNavigateToColorPalette = {
+                    navController.navigate(Destination.ColorPaletteSelection.route)
+                }
+            )
+        }
+
+        composable(Destination.ColorPaletteSelection.route) {
+            val viewModel: ColorPaletteViewModel = viewModel(factory = viewModelFactory)
+            LaunchedEffect(Unit) {
+                onScaffoldStateChanged(
+                    ScaffoldState(
+                        topBarState = TopBarState(
+                            title = navController.context.getString(R.string.top_bar_color_palette_title),
+                            navigationAction = TopBarAction(
+                                id = "back",
+                                onAction = { navController.popBackStack() },
+                                content = {
+                                    Icon(
+                                        Icons.Default.ArrowBack,
+                                        contentDescription = stringResource(id = R.string.action_back)
+                                    )
+                                }
+                            )
+                        ),
+                        isBottomBarVisible = false
+                    )
+                )
+            }
+            ColorPaletteScreen(viewModel = viewModel)
         }
     }
 }

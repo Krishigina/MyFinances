@@ -8,9 +8,11 @@ import com.myfinances.domain.usecase.GetAccountUseCase
 import com.myfinances.domain.usecase.GetActiveAccountIdUseCase
 import com.myfinances.domain.usecase.GetAnalysisDataUseCase
 import com.myfinances.domain.usecase.GetCategoriesUseCase
+import com.myfinances.domain.usecase.GetColorPaletteUseCase
 import com.myfinances.domain.usecase.GetLastSyncTimeUseCase
 import com.myfinances.domain.usecase.GetThemeUseCase
 import com.myfinances.domain.usecase.GetTransactionsUseCase
+import com.myfinances.domain.usecase.SaveColorPaletteUseCase
 import com.myfinances.domain.usecase.SaveThemeUseCase
 import dagger.Module
 import dagger.Provides
@@ -74,5 +76,15 @@ object DomainModule {
     @Provides
     fun provideSaveThemeUseCase(sessionRepository: SessionRepository): SaveThemeUseCase {
         return SaveThemeUseCase(sessionRepository)
+    }
+
+    @Provides
+    fun provideGetColorPaletteUseCase(sessionRepository: SessionRepository): GetColorPaletteUseCase {
+        return GetColorPaletteUseCase(sessionRepository)
+    }
+
+    @Provides
+    fun provideSaveColorPaletteUseCase(sessionRepository: SessionRepository): SaveColorPaletteUseCase {
+        return SaveColorPaletteUseCase(sessionRepository)
     }
 }

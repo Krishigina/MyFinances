@@ -4,7 +4,7 @@ import androidx.compose.ui.graphics.Color
 import com.myfinances.domain.entity.AnalysisData
 import com.myfinances.ui.model.AnalysisUiModel
 import com.myfinances.ui.model.CategorySpendingUiModel
-import com.myfinances.ui.theme.BrightGreen
+import com.myfinances.ui.theme.Green_Primary
 import com.myfinances.ui.util.formatCurrency
 import javax.inject.Inject
 import kotlin.math.roundToInt
@@ -12,7 +12,7 @@ import kotlin.math.roundToInt
 class AnalysisDomainToUiMapper @Inject constructor() {
 
     private val chartColors = listOf(
-        BrightGreen,
+        Green_Primary,
         Color(0xFFFACC15), // yellow
         Color(0xFF22D3EE), // cyan
         Color(0xFFF9A8D4), // pink

@@ -64,6 +64,11 @@
     <string name="theme_dialog_title">Выберите тему</string>
     <string name="theme_light">Светлая</string>
     <string name="theme_dark">Темная</string>
+    <string name="top_bar_color_palette_title">Основной цвет</string>
+    <string name="palette_green">Зелёный (по умолч.)</string>
+    <string name="palette_pink">Розовый</string>
+    <string name="palette_blue">Голубой</string>
+    <string name="palette_beige">Бежевый</string>
 
     <!-- Transaction Summary -->
     <string name="total_amount_card">Итого</string>

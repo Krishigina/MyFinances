@@ -18,23 +18,9 @@ import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.components.TrailingContent
 
 @Composable
-fun SettingsScreenContent(
-    items: List<ListItemModel>
-) {
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(
-            items = items,
-            key = { it.id }
-        ) { model ->
-            ListItem(model = model)
-            Divider()
-        }
-    }
-}
-
-@Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel
+    viewModel: SettingsViewModel,
+    onNavigateToColorPalette: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -55,8 +41,11 @@ fun SettingsScreen(
             id = "primary_color",
             type = ItemType.SETTING,
             title = stringResource(id = R.string.primary_color),
-            trailingContent = TrailingContent.ArrowOnly(customIconRes = R.drawable.ic_settings_arrow),
-            showTrailingArrow = false
+            trailingContent = TrailingContent.TextWithArrow(
+                text = uiState.currentPaletteName
+            ),
+            showTrailingArrow = true,
+            onClick = onNavigateToColorPalette
         ),
         ListItemModel(
             id = "sounds",
@@ -102,11 +91,13 @@ fun SettingsScreen(
         )
     )
 
-    SettingsScreenContent(items = settingsItems)
-}
-
-@Composable
-fun SettingsScreen(factory: ViewModelFactory) {
-    val viewModel: SettingsViewModel = viewModel(factory = factory)
-    SettingsScreen(viewModel = viewModel)
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+        items(
+            items = settingsItems,
+            key = { it.id }
+        ) { model ->
+            ListItem(model = model)
+            Divider()
+        }
+    }
 }

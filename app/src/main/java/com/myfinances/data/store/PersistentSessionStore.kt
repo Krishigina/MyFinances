@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.myfinances.domain.entity.ColorPalette
 import com.myfinances.domain.entity.ThemeSetting
 import com.myfinances.domain.repository.SessionRepository
 import kotlinx.coroutines.flow.Flow
@@ -26,6 +27,7 @@ class PersistentSessionStore @Inject constructor(
         val ACTIVE_ACCOUNT_ID = intPreferencesKey("active_account_id")
         val LAST_SYNC_TIME = longPreferencesKey("last_sync_time")
         val THEME_SETTING = stringPreferencesKey("theme_setting")
+        val COLOR_PALETTE = stringPreferencesKey("color_palette")
     }
 
     override fun getActiveAccountId(): Flow<Int?> = context.dataStore.data
@@ -53,14 +55,30 @@ class PersistentSessionStore @Inject constructor(
     override fun getTheme(): Flow<ThemeSetting> = context.dataStore.data
         .map { preferences ->
             when (preferences[THEME_SETTING]) {
-                ThemeSetting.LIGHT.name -> ThemeSetting.LIGHT
-                else -> ThemeSetting.DARK
+                ThemeSetting.DARK.name -> ThemeSetting.DARK
+                else -> ThemeSetting.LIGHT
             }
         }
 
     override suspend fun setTheme(theme: ThemeSetting) {
         context.dataStore.edit { settings ->
             settings[THEME_SETTING] = theme.name
+        }
+    }
+
+    override fun getColorPalette(): Flow<ColorPalette> = context.dataStore.data
+        .map { preferences ->
+            val paletteName = preferences[COLOR_PALETTE]
+            try {
+                if (paletteName != null) ColorPalette.valueOf(paletteName) else ColorPalette.default
+            } catch (e: IllegalArgumentException) {
+                ColorPalette.default
+            }
+        }
+
+    override suspend fun setColorPalette(palette: ColorPalette) {
+        context.dataStore.edit { settings ->
+            settings[COLOR_PALETTE] = palette.name
         }
     }
 }

@@ -52,7 +52,7 @@ fun NavigationGraph(
     val currentRoute = navBackStackEntry?.destination?.route
 
     val isBottomBarVisible = remember(currentRoute) {
-        scaffoldState.isBottomBarVisible && when (currentRoute) {
+        when (currentRoute) {
             Destination.Expenses.route,
             Destination.Income.route,
             Destination.Account.route,

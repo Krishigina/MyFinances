@@ -39,6 +39,8 @@ sealed class Destination(
         icon = R.drawable.ic_bottom_nav_settings
     )
 
+    data object ColorPaletteSelection : Destination(route = "color_palette_selection")
+
     data object History : Destination(route = "history/{transactionType}/{parentRoute}") {
         fun createRoute(filter: TransactionTypeFilter, parentRoute: String): String {
             return "history/${filter.name}/$parentRoute"

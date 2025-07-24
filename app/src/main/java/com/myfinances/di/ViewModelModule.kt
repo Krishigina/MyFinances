@@ -5,6 +5,7 @@ import com.myfinances.ui.screens.account.AccountViewModel
 import com.myfinances.ui.screens.add_edit_transaction.AddEditTransactionViewModel
 import com.myfinances.ui.screens.analysis.AnalysisViewModel
 import com.myfinances.ui.screens.articles.ArticlesViewModel
+import com.myfinances.ui.screens.color_palette.ColorPaletteViewModel
 import com.myfinances.ui.screens.expenses.ExpensesViewModel
 import com.myfinances.ui.screens.history.HistoryViewModel
 import com.myfinances.ui.screens.income.IncomeViewModel
@@ -55,4 +56,9 @@ abstract class ViewModelModule {
     @IntoMap
     @ViewModelKey(SettingsViewModel::class)
     abstract fun bindSettingsViewModel(viewModel: SettingsViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(ColorPaletteViewModel::class)
+    abstract fun bindColorPaletteViewModel(viewModel: ColorPaletteViewModel): ViewModel
 }

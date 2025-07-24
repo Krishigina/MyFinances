@@ -27,8 +27,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.myfinances.R
 import com.myfinances.ui.theme.BrightBlack
-import com.myfinances.ui.theme.BrightGreen
-import com.myfinances.ui.theme.PastelGreen
+import com.myfinances.ui.theme.Green_Primary
+import com.myfinances.ui.theme.Green_Secondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,17 +45,17 @@ fun TimePickerDialog(
     )
 
     val timePickerColors = TimePickerDefaults.colors(
-        clockDialColor = PastelGreen,
+        clockDialColor = Green_Secondary,
         clockDialSelectedContentColor = BrightBlack,
         clockDialUnselectedContentColor = BrightBlack,
-        selectorColor = BrightGreen,
-        periodSelectorBorderColor = BrightGreen,
-        periodSelectorSelectedContainerColor = BrightGreen,
-        periodSelectorUnselectedContainerColor = PastelGreen,
+        selectorColor = Green_Primary,
+        periodSelectorBorderColor = Green_Primary,
+        periodSelectorSelectedContainerColor = Green_Primary,
+        periodSelectorUnselectedContainerColor = Green_Secondary,
         periodSelectorSelectedContentColor = BrightBlack,
         periodSelectorUnselectedContentColor = BrightBlack,
-        timeSelectorSelectedContainerColor = BrightGreen,
-        timeSelectorUnselectedContainerColor = PastelGreen,
+        timeSelectorSelectedContainerColor = Green_Primary,
+        timeSelectorUnselectedContainerColor = Green_Secondary,
         timeSelectorSelectedContentColor = BrightBlack,
         timeSelectorUnselectedContentColor = BrightBlack
     )
@@ -77,7 +77,7 @@ fun TimePickerDialog(
         ) {
             Column(
                 modifier = Modifier
-                    .background(PastelGreen)
+                    .background(Green_Secondary)
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
