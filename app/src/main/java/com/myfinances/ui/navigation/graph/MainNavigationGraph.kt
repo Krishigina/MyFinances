@@ -7,12 +7,17 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
@@ -54,6 +59,7 @@ fun NavGraphBuilder.mainGraph(
         startDestination = Destination.Expenses.route,
         route = "main_graph"
     ) {
+        // ... (composable-блоки для Expenses, Income, Account, Articles остаются без изменений)
         composable(Destination.Expenses.route) {
             val viewModel: ExpensesViewModel = viewModel(factory = viewModelFactory)
             LaunchedEffect(Unit) {
@@ -197,6 +203,19 @@ fun NavGraphBuilder.mainGraph(
         }
         composable(Destination.Settings.route) {
             val viewModel: SettingsViewModel = viewModel(factory = viewModelFactory)
+            val lifecycleOwner = LocalLifecycleOwner.current
+
+            DisposableEffect(lifecycleOwner) {
+                val observer = LifecycleEventObserver { _, event ->
+                    if (event == Lifecycle.Event.ON_RESUME) {
+                        viewModel.onResume()
+                    }
+                }
+                lifecycleOwner.lifecycle.addObserver(observer)
+                onDispose {
+                    lifecycleOwner.lifecycle.removeObserver(observer)
+                }
+            }
             LaunchedEffect(Unit) {
                 onScaffoldStateChanged(
                     ScaffoldState(
@@ -269,6 +288,20 @@ fun NavGraphBuilder.mainGraph(
         }
         composable(Destination.LanguageSelection.route) {
             val viewModel: LanguageScreenViewModel = viewModel(factory = viewModelFactory)
+            val lifecycleOwner = LocalLifecycleOwner.current
+
+            DisposableEffect(lifecycleOwner) {
+                val observer = LifecycleEventObserver { _, event ->
+                    if (event == Lifecycle.Event.ON_RESUME) {
+                        viewModel.onResume()
+                    }
+                }
+                lifecycleOwner.lifecycle.addObserver(observer)
+                onDispose {
+                    lifecycleOwner.lifecycle.removeObserver(observer)
+                }
+            }
+
             LaunchedEffect(Unit) {
                 onScaffoldStateChanged(
                     ScaffoldState(

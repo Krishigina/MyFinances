@@ -8,7 +8,11 @@ enum class Language(val code: String) {
         val default = RUSSIAN
 
         fun fromCode(code: String?): Language {
-            return entries.find { it.code == code } ?: default
+            if (code.isNullOrBlank()) {
+                return default
+            }
+            val primaryLanguage = code.split("-").first()
+            return entries.find { it.code == primaryLanguage } ?: default
         }
     }
 }

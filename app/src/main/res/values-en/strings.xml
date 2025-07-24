@@ -112,4 +112,33 @@
     <string name="period_end_date_analysis">Period: end</string>
     <string name="top_bar_analysis_title">Analysis</string>
 
+    <!-- Snackbar Messages -->
+    <string name="snackbar_sync_complete">Синхронизация завершена: %1$s</string>
+    <string name="snackbar_no_expenses_today">За сегодня еще не было расходов</string>
+    <string name="snackbar_no_income_today">За сегодня еще не было доходов</string>
+    <string name="snackbar_saved_successfully">Счет успешно сохранен</string>
+    <string name="snackbar_network_error_cached_data">Нет сети, показаны сохраненные данные</string>
+    <string name="snackbar_update_error">Ошибка обновления</string>
+    <string name="snackbar_network_error_check_connection">Ошибка сети. Проверьте подключение.</string>
+
+    <!-- Error Messages -->
+    <string name="error_api_code">Ошибка API: %1$d</string>
+    <string name="error_api_message">Ошибка API: %1$s</string>
+    <string name="error_generic_message">Ошибка: %1$s</string>
+    <string name="error_unknown">Неизвестная ошибка</string>
+    <string name="error_category_not_selected">Необходимо выбрать категорию</string>
+    <string name="error_failed_to_load_account">Не удалось загрузить счет</string>
+    <string name="error_failed_to_save">Ошибка сохранения</string>
+    <string name="error_failed_to_delete">Ошибка удаления</string>
+    <string name="error_failed_to_load_categories">Не удалось загрузить категории</string>
+
+    <!-- Time formatting -->
+    <string name="time_never">Никогда</string>
+    <string name="time_just_now">Только что</string>
+    <string name="time_today_at">Сегодня, %1$s</string>
+
+    <!-- UI Placeholders & Titles -->
+    <string name="time_picker_title">Выберите время</string>
+    <string name="analysis_chart_placeholder">График будет здесь</string>
+
 </resources>

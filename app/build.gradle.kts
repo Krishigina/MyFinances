@@ -107,6 +107,8 @@ dependencies {
     implementation(libs.androidx.startup.runtime)
 
     implementation(libs.androidx.appcompat)
+
+    implementation(libs.material)
 }
 
 detekt {

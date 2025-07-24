@@ -112,4 +112,33 @@
     <string name="period_end_date_analysis">Период: конец</string>
     <string name="top_bar_analysis_title">Анализ</string>
 
+    <!-- Snackbar Messages -->
+    <string name="snackbar_sync_complete">Sync completed: %1$s</string>
+    <string name="snackbar_no_expenses_today">No expenses for today yet</string>
+    <string name="snackbar_no_income_today">No income for today yet</string>
+    <string name="snackbar_saved_successfully">Account saved successfully</string>
+    <string name="snackbar_network_error_cached_data">No network, showing cached data</string>
+    <string name="snackbar_update_error">Update error</string>
+    <string name="snackbar_network_error_check_connection">Network error. Check your connection.</string>
+
+    <!-- Error Messages -->
+    <string name="error_api_code">API Error: %1$d</string>
+    <string name="error_api_message">API Error: %1$s</string>
+    <string name="error_generic_message">Error: %1$s</string>
+    <string name="error_unknown">Unknown error</string>
+    <string name="error_category_not_selected">A category must be selected</string>
+    <string name="error_failed_to_load_account">Failed to load account</string>
+    <string name="error_failed_to_save">Failed to save</string>
+    <string name="error_failed_to_delete">Failed to delete</string>
+    <string name="error_failed_to_load_categories">Failed to load categories</string>
+
+    <!-- Time formatting -->
+    <string name="time_never">Never</string>
+    <string name="time_just_now">Just now</string>
+    <string name="time_today_at">Today, %1$s</string>
+
+    <!-- UI Placeholders & Titles -->
+    <string name="time_picker_title">Select time</string>
+    <string name="analysis_chart_placeholder">Chart will be here</string>
+
 </resources>
