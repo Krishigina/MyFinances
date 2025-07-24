@@ -1,10 +1,14 @@
 package com.myfinances.ui.screens.settings
 
+import android.content.Context
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.myfinances.domain.entity.Language
 import com.myfinances.domain.entity.ThemeSetting
 import com.myfinances.domain.usecase.GetColorPaletteUseCase
-import com.myfinances.domain.usecase.GetLanguageUseCase
 import com.myfinances.domain.usecase.GetThemeUseCase
 import com.myfinances.domain.usecase.SaveThemeUseCase
 import com.myfinances.ui.mappers.ColorPaletteDomainToUiMapper
@@ -18,10 +22,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class SettingsViewModel @Inject constructor(
+    private val context: Context, // Используем Context
     getThemeUseCase: GetThemeUseCase,
     private val saveThemeUseCase: SaveThemeUseCase,
     getColorPaletteUseCase: GetColorPaletteUseCase,
-    getLanguageUseCase: GetLanguageUseCase,
     private val colorPaletteMapper: ColorPaletteDomainToUiMapper,
     private val languageMapper: LanguageDomainToUiMapper
 ) : ViewModel() {
@@ -30,19 +34,38 @@ class SettingsViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     init {
-        val themeFlow = getThemeUseCase()
-        val paletteFlow = getColorPaletteUseCase()
-        val languageFlow = getLanguageUseCase()
-
-        combine(themeFlow, paletteFlow, languageFlow) { theme, palette, language ->
+        // Слушаем изменения темы и палитры
+        combine(
+            getThemeUseCase(),
+            getColorPaletteUseCase()
+        ) { theme, palette ->
             _uiState.update {
                 it.copy(
                     isDarkMode = theme == ThemeSetting.DARK,
-                    currentPaletteName = colorPaletteMapper.mapToName(palette),
-                    currentLanguageName = languageMapper.mapToName(language)
+                    currentPaletteName = colorPaletteMapper.mapToName(palette)
                 )
             }
         }.launchIn(viewModelScope)
+
+        setCurrentLanguage()
+
+        val executor = ContextCompat.getMainExecutor(context)
+        AppCompatDelegate.setOnApplicationLocalesChangedListener(executor) {
+            setCurrentLanguage()
+        }
+    }
+
+    private fun setCurrentLanguage() {
+        val currentLocales = AppCompatDelegate.getApplicationLocales()
+        val currentLangCode = if (!currentLocales.isEmpty) {
+            currentLocales[0]?.toLanguageTag()
+        } else {
+            LocaleListCompat.getAdjustedDefault()[0]?.toLanguageTag()
+        }
+        val language = Language.fromCode(currentLangCode)
+        _uiState.update {
+            it.copy(currentLanguageName = languageMapper.mapToName(language))
+        }
     }
 
     fun onEvent(event: SettingsEvent) {

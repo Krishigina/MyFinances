@@ -1,7 +1,6 @@
 package com.myfinances.di
 
 import com.myfinances.data.manager.HapticFeedbackManager
-import com.myfinances.data.manager.LocaleManager
 import com.myfinances.domain.repository.AccountsRepository
 import com.myfinances.domain.repository.CategoriesRepository
 import com.myfinances.domain.repository.SessionRepository
@@ -12,7 +11,6 @@ import com.myfinances.domain.usecase.GetAnalysisDataUseCase
 import com.myfinances.domain.usecase.GetCategoriesUseCase
 import com.myfinances.domain.usecase.GetColorPaletteUseCase
 import com.myfinances.domain.usecase.GetHapticSettingsUseCase
-import com.myfinances.domain.usecase.GetLanguageUseCase
 import com.myfinances.domain.usecase.GetLastSyncTimeUseCase
 import com.myfinances.domain.usecase.GetThemeUseCase
 import com.myfinances.domain.usecase.GetTransactionsUseCase
@@ -20,7 +18,6 @@ import com.myfinances.domain.usecase.PreviewHapticEffectUseCase
 import com.myfinances.domain.usecase.SaveColorPaletteUseCase
 import com.myfinances.domain.usecase.SaveHapticEffectUseCase
 import com.myfinances.domain.usecase.SaveHapticsEnabledUseCase
-import com.myfinances.domain.usecase.SaveLanguageUseCase
 import com.myfinances.domain.usecase.SaveThemeUseCase
 import dagger.Module
 import dagger.Provides
@@ -114,18 +111,5 @@ object DomainModule {
     @Provides
     fun providePreviewHapticEffectUseCase(hapticFeedbackManager: HapticFeedbackManager): PreviewHapticEffectUseCase {
         return PreviewHapticEffectUseCase(hapticFeedbackManager)
-    }
-
-    @Provides
-    fun provideGetLanguageUseCase(sessionRepository: SessionRepository): GetLanguageUseCase {
-        return GetLanguageUseCase(sessionRepository)
-    }
-
-    @Provides
-    fun provideSaveLanguageUseCase(
-        sessionRepository: SessionRepository,
-        localeManager: LocaleManager
-    ): SaveLanguageUseCase {
-        return SaveLanguageUseCase(sessionRepository, localeManager)
     }
 }

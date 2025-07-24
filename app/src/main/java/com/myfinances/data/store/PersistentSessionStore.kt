@@ -11,7 +11,6 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.myfinances.domain.entity.ColorPalette
 import com.myfinances.domain.entity.HapticEffect
-import com.myfinances.domain.entity.Language
 import com.myfinances.domain.entity.ThemeSetting
 import com.myfinances.domain.repository.SessionRepository
 import kotlinx.coroutines.flow.Flow
@@ -33,7 +32,6 @@ class PersistentSessionStore @Inject constructor(
         val COLOR_PALETTE = stringPreferencesKey("color_palette")
         val HAPTICS_ENABLED = booleanPreferencesKey("haptics_enabled")
         val HAPTIC_EFFECT = stringPreferencesKey("haptic_effect")
-        val APP_LANGUAGE = stringPreferencesKey("app_language")
     }
 
     override fun getActiveAccountId(): Flow<Int?> = context.dataStore.data
@@ -112,17 +110,6 @@ class PersistentSessionStore @Inject constructor(
     override suspend fun setHapticEffect(effect: HapticEffect) {
         context.dataStore.edit { settings ->
             settings[HAPTIC_EFFECT] = effect.name
-        }
-    }
-
-    override fun getLanguage(): Flow<Language> = context.dataStore.data
-        .map { preferences ->
-            Language.fromCode(preferences[APP_LANGUAGE])
-        }
-
-    override suspend fun setLanguage(language: Language) {
-        context.dataStore.edit { settings ->
-            settings[APP_LANGUAGE] = language.code
         }
     }
 }
