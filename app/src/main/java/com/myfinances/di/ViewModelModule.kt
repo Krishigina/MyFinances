@@ -10,6 +10,7 @@ import com.myfinances.ui.screens.expenses.ExpensesViewModel
 import com.myfinances.ui.screens.haptics.HapticsScreenViewModel
 import com.myfinances.ui.screens.history.HistoryViewModel
 import com.myfinances.ui.screens.income.IncomeViewModel
+import com.myfinances.ui.screens.language.LanguageScreenViewModel
 import com.myfinances.ui.screens.settings.SettingsViewModel
 import dagger.Binds
 import dagger.Module
@@ -67,4 +68,9 @@ abstract class ViewModelModule {
     @IntoMap
     @ViewModelKey(HapticsScreenViewModel::class)
     abstract fun bindHapticsScreenViewModel(viewModel: HapticsScreenViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(LanguageScreenViewModel::class)
+    abstract fun bindLanguageScreenViewModel(viewModel: LanguageScreenViewModel): ViewModel
 }

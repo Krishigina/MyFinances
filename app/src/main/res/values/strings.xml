@@ -77,6 +77,10 @@
     <string name="haptic_effect_tick">Тик</string>
     <string name="haptic_effect_selected">Выбрано</string>
 
+    <string name="language_russian">Русский</string>
+    <string name="language_english">English</string>
+    <string name="top_bar_language_title">Язык</string>
+
     <!-- Transaction Summary -->
     <string name="total_amount_card">Итого</string>
 

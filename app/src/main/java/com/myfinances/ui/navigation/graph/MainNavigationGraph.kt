@@ -37,6 +37,8 @@ import com.myfinances.ui.screens.haptics.HapticsScreen
 import com.myfinances.ui.screens.haptics.HapticsScreenViewModel
 import com.myfinances.ui.screens.income.IncomeScreen
 import com.myfinances.ui.screens.income.IncomeViewModel
+import com.myfinances.ui.screens.language.LanguageScreen
+import com.myfinances.ui.screens.language.LanguageScreenViewModel
 import com.myfinances.ui.screens.settings.SettingsScreen
 import com.myfinances.ui.screens.settings.SettingsViewModel
 import com.myfinances.ui.viewmodel.ScaffoldState
@@ -210,6 +212,9 @@ fun NavGraphBuilder.mainGraph(
                 },
                 onNavigateToHaptics = {
                     navController.navigate(Destination.Haptics.route)
+                },
+                onNavigateToLanguage = {
+                    navController.navigate(Destination.LanguageSelection.route)
                 }
             )
         }
@@ -261,6 +266,30 @@ fun NavGraphBuilder.mainGraph(
                 )
             }
             HapticsScreen(viewModel = viewModel)
+        }
+        composable(Destination.LanguageSelection.route) {
+            val viewModel: LanguageScreenViewModel = viewModel(factory = viewModelFactory)
+            LaunchedEffect(Unit) {
+                onScaffoldStateChanged(
+                    ScaffoldState(
+                        topBarState = TopBarState(
+                            title = navController.context.getString(R.string.top_bar_language_title),
+                            navigationAction = TopBarAction(
+                                id = "back",
+                                onAction = { navController.popBackStack() },
+                                content = {
+                                    Icon(
+                                        Icons.Default.ArrowBack,
+                                        contentDescription = stringResource(id = R.string.action_back)
+                                    )
+                                }
+                            )
+                        ),
+                        isBottomBarVisible = false
+                    )
+                )
+            }
+            LanguageScreen(viewModel = viewModel)
         }
     }
 }

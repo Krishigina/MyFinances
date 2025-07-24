@@ -5,6 +5,7 @@ import com.myfinances.ui.mappers.AnalysisDomainToUiMapper
 import com.myfinances.ui.mappers.CategoryDomainToUiMapper
 import com.myfinances.ui.mappers.ColorPaletteDomainToUiMapper
 import com.myfinances.ui.mappers.HapticEffectDomainToUiMapper
+import com.myfinances.ui.mappers.LanguageDomainToUiMapper
 import com.myfinances.ui.mappers.TransactionDomainToUiMapper
 import com.myfinances.ui.util.ResourceProvider
 import dagger.Module
@@ -48,5 +49,11 @@ object MapperModule {
     @Singleton
     fun provideHapticEffectDomainToUiMapper(resourceProvider: ResourceProvider): HapticEffectDomainToUiMapper {
         return HapticEffectDomainToUiMapper(resourceProvider)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLanguageDomainToUiMapper(resourceProvider: ResourceProvider): LanguageDomainToUiMapper {
+        return LanguageDomainToUiMapper(resourceProvider)
     }
 }

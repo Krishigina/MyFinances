@@ -21,7 +21,8 @@ import com.myfinances.ui.components.TrailingContent
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     onNavigateToColorPalette: () -> Unit,
-    onNavigateToHaptics: () -> Unit
+    onNavigateToHaptics: () -> Unit,
+    onNavigateToLanguage: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -81,8 +82,11 @@ fun SettingsScreen(
             id = "language",
             type = ItemType.SETTING,
             title = stringResource(id = R.string.language),
-            trailingContent = TrailingContent.ArrowOnly(customIconRes = R.drawable.ic_settings_arrow),
-            showTrailingArrow = false
+            trailingContent = TrailingContent.TextWithArrow(
+                text = uiState.currentLanguageName
+            ),
+            showTrailingArrow = true,
+            onClick = onNavigateToLanguage
         ),
         ListItemModel(
             id = "about",

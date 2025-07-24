@@ -4,6 +4,7 @@ import android.content.Context
 import com.myfinances.BuildConfig
 import com.myfinances.data.manager.AccountUpdateManager
 import com.myfinances.data.manager.HapticFeedbackManager
+import com.myfinances.data.manager.LocaleManager
 import com.myfinances.data.manager.SnackbarManager
 import com.myfinances.data.manager.SyncUpdateManager
 import com.myfinances.data.network.RetryInterceptor
@@ -84,5 +85,11 @@ object AppModule {
         sessionRepository: SessionRepository
     ): HapticFeedbackManager {
         return HapticFeedbackManager(context, sessionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLocaleManager(): LocaleManager {
+        return LocaleManager()
     }
 }

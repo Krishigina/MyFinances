@@ -7,11 +7,17 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.myfinances.data.manager.LocaleManager
 import com.myfinances.data.workers.SyncWorker
 import com.myfinances.di.AppComponent
 import com.myfinances.di.CustomWorkerFactory
 import com.myfinances.di.DaggerAppComponent
+import com.myfinances.domain.repository.SessionRepository
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
 /**
  * Главный класс Application, который служит точкой входа для Dagger,
@@ -19,12 +25,22 @@ import java.util.concurrent.TimeUnit
  */
 class MyFinancesApplication : Application() {
 
+    @Inject
+    lateinit var sessionRepository: SessionRepository
+    @Inject
+    lateinit var localeManager: LocaleManager
+
     lateinit var appComponent: AppComponent
         private set
+
+    private val applicationScope = MainScope()
 
     override fun onCreate() {
         super.onCreate()
         appComponent = DaggerAppComponent.factory().create(this)
+        appComponent.inject(this)
+
+        setupInitialLocale()
 
         val customWorkerFactory = appComponent.customWorkerFactory()
 
@@ -35,6 +51,13 @@ class MyFinancesApplication : Application() {
         WorkManager.initialize(this, workManagerConfig)
 
         setupPeriodicSync()
+    }
+
+    private fun setupInitialLocale() {
+        applicationScope.launch {
+            val language = sessionRepository.getLanguage().first()
+            localeManager.updateAppLocale(language.code)
+        }
     }
 
     private fun setupPeriodicSync() {

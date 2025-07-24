@@ -4,14 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myfinances.domain.entity.ThemeSetting
 import com.myfinances.domain.usecase.GetColorPaletteUseCase
+import com.myfinances.domain.usecase.GetLanguageUseCase
 import com.myfinances.domain.usecase.GetThemeUseCase
 import com.myfinances.domain.usecase.SaveThemeUseCase
 import com.myfinances.ui.mappers.ColorPaletteDomainToUiMapper
+import com.myfinances.ui.mappers.LanguageDomainToUiMapper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -20,7 +21,9 @@ class SettingsViewModel @Inject constructor(
     getThemeUseCase: GetThemeUseCase,
     private val saveThemeUseCase: SaveThemeUseCase,
     getColorPaletteUseCase: GetColorPaletteUseCase,
-    private val colorPaletteMapper: ColorPaletteDomainToUiMapper
+    getLanguageUseCase: GetLanguageUseCase,
+    private val colorPaletteMapper: ColorPaletteDomainToUiMapper,
+    private val languageMapper: LanguageDomainToUiMapper
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -29,12 +32,14 @@ class SettingsViewModel @Inject constructor(
     init {
         val themeFlow = getThemeUseCase()
         val paletteFlow = getColorPaletteUseCase()
+        val languageFlow = getLanguageUseCase()
 
-        combine(themeFlow, paletteFlow) { theme, palette ->
+        combine(themeFlow, paletteFlow, languageFlow) { theme, palette, language ->
             _uiState.update {
                 it.copy(
                     isDarkMode = theme == ThemeSetting.DARK,
-                    currentPaletteName = colorPaletteMapper.mapToName(palette)
+                    currentPaletteName = colorPaletteMapper.mapToName(palette),
+                    currentLanguageName = languageMapper.mapToName(language)
                 )
             }
         }.launchIn(viewModelScope)

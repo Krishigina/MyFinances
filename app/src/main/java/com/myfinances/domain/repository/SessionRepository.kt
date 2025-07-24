@@ -2,6 +2,7 @@ package com.myfinances.domain.repository
 
 import com.myfinances.domain.entity.ColorPalette
 import com.myfinances.domain.entity.HapticEffect
+import com.myfinances.domain.entity.Language
 import com.myfinances.domain.entity.ThemeSetting
 import kotlinx.coroutines.flow.Flow
 
@@ -23,4 +24,7 @@ interface SessionRepository {
 
     fun getHapticEffect(): Flow<HapticEffect>
     suspend fun setHapticEffect(effect: HapticEffect)
+
+    fun getLanguage(): Flow<Language>
+    suspend fun setLanguage(language: Language)
 }
