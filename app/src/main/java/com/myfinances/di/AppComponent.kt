@@ -1,6 +1,7 @@
 package com.myfinances.di
 
 import android.content.Context
+import com.myfinances.MainActivity
 import com.myfinances.data.manager.SnackbarManager
 import dagger.BindsInstance
 import dagger.Component
@@ -13,7 +14,8 @@ import javax.inject.Singleton
         DataModule::class,
         DatabaseModule::class,
         RepositoryModule::class,
-        MapperModule::class
+        MapperModule::class,
+        DomainModule::class
     ]
 )
 interface AppComponent {
@@ -28,4 +30,6 @@ interface AppComponent {
     fun customWorkerFactory(): CustomWorkerFactory
 
     fun provideSnackbarManager(): SnackbarManager
+
+    fun inject(activity: MainActivity)
 }

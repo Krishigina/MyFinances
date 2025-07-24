@@ -8,6 +8,7 @@ import com.myfinances.ui.screens.articles.ArticlesViewModel
 import com.myfinances.ui.screens.expenses.ExpensesViewModel
 import com.myfinances.ui.screens.history.HistoryViewModel
 import com.myfinances.ui.screens.income.IncomeViewModel
+import com.myfinances.ui.screens.settings.SettingsViewModel
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
@@ -49,4 +50,9 @@ abstract class ViewModelModule {
     @IntoMap
     @ViewModelKey(AnalysisViewModel::class)
     abstract fun bindAnalysisViewModel(viewModel: AnalysisViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(SettingsViewModel::class)
+    abstract fun bindSettingsViewModel(viewModel: SettingsViewModel): ViewModel
 }

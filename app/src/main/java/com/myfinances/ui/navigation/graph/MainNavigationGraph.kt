@@ -39,7 +39,7 @@ import com.myfinances.ui.viewmodel.TopBarAction
 import com.myfinances.ui.viewmodel.TopBarState
 
 fun NavGraphBuilder.mainGraph(
-    navController: NavHostController, // <- ИЗМЕНЕНИЕ ЗДЕСЬ
+    navController: NavHostController,
     viewModelFactory: ViewModelFactory,
     onScaffoldStateChanged: (ScaffoldState) -> Unit
 ) {
@@ -184,7 +184,7 @@ fun NavGraphBuilder.mainGraph(
                     )
                 )
             }
-            SettingsScreen()
+            SettingsScreen(factory = viewModelFactory)
         }
     }
 }

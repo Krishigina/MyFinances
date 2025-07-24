@@ -1,5 +1,6 @@
 package com.myfinances.domain.repository
 
+import com.myfinances.domain.entity.ThemeSetting
 import kotlinx.coroutines.flow.Flow
 
 interface SessionRepository {
@@ -8,4 +9,7 @@ interface SessionRepository {
 
     fun getLastSyncTime(): Flow<Long?>
     suspend fun setLastSyncTime(time: Long)
+
+    fun getTheme(): Flow<ThemeSetting>
+    suspend fun setTheme(theme: ThemeSetting)
 }

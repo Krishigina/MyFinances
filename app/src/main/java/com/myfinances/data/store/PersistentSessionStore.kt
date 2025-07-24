@@ -6,7 +6,9 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.myfinances.domain.entity.ThemeSetting
 import com.myfinances.domain.repository.SessionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -23,6 +25,7 @@ class PersistentSessionStore @Inject constructor(
     private companion object {
         val ACTIVE_ACCOUNT_ID = intPreferencesKey("active_account_id")
         val LAST_SYNC_TIME = longPreferencesKey("last_sync_time")
+        val THEME_SETTING = stringPreferencesKey("theme_setting")
     }
 
     override fun getActiveAccountId(): Flow<Int?> = context.dataStore.data
@@ -44,6 +47,20 @@ class PersistentSessionStore @Inject constructor(
     override suspend fun setLastSyncTime(time: Long) {
         context.dataStore.edit { settings ->
             settings[LAST_SYNC_TIME] = time
+        }
+    }
+
+    override fun getTheme(): Flow<ThemeSetting> = context.dataStore.data
+        .map { preferences ->
+            when (preferences[THEME_SETTING]) {
+                ThemeSetting.LIGHT.name -> ThemeSetting.LIGHT
+                else -> ThemeSetting.DARK
+            }
+        }
+
+    override suspend fun setTheme(theme: ThemeSetting) {
+        context.dataStore.edit { settings ->
+            settings[THEME_SETTING] = theme.name
         }
     }
 }

@@ -9,7 +9,9 @@ import com.myfinances.domain.usecase.GetActiveAccountIdUseCase
 import com.myfinances.domain.usecase.GetAnalysisDataUseCase
 import com.myfinances.domain.usecase.GetCategoriesUseCase
 import com.myfinances.domain.usecase.GetLastSyncTimeUseCase
+import com.myfinances.domain.usecase.GetThemeUseCase
 import com.myfinances.domain.usecase.GetTransactionsUseCase
+import com.myfinances.domain.usecase.SaveThemeUseCase
 import dagger.Module
 import dagger.Provides
 
@@ -62,5 +64,15 @@ object DomainModule {
     @Provides
     fun provideGetLastSyncTimeUseCase(sessionRepository: SessionRepository): GetLastSyncTimeUseCase {
         return GetLastSyncTimeUseCase(sessionRepository)
+    }
+
+    @Provides
+    fun provideGetThemeUseCase(sessionRepository: SessionRepository): GetThemeUseCase {
+        return GetThemeUseCase(sessionRepository)
+    }
+
+    @Provides
+    fun provideSaveThemeUseCase(sessionRepository: SessionRepository): SaveThemeUseCase {
+        return SaveThemeUseCase(sessionRepository)
     }
 }

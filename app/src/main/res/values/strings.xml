@@ -60,6 +60,10 @@
     <string name="sync">Синхронизация</string>
     <string name="language">Язык</string>
     <string name="about">О приложении</string>
+    <string name="settings_theme">Тема оформления</string>
+    <string name="theme_dialog_title">Выберите тему</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Темная</string>
 
     <!-- Transaction Summary -->
     <string name="total_amount_card">Итого</string>

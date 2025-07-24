@@ -6,13 +6,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.myfinances.R
+import com.myfinances.di.ViewModelFactory
 import com.myfinances.ui.components.ItemType
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
@@ -33,15 +32,11 @@ fun SettingsScreenContent(
     }
 }
 
-/**
- * Экран, предоставляющий пользователю доступ к различным настройкам приложения.
- * Здесь можно управлять темой оформления, звуками, кодом-доступа и другими параметрами.
- * На данный момент экран является самодостаточным и управляет своим состоянием локально
- * (например, состоянием переключателя темной темы).
- */
 @Composable
-fun SettingsScreen() {
-    var isDarkMode by remember { mutableStateOf(false) }
+fun SettingsScreen(
+    viewModel: SettingsViewModel
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val settingsItems = listOf(
         ListItemModel(
@@ -49,8 +44,10 @@ fun SettingsScreen() {
             type = ItemType.SETTING,
             title = stringResource(id = R.string.dark_theme),
             trailingContent = TrailingContent.Switch(
-                isChecked = isDarkMode,
-                onToggle = { isDarkMode = it }
+                isChecked = uiState.isDarkMode,
+                onToggle = { isEnabled ->
+                    viewModel.onEvent(SettingsEvent.OnThemeToggled(isEnabled))
+                }
             ),
             showTrailingArrow = false
         ),
@@ -108,8 +105,8 @@ fun SettingsScreen() {
     SettingsScreenContent(items = settingsItems)
 }
 
-@Preview(showBackground = true)
 @Composable
-fun SettingsScreenPreview() {
-    SettingsScreen()
+fun SettingsScreen(factory: ViewModelFactory) {
+    val viewModel: SettingsViewModel = viewModel(factory = factory)
+    SettingsScreen(viewModel = viewModel)
 }
