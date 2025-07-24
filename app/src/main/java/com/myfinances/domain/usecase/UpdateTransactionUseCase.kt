@@ -35,6 +35,7 @@ class UpdateTransactionUseCase @Inject constructor(
 
         if (result is Result.Success) {
             accountUpdateManager.notifyAccountUpdated()
+            transactionsRepository.scheduleSync()
         }
 
         return result

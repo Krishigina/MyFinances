@@ -2,6 +2,7 @@ package com.myfinances.data.repository
 
 import android.content.Context
 import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -124,21 +125,24 @@ class TransactionsRepositoryImpl @Inject constructor(
         transactionDate: Date,
         comment: String
     ): Result<Transaction> {
-        val temporaryId = (System.currentTimeMillis() * -1) + Random.nextInt()
+        return try {
+            val temporaryId = (System.currentTimeMillis() * -1) + Random.nextInt()
 
-        val newTransaction = Transaction(
-            id = temporaryId.toInt(),
-            accountId = accountId,
-            categoryId = categoryId,
-            amount = amount,
-            date = transactionDate,
-            comment = comment,
-            lastUpdatedAt = System.currentTimeMillis()
-        )
+            val newTransaction = Transaction(
+                id = temporaryId.toInt(),
+                accountId = accountId,
+                categoryId = categoryId,
+                amount = amount,
+                date = transactionDate,
+                comment = comment,
+                lastUpdatedAt = System.currentTimeMillis()
+            )
 
-        transactionDao.upsert(newTransaction.toEntity(isSynced = false))
-        scheduleSync()
-        return Result.Success(newTransaction)
+            transactionDao.upsert(newTransaction.toEntity(isSynced = false))
+            Result.Success(newTransaction)
+        } catch (e: Exception) {
+            Result.Failure.GenericError(e)
+        }
     }
 
     override suspend fun updateTransaction(
@@ -149,48 +153,56 @@ class TransactionsRepositoryImpl @Inject constructor(
         transactionDate: Date,
         comment: String
     ): Result<Transaction> {
-        val originalTransaction = transactionDao.getTransactionById(transactionId)
-        val updatedTransaction = Transaction(
-            id = transactionId,
-            accountId = accountId,
-            categoryId = categoryId,
-            amount = amount,
-            date = transactionDate,
-            comment = comment,
-            lastUpdatedAt = System.currentTimeMillis()
-        )
+        return try {
+            val updatedTransaction = Transaction(
+                id = transactionId,
+                accountId = accountId,
+                categoryId = categoryId,
+                amount = amount,
+                date = transactionDate,
+                comment = comment,
+                lastUpdatedAt = System.currentTimeMillis()
+            )
 
-        transactionDao.upsert(updatedTransaction.toEntity(isSynced = false))
-        scheduleSync()
-        return Result.Success(updatedTransaction)
+            transactionDao.upsert(updatedTransaction.toEntity(isSynced = false))
+            Result.Success(updatedTransaction)
+        } catch (e: Exception) {
+            Result.Failure.GenericError(e)
+        }
     }
 
     override suspend fun deleteTransaction(transactionId: Int): Result<Unit> {
-        val transaction = transactionDao.getTransactionById(transactionId)
-            ?: return Result.Failure.GenericError(Exception("Transaction not found"))
+        return try {
+            val transaction = transactionDao.getTransactionById(transactionId)
+                ?: return Result.Failure.GenericError(Exception("Transaction not found"))
 
-        if (transaction.id < 0) {
-            transactionDao.deleteById(transaction.id)
-        } else {
-            val updatedTransaction = transaction.copy(
-                isDeletedLocally = true,
-                isSynced = false
-            )
-            transactionDao.upsert(updatedTransaction)
+            if (transaction.id < 0) { 
+                transactionDao.deleteById(transaction.id)
+            } else {
+                val updatedTransaction = transaction.copy(
+                    isDeletedLocally = true,
+                    isSynced = false
+                )
+                transactionDao.upsert(updatedTransaction)
+            }
+
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure.GenericError(e)
         }
-
-        scheduleSync()
-
-        return Result.Success(Unit)
     }
 
-    private fun scheduleSync() {
+    override fun scheduleSync() {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
         val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
             .setConstraints(constraints)
             .build()
-        WorkManager.getInstance(context).enqueue(syncRequest)
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            "one-time-sync",
+            ExistingWorkPolicy.KEEP,
+            syncRequest
+        )
     }
 }

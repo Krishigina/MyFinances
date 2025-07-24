@@ -16,6 +16,7 @@ class DeleteTransactionUseCase @Inject constructor(
         val result = repository.deleteTransaction(transactionId)
         if (result is Result.Success) {
             accountUpdateManager.notifyAccountUpdated()
+            repository.scheduleSync()
         }
         return result
     }

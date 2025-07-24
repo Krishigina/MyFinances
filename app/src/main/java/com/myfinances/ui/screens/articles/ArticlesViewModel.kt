@@ -1,22 +1,25 @@
 package com.myfinances.ui.screens.articles
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.myfinances.data.manager.SnackbarManager
 import com.myfinances.domain.entity.Category
 import com.myfinances.domain.usecase.GetCategoriesUseCase
 import com.myfinances.domain.util.Result
 import com.myfinances.ui.mappers.CategoryDomainToUiMapper
 import com.myfinances.ui.model.ArticlesUiModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class ArticlesViewModel @Inject constructor(
     private val getCategoriesUseCase: GetCategoriesUseCase,
+    private val snackbarManager: SnackbarManager,
     private val mapper: CategoryDomainToUiMapper
 ) : ViewModel() {
 
@@ -24,9 +27,11 @@ class ArticlesViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     private var originalCategories: List<Category> = emptyList()
+    private var dataCollectionJob: Job? = null
 
     init {
-        loadCategories()
+        observeCategories()
+        refreshCategories()
     }
 
     fun onSearchQueryChanged(newQuery: String) {
@@ -49,35 +54,38 @@ class ArticlesViewModel @Inject constructor(
         }
     }
 
-    private fun loadCategories() {
-        viewModelScope.launch {
-            _uiState.value = ArticlesUiState.Loading
+    private fun observeCategories() {
+        dataCollectionJob?.cancel()
+        dataCollectionJob = getCategoriesUseCase().onEach { categories ->
+            originalCategories = categories
+            val uiItems = categories.map { mapper.mapToUiModel(it) }
 
-            val refreshResult = getCategoriesUseCase.refresh()
-            val categoriesFromDb = getCategoriesUseCase().first()
-
-            if (categoriesFromDb.isNotEmpty()) {
-                originalCategories = categoriesFromDb
-                val uiItems = categoriesFromDb.map { mapper.mapToUiModel(it) }
-                _uiState.value = ArticlesUiState.Success(
-                    query = "",
-                    articlesModel = ArticlesUiModel(categoryItems = uiItems)
-                )
-                if (refreshResult is Result.Failure.NetworkError) {
-                    Log.w("ArticlesViewModel", "Network error during refresh, showing cached data.")
+            val currentState = _uiState.value
+            if (currentState is ArticlesUiState.Success) {
+                _uiState.update {
+                    currentState.copy(articlesModel = ArticlesUiModel(uiItems))
                 }
             } else {
-                when (refreshResult) {
-                    is Result.Success -> {
-                        originalCategories = emptyList()
-                        _uiState.value = ArticlesUiState.Success(
-                            query = "",
-                            articlesModel = ArticlesUiModel(emptyList())
-                        )
+                _uiState.value = ArticlesUiState.Success(
+                    query = "",
+                    articlesModel = ArticlesUiModel(uiItems)
+                )
+            }
+        }.launchIn(viewModelScope)
+    }
+
+    private fun refreshCategories() {
+        viewModelScope.launch {
+            when (val refreshResult = getCategoriesUseCase.refresh()) {
+                is Result.Success -> {
+                }
+                is Result.Failure -> {
+                    val message = when (refreshResult) {
+                        is Result.Failure.ApiError -> "Ошибка сервера: ${refreshResult.code}"
+                        is Result.Failure.GenericError -> refreshResult.exception.message ?: "Не удалось загрузить категории"
+                        is Result.Failure.NetworkError -> "Нет сети, показаны сохраненные данные"
                     }
-                    is Result.Failure.NetworkError -> _uiState.value = ArticlesUiState.NoInternet
-                    is Result.Failure.ApiError -> _uiState.value = ArticlesUiState.Error("Ошибка сервера: ${refreshResult.code}")
-                    is Result.Failure.GenericError -> _uiState.value = ArticlesUiState.Error(refreshResult.exception.message ?: "Не удалось загрузить категории")
+                    snackbarManager.showMessage(message)
                 }
             }
         }

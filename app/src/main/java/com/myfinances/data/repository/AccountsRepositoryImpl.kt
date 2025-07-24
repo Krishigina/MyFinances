@@ -2,6 +2,7 @@ package com.myfinances.data.repository
 
 import android.content.Context
 import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -80,21 +81,24 @@ class AccountsRepositoryImpl @Inject constructor(
 
             accountDao.upsertAll(listOf(updatedAccount.toEntity(isSynced = false)))
 
-            scheduleSync()
-
             return Result.Success(updatedAccount)
         } catch (e: Exception) {
             return Result.Failure.GenericError(e)
         }
     }
 
-    private fun scheduleSync() {
+    override fun scheduleSync() {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
         val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
             .setConstraints(constraints)
             .build()
-        WorkManager.getInstance(context).enqueue(syncRequest)
+
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            "one-time-sync",
+            ExistingWorkPolicy.KEEP,
+            syncRequest
+        )
     }
 }

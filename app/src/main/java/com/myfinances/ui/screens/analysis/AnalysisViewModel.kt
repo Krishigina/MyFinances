@@ -44,12 +44,15 @@ class AnalysisViewModel @Inject constructor(
         val endDate = calendar.time
         calendar.set(Calendar.DAY_OF_MONTH, 1)
         val startDate = calendar.withTimeAtStartOfDay().time
-        loadData(startDate, endDate)
+
+        observeData(startDate, endDate)
+        refreshData(startDate, endDate, showLoading = true)
 
         viewModelScope.launch {
             accountUpdateManager.accountUpdateFlow.collect {
                 (_uiState.value as? AnalysisUiState.Content)?.let {
-                    loadData(it.uiModel.startDate, it.uiModel.endDate)
+                    observeData(it.uiModel.startDate, it.uiModel.endDate)
+                    refreshData(it.uiModel.startDate, it.uiModel.endDate, showLoading = false)
                 }
             }
         }
@@ -62,23 +65,25 @@ class AnalysisViewModel @Inject constructor(
             is AnalysisEvent.StartDateSelected -> {
                 val newStartDate = Date(event.timestampMillis)
                 if (!newStartDate.after(contentState.uiModel.endDate)) {
-                    loadData(newStartDate, contentState.uiModel.endDate)
+                    observeData(newStartDate, contentState.uiModel.endDate)
+                    refreshData(newStartDate, contentState.uiModel.endDate, showLoading = true)
                 }
             }
             is AnalysisEvent.EndDateSelected -> {
                 val newEndDate = Date(event.timestampMillis)
                 if (!newEndDate.before(contentState.uiModel.startDate)) {
-                    loadData(contentState.uiModel.startDate, newEndDate)
+                    observeData(contentState.uiModel.startDate, newEndDate)
+                    refreshData(contentState.uiModel.startDate, newEndDate, showLoading = true)
                 }
             }
         }
     }
 
-    private fun loadData(startDate: Date, endDate: Date) {
-        dataCollectionJob?.cancel()
-        _uiState.value = AnalysisUiState.Loading
-
+    private fun refreshData(startDate: Date, endDate: Date, showLoading: Boolean) {
         viewModelScope.launch {
+            if (showLoading) {
+                _uiState.value = AnalysisUiState.Loading
+            }
             when (val refreshResult = getAnalysisDataUseCase.refresh(startDate, endDate)) {
                 is Result.Success -> {}
                 is Result.Failure -> {
@@ -91,7 +96,10 @@ class AnalysisViewModel @Inject constructor(
                 }
             }
         }
+    }
 
+    private fun observeData(startDate: Date, endDate: Date) {
+        dataCollectionJob?.cancel()
         dataCollectionJob = getAnalysisDataUseCase(startDate, endDate, transactionType)
             .onEach { result ->
                 when (result) {

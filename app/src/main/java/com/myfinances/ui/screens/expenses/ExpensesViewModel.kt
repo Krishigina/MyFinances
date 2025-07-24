@@ -13,7 +13,9 @@ import com.myfinances.ui.screens.common.UiEvent
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-sealed interface ExpensesEvent : UiEvent
+sealed interface ExpensesEvent : UiEvent {
+    data object Refresh : ExpensesEvent
+}
 
 class ExpensesViewModel @Inject constructor(
     private val getExpenseTransactionsUseCase: GetExpenseTransactionsUseCase,
@@ -25,6 +27,12 @@ class ExpensesViewModel @Inject constructor(
 
     init {
         startDataCollection()
+    }
+
+    override fun onEvent(event: ExpensesEvent) {
+        when (event) {
+            ExpensesEvent.Refresh -> refreshData(showLoading = true)
+        }
     }
 
     override fun getInitialState(): ExpensesUiState = ExpensesUiState.Loading

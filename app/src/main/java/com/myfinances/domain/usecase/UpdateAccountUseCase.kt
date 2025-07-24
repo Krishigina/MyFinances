@@ -26,6 +26,7 @@ class UpdateAccountUseCase @Inject constructor(
 
         if (result is Result.Success) {
             accountUpdateManager.notifyAccountUpdated()
+            repository.scheduleSync()
         }
 
         return result

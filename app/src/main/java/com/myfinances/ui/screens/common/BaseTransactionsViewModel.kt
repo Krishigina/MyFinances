@@ -32,13 +32,17 @@ abstract class BaseTransactionsViewModel<T, E : UiEvent>(
     private var dataCollectionJob: Job? = null
     private var emptyMessageShown = false
 
+    abstract fun onEvent(event: E)
+
     protected fun startDataCollection() {
-        collectData()
+        collectDataFromDb()
+        refreshData(showLoading = !isContentState(_uiState.value))
 
         viewModelScope.launch {
             accountUpdateManager.accountUpdateFlow.collect {
                 emptyMessageShown = false
-                collectData()
+                collectDataFromDb()
+                refreshData(showLoading = false)
             }
         }
 
@@ -49,7 +53,7 @@ abstract class BaseTransactionsViewModel<T, E : UiEvent>(
         }
     }
 
-    private fun collectData() {
+    private fun collectDataFromDb() {
         dataCollectionJob?.cancel()
         dataCollectionJob = getDataFlow()
             .onEach { result ->
@@ -57,18 +61,19 @@ abstract class BaseTransactionsViewModel<T, E : UiEvent>(
                     is Result.Success -> processSuccess(result.data)
                     is Result.Failure.GenericError -> {
                         snackbarManager.showMessage(result.exception.message ?: "Неизвестная ошибка")
+                        if (!isContentState(_uiState.value)) {
+                            _uiState.value = createContentState(emptyList(), "")
+                        }
                     }
                     else -> { }
                 }
             }
             .launchIn(viewModelScope)
-
-        refreshData()
     }
 
-    private fun refreshData() {
+    protected fun refreshData(showLoading: Boolean) {
         viewModelScope.launch {
-            if (!isContentState(_uiState.value)) {
+            if (showLoading) {
                 _uiState.value = getLoadingState()
             }
 
