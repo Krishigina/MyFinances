@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,7 +24,6 @@ import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.components.TrailingContent
 import com.myfinances.ui.model.TransactionItemUiModel
 import com.myfinances.ui.navigation.Destination
-import com.myfinances.ui.screens.common.UiEvent
 
 @Composable
 fun IncomeScreen(
@@ -33,7 +31,6 @@ fun IncomeScreen(
     viewModel: IncomeViewModel
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
 
     Box(
         modifier = Modifier.fillMaxSize(),

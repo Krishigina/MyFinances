@@ -1,10 +1,9 @@
 package com.myfinances.ui.screens.analysis
 
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myfinances.data.manager.AccountUpdateManager
+import com.myfinances.data.manager.SnackbarManager
 import com.myfinances.domain.entity.AnalysisData
 import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.domain.usecase.GetAnalysisDataUseCase
@@ -24,6 +23,7 @@ import javax.inject.Inject
 class AnalysisViewModel @Inject constructor(
     private val getAnalysisDataUseCase: GetAnalysisDataUseCase,
     private val accountUpdateManager: AccountUpdateManager,
+    private val snackbarManager: SnackbarManager,
     private val mapper: AnalysisDomainToUiMapper
 ) : ViewModel() {
 
@@ -33,7 +33,6 @@ class AnalysisViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<AnalysisUiState>(AnalysisUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
-    val snackbarHostState = SnackbarHostState()
     private var dataCollectionJob: Job? = null
 
     fun initialize(filter: TransactionTypeFilter, parent: String) {
@@ -88,7 +87,7 @@ class AnalysisViewModel @Inject constructor(
                         is Result.Failure.GenericError -> refreshResult.exception.message ?: "Ошибка обновления"
                         is Result.Failure.NetworkError -> "Нет сети. Отображены локальные данные."
                     }
-                    showInfo(message)
+                    snackbarManager.showMessage(message)
                 }
             }
         }
@@ -103,7 +102,8 @@ class AnalysisViewModel @Inject constructor(
                             is Result.Failure.GenericError -> result.exception.message ?: "Неизвестная ошибка"
                             is Result.Failure.NetworkError -> "Ошибка сети. Проверьте подключение."
                         }
-                        showError(message)
+                        _uiState.value = AnalysisUiState.Error(message)
+                        snackbarManager.showMessage(message)
                     }
                 }
             }.launchIn(viewModelScope)
@@ -112,20 +112,5 @@ class AnalysisViewModel @Inject constructor(
     private fun processSuccess(data: AnalysisData) {
         val analysisUiModel = mapper.map(data)
         _uiState.value = AnalysisUiState.Content(analysisUiModel, transactionType, parentRoute)
-
-        if (analysisUiModel.categorySpents.isEmpty()) {
-            showInfo("Нет данных за выбранный период")
-        }
-    }
-
-    private fun showError(message: String) {
-        _uiState.value = AnalysisUiState.Error(message)
-        viewModelScope.launch { snackbarHostState.showSnackbar(message) }
-    }
-
-    private fun showInfo(message: String) {
-        viewModelScope.launch {
-            snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
-        }
     }
 }

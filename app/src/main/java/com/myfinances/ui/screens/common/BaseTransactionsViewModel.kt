@@ -1,10 +1,9 @@
 package com.myfinances.ui.screens.common
 
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myfinances.data.manager.AccountUpdateManager
+import com.myfinances.data.manager.SnackbarManager
 import com.myfinances.data.manager.SyncUpdateManager
 import com.myfinances.domain.entity.TransactionData
 import com.myfinances.domain.util.Result
@@ -23,27 +22,29 @@ import kotlinx.coroutines.launch
 abstract class BaseTransactionsViewModel<T, E : UiEvent>(
     private val accountUpdateManager: AccountUpdateManager,
     private val syncUpdateManager: SyncUpdateManager,
+    private val snackbarManager: SnackbarManager,
     private val mapper: TransactionDomainToUiMapper
 ) : ViewModel() {
 
     protected val _uiState = MutableStateFlow<T>(getInitialState())
     val uiState = _uiState.asStateFlow()
 
-    val snackbarHostState = SnackbarHostState()
     private var dataCollectionJob: Job? = null
+    private var emptyMessageShown = false
 
     protected fun startDataCollection() {
         collectData()
 
         viewModelScope.launch {
             accountUpdateManager.accountUpdateFlow.collect {
+                emptyMessageShown = false
                 collectData()
             }
         }
 
         viewModelScope.launch {
             syncUpdateManager.syncCompletedFlow.collect { syncTime ->
-                showInfo("Синхронизация завершена: ${formatSyncTime(syncTime)}")
+                snackbarManager.showMessage("Синхронизация завершена: ${formatSyncTime(syncTime)}")
             }
         }
     }
@@ -55,7 +56,7 @@ abstract class BaseTransactionsViewModel<T, E : UiEvent>(
                 when (result) {
                     is Result.Success -> processSuccess(result.data)
                     is Result.Failure.GenericError -> {
-                        showError(result.exception.message ?: "Неизвестная ошибка")
+                        snackbarManager.showMessage(result.exception.message ?: "Неизвестная ошибка")
                     }
                     else -> { }
                 }
@@ -79,7 +80,7 @@ abstract class BaseTransactionsViewModel<T, E : UiEvent>(
                         is Result.Failure.GenericError -> refreshResult.exception.message ?: "Ошибка обновления"
                         is Result.Failure.NetworkError -> "Нет подключения к сети. Отображаются последние данные."
                     }
-                    showInfo(message)
+                    snackbarManager.showMessage(message)
                 }
             }
         }
@@ -92,28 +93,19 @@ abstract class BaseTransactionsViewModel<T, E : UiEvent>(
         val totalAmountFormatted = formatCurrency(data.totalAmount, data.account.currency)
         _uiState.value = createContentState(items, totalAmountFormatted)
 
-        if (items.isEmpty() && isContentState(_uiState.value)) {
-            showInfo(getEmptyDataMessage())
+        if (items.isEmpty() && !emptyMessageShown) {
+            snackbarManager.showMessage(getEmptyDataMessage())
+            emptyMessageShown = true
+        } else if (items.isNotEmpty()) {
+            emptyMessageShown = false
         }
     }
 
-    private fun showError(message: String) {
-        viewModelScope.launch { snackbarHostState.showSnackbar(message = message) }
-        if (!isContentState(_uiState.value)) {
-            _uiState.value = createContentState(emptyList(), formatCurrency(0.0, "RUB"))
-        }
-    }
-
-    private fun showInfo(message: String) {
-        viewModelScope.launch {
-            snackbarHostState.showSnackbar(message = message, duration = SnackbarDuration.Short)
-        }
-    }
+    abstract fun getEmptyDataMessage(): String
     protected abstract fun getInitialState(): T
     protected abstract fun getLoadingState(): T
     protected abstract fun isContentState(state: T): Boolean
     protected abstract fun createContentState(items: List<TransactionItemUiModel>, total: String): T
-    protected abstract fun getEmptyDataMessage(): String
     protected abstract fun getDataFlow(): Flow<Result<TransactionData>>
     protected abstract suspend fun refreshDataUseCase(): Result<Unit>
 }

@@ -92,7 +92,6 @@ fun NavGraphBuilder.detailsGraph(
                             )
                         )
                     ),
-                    snackbarHostState = viewModel.snackbarHostState,
                     isBottomBarVisible = true,
                     isFabVisible = false
                 )
@@ -161,7 +160,6 @@ fun NavGraphBuilder.detailsGraph(
                             )
                         )
                     ),
-                    snackbarHostState = viewModel.snackbarHostState,
                     isBottomBarVisible = true,
                     isFabVisible = false
                 )

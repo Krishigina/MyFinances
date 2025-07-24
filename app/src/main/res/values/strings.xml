@@ -44,6 +44,7 @@
     <string name="history_date_from">С</string>
     <string name="history_date_to">По</string>
     <string name="total_for_period">Итого за период</string>
+    <string name="no_transactions_for_period">Нет транзакций за этот период</string>
 
     <!-- Articles Screen -->
     <string name="search">Поиск</string>

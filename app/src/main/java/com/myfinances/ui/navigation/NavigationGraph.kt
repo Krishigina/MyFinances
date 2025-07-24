@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -17,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.myfinances.data.manager.SnackbarManager
 import com.myfinances.di.ViewModelFactory
 import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.ui.components.AppSnackbar
@@ -25,23 +28,26 @@ import com.myfinances.ui.components.MainFloatingActionButton
 import com.myfinances.ui.components.MainTopBar
 import com.myfinances.ui.navigation.graph.AppNavHost
 import com.myfinances.ui.viewmodel.ScaffoldState
+import kotlinx.coroutines.flow.collectLatest
 
-/**
- * Определяет основной Scaffold приложения и управляет состоянием его элементов
- * (TopBar, BottomBar, FAB) в зависимости от текущего экрана в NavHost.
- *
- * @param navController Контроллер навигации, управляющий стеком экранов.
- * @param viewModelFactory Фабрика для создания ViewModel.
- */
 @Composable
 fun NavigationGraph(
     navController: NavHostController,
     viewModelFactory: ViewModelFactory,
+    snackbarManager: SnackbarManager,
 ) {
     var scaffoldState by remember { mutableStateOf(ScaffoldState()) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    // Определяем, нужно ли показывать нижнюю панель навигации.
-    // Это более декларативный подход, чем управление через колбэк.
+    LaunchedEffect(snackbarManager) {
+        snackbarManager.messages.collectLatest { messages ->
+            messages.firstOrNull()?.let { message ->
+                snackbarHostState.showSnackbar(message.message)
+                snackbarManager.setMessageShown(message.id)
+            }
+        }
+    }
+
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
@@ -104,7 +110,7 @@ fun NavigationGraph(
         },
         snackbarHost = {
             SnackbarHost(
-                hostState = scaffoldState.snackbarHostState,
+                hostState = snackbarHostState,
                 modifier = Modifier
                     .imePadding()
                     .padding(horizontal = 16.dp)

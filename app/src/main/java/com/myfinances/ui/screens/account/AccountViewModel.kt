@@ -1,9 +1,8 @@
 package com.myfinances.ui.screens.account
 
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.myfinances.data.manager.SnackbarManager
 import com.myfinances.data.manager.SyncUpdateManager
 import com.myfinances.domain.usecase.GetAccountUseCase
 import com.myfinances.domain.usecase.UpdateAccountUseCase
@@ -24,13 +23,13 @@ class AccountViewModel @Inject constructor(
     private val getAccountUseCase: GetAccountUseCase,
     private val updateAccountUseCase: UpdateAccountUseCase,
     private val syncUpdateManager: SyncUpdateManager,
+    private val snackbarManager: SnackbarManager,
     private val accountMapper: AccountDomainToUiMapper
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AccountUiState>(AccountUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
-    val snackbarHostState = SnackbarHostState()
     private var activeJob: Job? = null
 
     private val availableCurrencies = listOf(
@@ -43,7 +42,7 @@ class AccountViewModel @Inject constructor(
         loadAccount()
         viewModelScope.launch {
             syncUpdateManager.syncCompletedFlow.collect { syncTime ->
-                showInfo("Синхронизация завершена: ${formatSyncTime(syncTime)}")
+                snackbarManager.showMessage("Синхронизация завершена: ${formatSyncTime(syncTime)}")
             }
         }
     }
@@ -117,9 +116,9 @@ class AccountViewModel @Inject constructor(
 
                 is Result.Failure -> {
                     when(result) {
-                        is Result.Failure.ApiError -> showError("Ошибка API: ${result.code}")
-                        is Result.Failure.GenericError -> showError(result.exception.message ?: "Не удалось загрузить счет")
-                        is Result.Failure.NetworkError -> showError("Ошибка сети. Проверьте подключение.")
+                        is Result.Failure.ApiError -> snackbarManager.showMessage("Ошибка API: ${result.code}")
+                        is Result.Failure.GenericError -> snackbarManager.showMessage(result.exception.message ?: "Не удалось загрузить счет")
+                        is Result.Failure.NetworkError -> snackbarManager.showMessage("Ошибка сети. Проверьте подключение.")
                     }
                 }
             }
@@ -148,7 +147,7 @@ class AccountViewModel @Inject constructor(
 
             when (result) {
                 is Result.Success -> {
-                    showInfo("Счет успешно сохранен")
+                    snackbarManager.showMessage("Счет успешно сохранен")
                     _uiState.update {
                         if (it is AccountUiState.Success) {
                             it.copy(isEditMode = false)
@@ -159,24 +158,12 @@ class AccountViewModel @Inject constructor(
                 }
                 is Result.Failure -> {
                     when(result) {
-                        is Result.Failure.ApiError -> showError("Ошибка сохранения: ${result.message}")
-                        is Result.Failure.GenericError -> showError(result.exception.message ?: "Ошибка сохранения")
-                        is Result.Failure.NetworkError -> showError("Ошибка сети. Проверьте подключение.")
+                        is Result.Failure.ApiError -> snackbarManager.showMessage("Ошибка сохранения: ${result.message}")
+                        is Result.Failure.GenericError -> snackbarManager.showMessage(result.exception.message ?: "Ошибка сохранения")
+                        is Result.Failure.NetworkError -> snackbarManager.showMessage("Ошибка сети. Проверьте подключение.")
                     }
                 }
             }
-        }
-    }
-
-    private fun showError(message: String) {
-        viewModelScope.launch {
-            snackbarHostState.showSnackbar(message)
-        }
-    }
-
-    private fun showInfo(message: String) {
-        viewModelScope.launch {
-            snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
         }
     }
 }

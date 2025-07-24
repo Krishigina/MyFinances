@@ -2,6 +2,7 @@ package com.myfinances.di
 
 import com.myfinances.BuildConfig
 import com.myfinances.data.manager.AccountUpdateManager
+import com.myfinances.data.manager.SnackbarManager
 import com.myfinances.data.manager.SyncUpdateManager
 import com.myfinances.data.network.RetryInterceptor
 import com.myfinances.ui.util.ResourceProvider
@@ -65,5 +66,11 @@ object AppModule {
     @Singleton
     fun provideSyncUpdateManager(sessionRepository: com.myfinances.domain.repository.SessionRepository): SyncUpdateManager {
         return SyncUpdateManager(sessionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSnackbarManager(): SnackbarManager {
+        return SnackbarManager()
     }
 }

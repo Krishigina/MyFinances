@@ -1,6 +1,7 @@
 package com.myfinances.ui.screens.expenses
 
 import com.myfinances.data.manager.AccountUpdateManager
+import com.myfinances.data.manager.SnackbarManager
 import com.myfinances.data.manager.SyncUpdateManager
 import com.myfinances.domain.entity.TransactionData
 import com.myfinances.domain.usecase.GetExpenseTransactionsUseCase
@@ -18,8 +19,9 @@ class ExpensesViewModel @Inject constructor(
     private val getExpenseTransactionsUseCase: GetExpenseTransactionsUseCase,
     accountUpdateManager: AccountUpdateManager,
     syncUpdateManager: SyncUpdateManager,
+    snackbarManager: SnackbarManager,
     mapper: TransactionDomainToUiMapper
-) : BaseTransactionsViewModel<ExpensesUiState, ExpensesEvent>(accountUpdateManager, syncUpdateManager, mapper) {
+) : BaseTransactionsViewModel<ExpensesUiState, ExpensesEvent>(accountUpdateManager, syncUpdateManager, snackbarManager, mapper) {
 
     init {
         startDataCollection()

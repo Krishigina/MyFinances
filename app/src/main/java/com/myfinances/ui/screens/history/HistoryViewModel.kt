@@ -1,10 +1,9 @@
 package com.myfinances.ui.screens.history
 
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myfinances.data.manager.AccountUpdateManager
+import com.myfinances.data.manager.SnackbarManager
 import com.myfinances.data.manager.SyncUpdateManager
 import com.myfinances.domain.entity.TransactionData
 import com.myfinances.domain.entity.TransactionTypeFilter
@@ -28,6 +27,7 @@ class HistoryViewModel @Inject constructor(
     private val getTransactionsUseCase: GetTransactionsUseCase,
     private val accountUpdateManager: AccountUpdateManager,
     private val syncUpdateManager: SyncUpdateManager,
+    private val snackbarManager: SnackbarManager,
     private val mapper: TransactionDomainToUiMapper
 ) : ViewModel() {
 
@@ -37,7 +37,6 @@ class HistoryViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<HistoryUiState>(HistoryUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
-    val snackbarHostState = SnackbarHostState()
     private var dataCollectionJob: Job? = null
 
     fun initialize(filter: TransactionTypeFilter, parent: String) {
@@ -61,7 +60,7 @@ class HistoryViewModel @Inject constructor(
 
         viewModelScope.launch {
             syncUpdateManager.syncCompletedFlow.collect { syncTime ->
-                showInfo("Синхронизация завершена: ${formatSyncTime(syncTime)}")
+                snackbarManager.showMessage("Синхронизация завершена: ${formatSyncTime(syncTime)}")
             }
         }
     }
@@ -91,14 +90,16 @@ class HistoryViewModel @Inject constructor(
             .onEach { result ->
                 when (result) {
                     is Result.Success -> processSuccess(result.data)
-                    // <- Изменение здесь
                     is Result.Failure -> {
                         val message = when(result) {
                             is Result.Failure.ApiError -> "Ошибка API: ${result.code}"
                             is Result.Failure.GenericError -> result.exception.message ?: "Неизвестная ошибка"
                             is Result.Failure.NetworkError -> "Ошибка сети. Проверьте подключение."
                         }
-                        showError(message)
+                        snackbarManager.showMessage(message)
+                        if (_uiState.value is HistoryUiState.Loading) {
+                            _uiState.value = createEmptyContentState(startDate, endDate)
+                        }
                     }
                 }
             }.launchIn(viewModelScope)
@@ -118,34 +119,15 @@ class HistoryViewModel @Inject constructor(
         )
 
         _uiState.value = HistoryUiState.Content(historyUiModel, transactionType, parentRoute)
-
-        if (items.isEmpty()) {
-            showInfo("Нет транзакций за выбранный период")
-        }
     }
 
-    private fun showError(message: String) {
-        viewModelScope.launch {
-            snackbarHostState.showSnackbar(message)
-        }
-        if (_uiState.value is HistoryUiState.Loading) {
-            val calendar = Calendar.getInstance()
-            val endDate = calendar.time
-            calendar.set(Calendar.DAY_OF_MONTH, 1)
-            val startDate = calendar.withTimeAtStartOfDay().time
-            _uiState.value = HistoryUiState.Content(
-                HistoryUiModel(
-                    emptyList(), 0.0, "₽", startDate, endDate
-                ),
-                transactionType,
-                parentRoute
-            )
-        }
-    }
-
-    private fun showInfo(message: String) {
-        viewModelScope.launch {
-            snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
-        }
+    private fun createEmptyContentState(startDate: Date, endDate: Date): HistoryUiState.Content {
+        return HistoryUiState.Content(
+            HistoryUiModel(
+                emptyList(), 0.0, "₽", startDate, endDate
+            ),
+            transactionType,
+            parentRoute
+        )
     }
 }

@@ -15,8 +15,13 @@ fun MainScreen() {
     val viewModelFactory = remember {
         appComponent.viewModelComponentFactory().create().getViewModelFactory()
     }
+    val snackbarManager = remember {
+        appComponent.provideSnackbarManager()
+    }
+
     NavigationGraph(
         navController = mainNavController,
         viewModelFactory = viewModelFactory,
+        snackbarManager = snackbarManager
     )
 }
