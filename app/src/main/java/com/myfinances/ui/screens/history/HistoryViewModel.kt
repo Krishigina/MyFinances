@@ -2,6 +2,7 @@ package com.myfinances.ui.screens.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.myfinances.R
 import com.myfinances.data.manager.AccountUpdateManager
 import com.myfinances.data.manager.SnackbarManager
 import com.myfinances.data.manager.SyncUpdateManager
@@ -12,6 +13,7 @@ import com.myfinances.domain.util.Result
 import com.myfinances.domain.util.withTimeAtStartOfDay
 import com.myfinances.ui.mappers.TransactionDomainToUiMapper
 import com.myfinances.ui.model.HistoryUiModel
+import com.myfinances.ui.util.ResourceProvider
 import com.myfinances.ui.util.formatSyncTime
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +30,8 @@ class HistoryViewModel @Inject constructor(
     private val accountUpdateManager: AccountUpdateManager,
     private val syncUpdateManager: SyncUpdateManager,
     private val snackbarManager: SnackbarManager,
-    private val mapper: TransactionDomainToUiMapper
+    private val mapper: TransactionDomainToUiMapper,
+    private val resourceProvider: ResourceProvider
 ) : ViewModel() {
 
     private lateinit var transactionType: TransactionTypeFilter
@@ -60,7 +63,8 @@ class HistoryViewModel @Inject constructor(
 
         viewModelScope.launch {
             syncUpdateManager.syncCompletedFlow.collect { syncTime ->
-                snackbarManager.showMessage("Синхронизация завершена: ${formatSyncTime(syncTime)}")
+                val timeString = formatSyncTime(syncTime, resourceProvider)
+                snackbarManager.showMessage(resourceProvider.getString(R.string.snackbar_sync_complete, timeString))
             }
         }
     }
@@ -92,9 +96,9 @@ class HistoryViewModel @Inject constructor(
                     is Result.Success -> processSuccess(result.data)
                     is Result.Failure -> {
                         val message = when(result) {
-                            is Result.Failure.ApiError -> "Ошибка API: ${result.code}"
-                            is Result.Failure.GenericError -> result.exception.message ?: "Неизвестная ошибка"
-                            is Result.Failure.NetworkError -> "Ошибка сети. Проверьте подключение."
+                            is Result.Failure.ApiError -> resourceProvider.getString(R.string.error_api_code, result.code)
+                            is Result.Failure.GenericError -> result.exception.message ?: resourceProvider.getString(R.string.error_unknown)
+                            is Result.Failure.NetworkError -> resourceProvider.getString(R.string.snackbar_network_error_check_connection)
                         }
                         snackbarManager.showMessage(message)
                         if (_uiState.value is HistoryUiState.Loading) {

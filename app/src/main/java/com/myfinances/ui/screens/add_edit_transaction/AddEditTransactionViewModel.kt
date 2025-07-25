@@ -197,9 +197,9 @@ class AddEditTransactionViewModel @Inject constructor(
 
             if (firstFailure != null) {
                 val (message, retryAction) = when (firstFailure) {
-                    is Result.Failure.NetworkError -> "Ошибка сети. Проверьте подключение." to { loadInitialData() }
-                    is Result.Failure.ApiError -> "Ошибка API ${firstFailure.code}" to { loadInitialData() }
-                    is Result.Failure.GenericError -> (firstFailure.exception.message ?: "Неизвестная ошибка") to { loadInitialData() }
+                    is Result.Failure.NetworkError -> resourceProvider.getString(R.string.snackbar_network_error_check_connection) to { loadInitialData() }
+                    is Result.Failure.ApiError -> resourceProvider.getString(R.string.error_api_code, firstFailure.code) to { loadInitialData() }
+                    is Result.Failure.GenericError -> (firstFailure.exception.message ?: resourceProvider.getString(R.string.error_unknown)) to { loadInitialData() }
                 }
                 showErrorDialog(message, retryAction)
                 return@launch
@@ -240,7 +240,7 @@ class AddEditTransactionViewModel @Inject constructor(
         val currentState = _uiState.value as? AddEditTransactionUiState.Success ?: return
 
         if (currentState.selectedCategory == null) {
-            showErrorDialog("Необходимо выбрать категорию") {
+            showErrorDialog(resourceProvider.getString(R.string.error_category_not_selected)) {
                 _uiState.update { state ->
                     if (state is AddEditTransactionUiState.Success) state.copy(error = null) else state
                 }
@@ -284,9 +284,9 @@ class AddEditTransactionViewModel @Inject constructor(
                         } else state
                     }
                     val (message, retryAction) = when (result) {
-                        is Result.Failure.NetworkError -> "Ошибка сети" to { saveTransaction() }
-                        is Result.Failure.ApiError -> "Ошибка API: ${result.message}" to { saveTransaction() }
-                        is Result.Failure.GenericError -> (result.exception.message ?: "Ошибка сохранения") to { saveTransaction() }
+                        is Result.Failure.NetworkError -> resourceProvider.getString(R.string.snackbar_network_error_check_connection) to { saveTransaction() }
+                        is Result.Failure.ApiError -> resourceProvider.getString(R.string.error_api_message, result.message) to { saveTransaction() }
+                        is Result.Failure.GenericError -> (result.exception.message ?: resourceProvider.getString(R.string.error_failed_to_save)) to { saveTransaction() }
                     }
                     showErrorDialog(message, retryAction)
                 }
@@ -315,9 +315,9 @@ class AddEditTransactionViewModel @Inject constructor(
                         if (state is AddEditTransactionUiState.Success) state.copy(isSaving = false) else state
                     }
                     val (message, retryAction) = when (result) {
-                        is Result.Failure.NetworkError -> "Ошибка сети" to { deleteTransaction() }
-                        is Result.Failure.ApiError -> "Ошибка API: ${result.message}" to { deleteTransaction() }
-                        is Result.Failure.GenericError -> (result.exception.message ?: "Ошибка удаления") to { deleteTransaction() }
+                        is Result.Failure.NetworkError -> resourceProvider.getString(R.string.snackbar_network_error_check_connection) to { deleteTransaction() }
+                        is Result.Failure.ApiError -> resourceProvider.getString(R.string.error_api_message, result.message) to { deleteTransaction() }
+                        is Result.Failure.GenericError -> (result.exception.message ?: resourceProvider.getString(R.string.error_failed_to_delete)) to { deleteTransaction() }
                     }
                     showErrorDialog(message, retryAction)
                 }

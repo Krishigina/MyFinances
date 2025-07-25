@@ -1,5 +1,6 @@
 package com.myfinances.ui.screens.income
 
+import com.myfinances.R
 import com.myfinances.data.manager.AccountUpdateManager
 import com.myfinances.data.manager.SnackbarManager
 import com.myfinances.data.manager.SyncUpdateManager
@@ -10,6 +11,7 @@ import com.myfinances.ui.mappers.TransactionDomainToUiMapper
 import com.myfinances.ui.model.TransactionItemUiModel
 import com.myfinances.ui.screens.common.BaseTransactionsViewModel
 import com.myfinances.ui.screens.common.UiEvent
+import com.myfinances.ui.util.ResourceProvider
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
@@ -22,8 +24,9 @@ class IncomeViewModel @Inject constructor(
     accountUpdateManager: AccountUpdateManager,
     syncUpdateManager: SyncUpdateManager,
     snackbarManager: SnackbarManager,
-    mapper: TransactionDomainToUiMapper
-) : BaseTransactionsViewModel<IncomeUiState, IncomeEvent>(accountUpdateManager, syncUpdateManager, snackbarManager, mapper) {
+    mapper: TransactionDomainToUiMapper,
+    resourceProvider: ResourceProvider
+) : BaseTransactionsViewModel<IncomeUiState, IncomeEvent>(accountUpdateManager, syncUpdateManager, snackbarManager, mapper, resourceProvider) {
 
     init {
         startDataCollection()
@@ -45,7 +48,7 @@ class IncomeViewModel @Inject constructor(
             totalAmountFormatted = total
         )
 
-    override fun getEmptyDataMessage(): String = "За сегодня еще не было доходов"
+    override fun getEmptyDataMessage(): Int = R.string.snackbar_no_income_today
 
     override fun getDataFlow(): Flow<Result<TransactionData>> = getIncomeTransactionsUseCase()
 

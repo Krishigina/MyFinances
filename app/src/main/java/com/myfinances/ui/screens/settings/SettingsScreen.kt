@@ -55,13 +55,6 @@ fun SettingsScreen(
             onClick = onNavigateToColorPalette
         ),
         ListItemModel(
-            id = "sounds",
-            type = ItemType.SETTING,
-            title = stringResource(id = R.string.sounds),
-            trailingContent = TrailingContent.ArrowOnly(customIconRes = R.drawable.ic_settings_arrow),
-            showTrailingArrow = false
-        ),
-        ListItemModel(
             id = "haptics",
             type = ItemType.SETTING,
             title = stringResource(id = R.string.haptics),

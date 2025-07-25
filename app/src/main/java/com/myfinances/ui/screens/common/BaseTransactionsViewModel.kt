@@ -1,7 +1,9 @@
 package com.myfinances.ui.screens.common
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.myfinances.R
 import com.myfinances.data.manager.AccountUpdateManager
 import com.myfinances.data.manager.SnackbarManager
 import com.myfinances.data.manager.SyncUpdateManager
@@ -9,6 +11,7 @@ import com.myfinances.domain.entity.TransactionData
 import com.myfinances.domain.util.Result
 import com.myfinances.ui.mappers.TransactionDomainToUiMapper
 import com.myfinances.ui.model.TransactionItemUiModel
+import com.myfinances.ui.util.ResourceProvider
 import com.myfinances.ui.util.formatCurrency
 import com.myfinances.ui.util.formatSyncTime
 import kotlinx.coroutines.Job
@@ -23,7 +26,8 @@ abstract class BaseTransactionsViewModel<T, E : UiEvent>(
     private val accountUpdateManager: AccountUpdateManager,
     private val syncUpdateManager: SyncUpdateManager,
     private val snackbarManager: SnackbarManager,
-    private val mapper: TransactionDomainToUiMapper
+    private val mapper: TransactionDomainToUiMapper,
+    private val resourceProvider: ResourceProvider
 ) : ViewModel() {
 
     protected val _uiState = MutableStateFlow<T>(getInitialState())
@@ -47,7 +51,8 @@ abstract class BaseTransactionsViewModel<T, E : UiEvent>(
 
         viewModelScope.launch {
             syncUpdateManager.syncCompletedFlow.collect { syncTime ->
-                snackbarManager.showMessage("Синхронизация завершена: ${formatSyncTime(syncTime)}")
+                val timeString = formatSyncTime(syncTime, resourceProvider)
+                snackbarManager.showMessage(resourceProvider.getString(R.string.snackbar_sync_complete, timeString))
             }
         }
     }
@@ -59,7 +64,7 @@ abstract class BaseTransactionsViewModel<T, E : UiEvent>(
                 when (result) {
                     is Result.Success -> processSuccess(result.data)
                     is Result.Failure.GenericError -> {
-                        snackbarManager.showMessage(result.exception.message ?: "Неизвестная ошибка")
+                        snackbarManager.showMessage(result.exception.message ?: resourceProvider.getString(R.string.error_unknown))
                         if (!isContentState(_uiState.value)) {
                             _uiState.value = createContentState(emptyList(), "")
                         }
@@ -80,9 +85,9 @@ abstract class BaseTransactionsViewModel<T, E : UiEvent>(
                 is Result.Success -> { }
                 is Result.Failure -> {
                     val message = when (refreshResult) {
-                        is Result.Failure.ApiError -> "Ошибка API: ${refreshResult.message}"
-                        is Result.Failure.GenericError -> refreshResult.exception.message ?: "Ошибка обновления"
-                        is Result.Failure.NetworkError -> "Нет подключения к сети. Отображаются последние данные."
+                        is Result.Failure.ApiError -> resourceProvider.getString(R.string.error_api_message, refreshResult.message)
+                        is Result.Failure.GenericError -> refreshResult.exception.message ?: resourceProvider.getString(R.string.snackbar_update_error)
+                        is Result.Failure.NetworkError -> resourceProvider.getString(R.string.snackbar_network_error_cached_data)
                     }
                     snackbarManager.showMessage(message)
                 }
@@ -98,14 +103,15 @@ abstract class BaseTransactionsViewModel<T, E : UiEvent>(
         _uiState.value = createContentState(items, totalAmountFormatted)
 
         if (items.isEmpty() && !emptyMessageShown) {
-            snackbarManager.showMessage(getEmptyDataMessage())
+            snackbarManager.showMessage(resourceProvider.getString(getEmptyDataMessage()))
             emptyMessageShown = true
         } else if (items.isNotEmpty()) {
             emptyMessageShown = false
         }
     }
 
-    abstract fun getEmptyDataMessage(): String
+    @StringRes
+    abstract fun getEmptyDataMessage(): Int
     protected abstract fun getInitialState(): T
     protected abstract fun getLoadingState(): T
     protected abstract fun isContentState(state: T): Boolean

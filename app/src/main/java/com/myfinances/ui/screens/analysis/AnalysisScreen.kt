@@ -44,7 +44,6 @@ import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.components.TrailingContent
 import com.myfinances.ui.model.AnalysisUiModel
 import com.myfinances.ui.navigation.Destination
-import com.myfinances.ui.theme.Green_Primary
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -248,7 +247,7 @@ private fun PeriodRow(
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(100))
-                .background(Green_Primary)
+                .background(MaterialTheme.colorScheme.primary)
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             Text(
