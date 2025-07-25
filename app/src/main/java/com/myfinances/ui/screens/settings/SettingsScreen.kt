@@ -9,22 +9,24 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.myfinances.R
-import com.myfinances.di.ViewModelFactory
 import com.myfinances.ui.components.ItemType
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.components.TrailingContent
+import com.myfinances.ui.navigation.PinMode
 
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     onNavigateToColorPalette: () -> Unit,
     onNavigateToHaptics: () -> Unit,
-    onNavigateToLanguage: () -> Unit
+    onNavigateToLanguage: () -> Unit,
+    onNavigateToPin: (PinMode) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val pinAction = if (uiState.isPinSet) PinMode.DISABLE else PinMode.SETUP
 
     val settingsItems = listOf(
         ListItemModel(
@@ -68,8 +70,11 @@ fun SettingsScreen(
             id = "passcode",
             type = ItemType.SETTING,
             title = stringResource(id = R.string.passcode),
-            trailingContent = TrailingContent.ArrowOnly(customIconRes = R.drawable.ic_settings_arrow),
-            showTrailingArrow = false
+            trailingContent = TrailingContent.TextWithArrow(
+                text = if (uiState.isPinSet) stringResource(R.string.pin_status_on) else stringResource(R.string.pin_status_off)
+            ),
+            showTrailingArrow = true,
+            onClick = { onNavigateToPin(pinAction) }
         ),
         ListItemModel(
             id = "sync",

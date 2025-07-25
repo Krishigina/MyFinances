@@ -22,12 +22,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.myfinances.R
 import com.myfinances.di.ViewModelFactory
 import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.ui.navigation.Destination
+import com.myfinances.ui.navigation.PinMode
 import com.myfinances.ui.screens.account.AccountEvent
 import com.myfinances.ui.screens.account.AccountScreen
 import com.myfinances.ui.screens.account.AccountUiState
@@ -44,6 +47,8 @@ import com.myfinances.ui.screens.income.IncomeScreen
 import com.myfinances.ui.screens.income.IncomeViewModel
 import com.myfinances.ui.screens.language.LanguageScreen
 import com.myfinances.ui.screens.language.LanguageScreenViewModel
+import com.myfinances.ui.screens.pin.PinScreen
+import com.myfinances.ui.screens.pin.PinScreenViewModel
 import com.myfinances.ui.screens.settings.SettingsScreen
 import com.myfinances.ui.screens.settings.SettingsViewModel
 import com.myfinances.ui.viewmodel.ScaffoldState
@@ -59,7 +64,6 @@ fun NavGraphBuilder.mainGraph(
         startDestination = Destination.Expenses.route,
         route = "main_graph"
     ) {
-        // ... (composable-блоки для Expenses, Income, Account, Articles остаются без изменений)
         composable(Destination.Expenses.route) {
             val viewModel: ExpensesViewModel = viewModel(factory = viewModelFactory)
             LaunchedEffect(Unit) {
@@ -234,6 +238,9 @@ fun NavGraphBuilder.mainGraph(
                 },
                 onNavigateToLanguage = {
                     navController.navigate(Destination.LanguageSelection.route)
+                },
+                onNavigateToPin = { mode ->
+                    navController.navigate(Destination.PinScreen.createRoute(mode))
                 }
             )
         }
@@ -323,6 +330,32 @@ fun NavGraphBuilder.mainGraph(
                 )
             }
             LanguageScreen(viewModel = viewModel)
+        }
+
+        composable(
+            route = Destination.PinScreen.route,
+            arguments = listOf(
+                navArgument("mode") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val viewModel: PinScreenViewModel = viewModel(factory = viewModelFactory)
+            val mode = PinMode.valueOf(backStackEntry.arguments?.getString("mode") ?: PinMode.VERIFY.name)
+
+            LaunchedEffect(viewModel) {
+                viewModel.initialize(mode)
+            }
+
+            LaunchedEffect(Unit) {
+                onScaffoldStateChanged(ScaffoldState())
+            }
+
+            PinScreen(
+                navController = navController,
+                viewModel = viewModel,
+                onAuthSuccess = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

@@ -141,4 +141,13 @@
     <string name="time_picker_title">Select time</string>
     <string name="analysis_chart_placeholder">Chart will be here</string>
 
+    <string name="pin_status_on">Включен</string>
+    <string name="pin_status_off">Выключен</string>
+    <string name="pin_enter_title">Придумайте пин-код</string>
+    <string name="pin_confirm_title">Подтвердите пин-код</string>
+    <string name="pin_verify_title">Введите пин-код</string>
+    <string name="pin_disable_title">Введите пин-код для отключения</string>
+    <string name="pin_error_mismatch">Пин-коды не совпадают</string>
+    <string name="pin_error_incorrect">Неверный пин-код</string>
+
 </resources>

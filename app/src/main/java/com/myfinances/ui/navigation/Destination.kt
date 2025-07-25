@@ -43,6 +43,12 @@ sealed class Destination(
     data object Haptics : Destination(route = "haptics")
     data object LanguageSelection : Destination(route = "language_selection")
 
+    data object PinScreen : Destination(route = "pin/{mode}") {
+        fun createRoute(mode: PinMode): String {
+            return "pin/${mode.name}"
+        }
+    }
+
     data object History : Destination(route = "history/{transactionType}/{parentRoute}") {
         fun createRoute(filter: TransactionTypeFilter, parentRoute: String): String {
             return "history/${filter.name}/$parentRoute"

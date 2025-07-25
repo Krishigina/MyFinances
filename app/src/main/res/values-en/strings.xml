@@ -141,4 +141,13 @@
     <string name="time_picker_title">Выберите время</string>
     <string name="analysis_chart_placeholder">График будет здесь</string>
 
+    <string name="pin_status_on">On</string>
+    <string name="pin_status_off">Off</string>
+    <string name="pin_enter_title">Create a PIN</string>
+    <string name="pin_confirm_title">Confirm your PIN</string>
+    <string name="pin_verify_title">Enter your PIN</string>
+    <string name="pin_disable_title">Enter PIN to disable</string>
+    <string name="pin_error_mismatch">PINs do not match</string>
+    <string name="pin_error_incorrect">Incorrect PIN</string>
+
 </resources>
