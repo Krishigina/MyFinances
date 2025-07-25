@@ -6,6 +6,7 @@ import com.myfinances.MyFinancesApplication
 import com.myfinances.data.manager.HapticFeedbackManager
 import com.myfinances.data.manager.SnackbarManager
 import com.myfinances.domain.usecase.IsPinSetUseCase
+import com.myfinances.domain.usecase.SetupPeriodicSyncUseCase
 import dagger.BindsInstance
 import dagger.Component
 import javax.inject.Singleton
@@ -37,6 +38,8 @@ interface AppComponent {
     fun provideHapticFeedbackManager(): HapticFeedbackManager
 
     fun isPinSetUseCase(): IsPinSetUseCase
+
+    fun setupPeriodicSyncUseCase(): SetupPeriodicSyncUseCase
 
     fun inject(activity: MainActivity)
     fun inject(application: MyFinancesApplication)

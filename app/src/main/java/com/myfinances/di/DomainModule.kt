@@ -1,5 +1,6 @@
 package com.myfinances.di
 
+import android.content.Context
 import com.myfinances.data.manager.HapticFeedbackManager
 import com.myfinances.data.manager.LocaleManager
 import com.myfinances.domain.repository.AccountsRepository
@@ -16,6 +17,7 @@ import com.myfinances.domain.usecase.GetColorPaletteUseCase
 import com.myfinances.domain.usecase.GetCurrentLanguageUseCase
 import com.myfinances.domain.usecase.GetHapticSettingsUseCase
 import com.myfinances.domain.usecase.GetLastSyncTimeUseCase
+import com.myfinances.domain.usecase.GetSyncFrequencyUseCase
 import com.myfinances.domain.usecase.GetThemeUseCase
 import com.myfinances.domain.usecase.GetTransactionsUseCase
 import com.myfinances.domain.usecase.IsPinSetUseCase
@@ -25,7 +27,9 @@ import com.myfinances.domain.usecase.SaveHapticEffectUseCase
 import com.myfinances.domain.usecase.SaveHapticsEnabledUseCase
 import com.myfinances.domain.usecase.SaveLanguageUseCase
 import com.myfinances.domain.usecase.SavePinUseCase
+import com.myfinances.domain.usecase.SaveSyncFrequencyUseCase
 import com.myfinances.domain.usecase.SaveThemeUseCase
+import com.myfinances.domain.usecase.SetupPeriodicSyncUseCase
 import com.myfinances.domain.usecase.VerifyPinUseCase
 import dagger.Module
 import dagger.Provides
@@ -149,5 +153,26 @@ object DomainModule {
     @Provides
     fun provideDeletePinUseCase(pinRepository: PinRepository): DeletePinUseCase {
         return DeletePinUseCase(pinRepository)
+    }
+
+    @Provides
+    fun provideGetSyncFrequencyUseCase(sessionRepository: SessionRepository): GetSyncFrequencyUseCase {
+        return GetSyncFrequencyUseCase(sessionRepository)
+    }
+
+    @Provides
+    fun provideSaveSyncFrequencyUseCase(
+        sessionRepository: SessionRepository,
+        setupPeriodicSyncUseCase: SetupPeriodicSyncUseCase
+    ): SaveSyncFrequencyUseCase {
+        return SaveSyncFrequencyUseCase(sessionRepository, setupPeriodicSyncUseCase)
+    }
+
+    @Provides
+    fun provideSetupPeriodicSyncUseCase(
+        context: Context,
+        sessionRepository: SessionRepository
+    ): SetupPeriodicSyncUseCase {
+        return SetupPeriodicSyncUseCase(context, sessionRepository)
     }
 }

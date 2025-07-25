@@ -150,4 +150,12 @@
     <string name="pin_error_mismatch">Пин-коды не совпадают</string>
     <string name="pin_error_incorrect">Неверный пин-код</string>
 
+    <string name="top_bar_sync_frequency_title">Частота синхронизации</string>
+    <string name="sync_frequency_3h">Каждые 3 часа</string>
+    <string name="sync_frequency_6h">Каждые 6 часов</string>
+    <string name="sync_frequency_12h">Каждые 12 часов</string>
+    <string name="sync_frequency_24h">Каждый день</string>
+    <string name="sync_frequency_never">Никогда</string>
+    <string name="sync_frequency_description">Автоматическая синхронизация данных с сервером. Более частая синхронизация может увеличить расход батареи.</string>
+
 </resources>

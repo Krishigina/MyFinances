@@ -22,7 +22,8 @@ fun SettingsScreen(
     onNavigateToColorPalette: () -> Unit,
     onNavigateToHaptics: () -> Unit,
     onNavigateToLanguage: () -> Unit,
-    onNavigateToPin: (PinMode) -> Unit
+    onNavigateToPin: (PinMode) -> Unit,
+    onNavigateToSyncFrequency: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -80,8 +81,11 @@ fun SettingsScreen(
             id = "sync",
             type = ItemType.SETTING,
             title = stringResource(id = R.string.sync),
-            trailingContent = TrailingContent.ArrowOnly(customIconRes = R.drawable.ic_settings_arrow),
-            showTrailingArrow = false
+            trailingContent = TrailingContent.TextWithArrow(
+                text = uiState.currentSyncFrequencyName
+            ),
+            showTrailingArrow = true,
+            onClick = onNavigateToSyncFrequency
         ),
         ListItemModel(
             id = "language",

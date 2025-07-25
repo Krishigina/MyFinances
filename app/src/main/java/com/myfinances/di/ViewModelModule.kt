@@ -13,6 +13,7 @@ import com.myfinances.ui.screens.income.IncomeViewModel
 import com.myfinances.ui.screens.language.LanguageScreenViewModel
 import com.myfinances.ui.screens.pin.PinScreenViewModel
 import com.myfinances.ui.screens.settings.SettingsViewModel
+import com.myfinances.ui.screens.sync_frequency.SyncFrequencyViewModel
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
@@ -79,4 +80,9 @@ abstract class ViewModelModule {
     @IntoMap
     @ViewModelKey(PinScreenViewModel::class)
     abstract fun bindPinScreenViewModel(viewModel: PinScreenViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(SyncFrequencyViewModel::class)
+    abstract fun bindSyncFrequencyViewModel(viewModel: SyncFrequencyViewModel): ViewModel
 }

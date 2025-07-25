@@ -11,6 +11,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.myfinances.domain.entity.ColorPalette
 import com.myfinances.domain.entity.HapticEffect
+import com.myfinances.domain.entity.SyncFrequency
 import com.myfinances.domain.entity.ThemeSetting
 import com.myfinances.domain.repository.SessionRepository
 import kotlinx.coroutines.flow.Flow
@@ -32,6 +33,7 @@ class PersistentSessionStore @Inject constructor(
         val COLOR_PALETTE = stringPreferencesKey("color_palette")
         val HAPTICS_ENABLED = booleanPreferencesKey("haptics_enabled")
         val HAPTIC_EFFECT = stringPreferencesKey("haptic_effect")
+        val SYNC_FREQUENCY_HOURS = longPreferencesKey("sync_frequency_hours")
     }
 
     override fun getActiveAccountId(): Flow<Int?> = context.dataStore.data
@@ -110,6 +112,19 @@ class PersistentSessionStore @Inject constructor(
     override suspend fun setHapticEffect(effect: HapticEffect) {
         context.dataStore.edit { settings ->
             settings[HAPTIC_EFFECT] = effect.name
+        }
+    }
+
+    override fun getSyncFrequency(): Flow<SyncFrequency> = context.dataStore.data
+        .map { preferences ->
+            val hours = preferences[SYNC_FREQUENCY_HOURS] ?: SyncFrequency.default.hours
+            SyncFrequency.fromHours(hours)
+        }
+
+
+    override suspend fun setSyncFrequency(frequency: SyncFrequency) {
+        context.dataStore.edit { settings ->
+            settings[SYNC_FREQUENCY_HOURS] = frequency.hours
         }
     }
 }

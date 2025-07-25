@@ -150,4 +150,12 @@
     <string name="pin_error_mismatch">PINs do not match</string>
     <string name="pin_error_incorrect">Incorrect PIN</string>
 
+    <string name="top_bar_sync_frequency_title">Sync Frequency</string>
+    <string name="sync_frequency_3h">Every 3 hours</string>
+    <string name="sync_frequency_6h">Every 6 hours</string>
+    <string name="sync_frequency_12h">Every 12 hours</string>
+    <string name="sync_frequency_24h">Every day</string>
+    <string name="sync_frequency_never">Never</string>
+    <string name="sync_frequency_description">Automatic data synchronization with the server. More frequent syncing may increase battery usage.</string>
+
 </resources>

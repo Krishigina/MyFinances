@@ -51,6 +51,8 @@ import com.myfinances.ui.screens.pin.PinScreen
 import com.myfinances.ui.screens.pin.PinScreenViewModel
 import com.myfinances.ui.screens.settings.SettingsScreen
 import com.myfinances.ui.screens.settings.SettingsViewModel
+import com.myfinances.ui.screens.sync_frequency.SyncFrequencyScreen
+import com.myfinances.ui.screens.sync_frequency.SyncFrequencyViewModel
 import com.myfinances.ui.viewmodel.ScaffoldState
 import com.myfinances.ui.viewmodel.TopBarAction
 import com.myfinances.ui.viewmodel.TopBarState
@@ -241,6 +243,9 @@ fun NavGraphBuilder.mainGraph(
                 },
                 onNavigateToPin = { mode ->
                     navController.navigate(Destination.PinScreen.createRoute(mode))
+                },
+                onNavigateToSyncFrequency = {
+                    navController.navigate(Destination.SyncFrequencySelection.route)
                 }
             )
         }
@@ -330,6 +335,31 @@ fun NavGraphBuilder.mainGraph(
                 )
             }
             LanguageScreen(viewModel = viewModel)
+        }
+
+        composable(Destination.SyncFrequencySelection.route) {
+            val viewModel: SyncFrequencyViewModel = viewModel(factory = viewModelFactory)
+            LaunchedEffect(Unit) {
+                onScaffoldStateChanged(
+                    ScaffoldState(
+                        topBarState = TopBarState(
+                            title = navController.context.getString(R.string.top_bar_sync_frequency_title),
+                            navigationAction = TopBarAction(
+                                id = "back",
+                                onAction = { navController.popBackStack() },
+                                content = {
+                                    Icon(
+                                        Icons.Default.ArrowBack,
+                                        contentDescription = stringResource(id = R.string.action_back)
+                                    )
+                                }
+                            )
+                        ),
+                        isBottomBarVisible = false
+                    )
+                )
+            }
+            SyncFrequencyScreen(viewModel = viewModel)
         }
 
         composable(
