@@ -144,7 +144,7 @@ fun ListItem(model: ListItemModel) {
                 if (model.showTrailingArrow) {
                     Spacer(modifier = Modifier.width(dimensions.spacing.paddingMedium))
                     Icon(
-                        painter = painterResource(R.drawable.ic_list_item_arrow),
+                        painter = painterResource(model.trailingArrowIconRes ?: R.drawable.ic_list_item_arrow),
                         contentDescription = null
                     )
                 }

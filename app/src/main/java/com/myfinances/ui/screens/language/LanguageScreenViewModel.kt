@@ -6,8 +6,10 @@ import com.myfinances.domain.entity.Language
 import com.myfinances.domain.usecase.GetCurrentLanguageUseCase
 import com.myfinances.domain.usecase.SaveLanguageUseCase
 import com.myfinances.ui.mappers.LanguageDomainToUiMapper
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -20,6 +22,9 @@ class LanguageScreenViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(LanguageScreenUiState())
     val uiState = _uiState.asStateFlow()
+
+    private val _sideEffect = Channel<LanguageScreenSideEffect>()
+    val sideEffect = _sideEffect.receiveAsFlow()
 
     init {
         loadLanguages()
@@ -43,15 +48,12 @@ class LanguageScreenViewModel @Inject constructor(
             is LanguageScreenEvent.OnLanguageSelected -> {
                 viewModelScope.launch {
                     saveLanguageUseCase(event.language)
+                    _sideEffect.send(LanguageScreenSideEffect.RecreateActivity)
                 }
             }
         }
     }
 
-    /**
-     * Вызывается, когда экран снова становится видимым, чтобы обновить состояние
-     * выбранного языка после системной смены локали.
-     */
     fun onResume() {
         loadLanguages()
     }

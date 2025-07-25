@@ -12,6 +12,7 @@ import com.myfinances.domain.usecase.DeletePinUseCase
 import com.myfinances.domain.usecase.GetAccountUseCase
 import com.myfinances.domain.usecase.GetActiveAccountIdUseCase
 import com.myfinances.domain.usecase.GetAnalysisDataUseCase
+import com.myfinances.domain.usecase.GetAppInfoUseCase
 import com.myfinances.domain.usecase.GetCategoriesUseCase
 import com.myfinances.domain.usecase.GetColorPaletteUseCase
 import com.myfinances.domain.usecase.GetCurrentLanguageUseCase
@@ -174,5 +175,10 @@ object DomainModule {
         sessionRepository: SessionRepository
     ): SetupPeriodicSyncUseCase {
         return SetupPeriodicSyncUseCase(context, sessionRepository)
+    }
+
+    @Provides
+    fun provideGetAppInfoUseCase(): GetAppInfoUseCase {
+        return GetAppInfoUseCase()
     }
 }

@@ -158,4 +158,8 @@
     <string name="sync_frequency_never">Никогда</string>
     <string name="sync_frequency_description">Автоматическая синхронизация данных с сервером. Более частая синхронизация может увеличить расход батареи.</string>
 
+    <string name="top_bar_about_title">О приложении</string>
+    <string name="about_app_version">Версия приложения</string>
+    <string name="about_last_updated">Последнее обновление</string>
+
 </resources>

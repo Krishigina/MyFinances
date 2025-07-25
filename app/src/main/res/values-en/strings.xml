@@ -158,4 +158,8 @@
     <string name="sync_frequency_never">Never</string>
     <string name="sync_frequency_description">Automatic data synchronization with the server. More frequent syncing may increase battery usage.</string>
 
+    <string name="top_bar_about_title">About</string>
+    <string name="about_app_version">App version</string>
+    <string name="about_last_updated">Last updated</string>
+
 </resources>

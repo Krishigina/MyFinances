@@ -31,6 +31,8 @@ import com.myfinances.di.ViewModelFactory
 import com.myfinances.domain.entity.TransactionTypeFilter
 import com.myfinances.ui.navigation.Destination
 import com.myfinances.ui.navigation.PinMode
+import com.myfinances.ui.screens.about.AboutScreen
+import com.myfinances.ui.screens.about.AboutViewModel
 import com.myfinances.ui.screens.account.AccountEvent
 import com.myfinances.ui.screens.account.AccountScreen
 import com.myfinances.ui.screens.account.AccountUiState
@@ -246,6 +248,9 @@ fun NavGraphBuilder.mainGraph(
                 },
                 onNavigateToSyncFrequency = {
                     navController.navigate(Destination.SyncFrequencySelection.route)
+                },
+                onNavigateToAbout = {
+                    navController.navigate(Destination.About.route)
                 }
             )
         }
@@ -360,6 +365,31 @@ fun NavGraphBuilder.mainGraph(
                 )
             }
             SyncFrequencyScreen(viewModel = viewModel)
+        }
+
+        composable(Destination.About.route) {
+            val viewModel: AboutViewModel = viewModel(factory = viewModelFactory)
+            LaunchedEffect(Unit) {
+                onScaffoldStateChanged(
+                    ScaffoldState(
+                        topBarState = TopBarState(
+                            title = navController.context.getString(R.string.top_bar_about_title),
+                            navigationAction = TopBarAction(
+                                id = "back",
+                                onAction = { navController.popBackStack() },
+                                content = {
+                                    Icon(
+                                        Icons.Default.ArrowBack,
+                                        contentDescription = stringResource(id = R.string.action_back)
+                                    )
+                                }
+                            )
+                        ),
+                        isBottomBarVisible = false
+                    )
+                )
+            }
+            AboutScreen(viewModel = viewModel)
         }
 
         composable(

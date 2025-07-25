@@ -34,6 +34,12 @@ android {
             "API_KEY",
             "\"${localProperties.getProperty("FINANCES_API_KEY")}\""
         )
+
+        buildConfigField("long", "BUILD_TIME", "${System.currentTimeMillis()}L")
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {

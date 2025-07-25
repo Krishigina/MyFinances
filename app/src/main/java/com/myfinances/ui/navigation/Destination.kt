@@ -43,6 +43,7 @@ sealed class Destination(
     data object Haptics : Destination(route = "haptics")
     data object LanguageSelection : Destination(route = "language_selection")
     data object SyncFrequencySelection : Destination(route = "sync_frequency_selection")
+    data object About : Destination(route = "about")
 
     data object PinScreen : Destination(route = "pin/{mode}") {
         fun createRoute(mode: PinMode): String {

@@ -1,6 +1,7 @@
 package com.myfinances.di
 
 import androidx.lifecycle.ViewModel
+import com.myfinances.ui.screens.about.AboutViewModel
 import com.myfinances.ui.screens.account.AccountViewModel
 import com.myfinances.ui.screens.add_edit_transaction.AddEditTransactionViewModel
 import com.myfinances.ui.screens.analysis.AnalysisViewModel
@@ -85,4 +86,9 @@ abstract class ViewModelModule {
     @IntoMap
     @ViewModelKey(SyncFrequencyViewModel::class)
     abstract fun bindSyncFrequencyViewModel(viewModel: SyncFrequencyViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(AboutViewModel::class)
+    abstract fun bindAboutViewModel(viewModel: AboutViewModel): ViewModel
 }

@@ -23,7 +23,8 @@ fun SettingsScreen(
     onNavigateToHaptics: () -> Unit,
     onNavigateToLanguage: () -> Unit,
     onNavigateToPin: (PinMode) -> Unit,
-    onNavigateToSyncFrequency: () -> Unit
+    onNavigateToSyncFrequency: () -> Unit,
+    onNavigateToAbout: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -50,6 +51,7 @@ fun SettingsScreen(
                 text = uiState.currentPaletteName
             ),
             showTrailingArrow = true,
+            trailingArrowIconRes = R.drawable.ic_settings_arrow,
             onClick = onNavigateToColorPalette
         ),
         ListItemModel(
@@ -75,6 +77,7 @@ fun SettingsScreen(
                 text = if (uiState.isPinSet) stringResource(R.string.pin_status_on) else stringResource(R.string.pin_status_off)
             ),
             showTrailingArrow = true,
+            trailingArrowIconRes = R.drawable.ic_settings_arrow,
             onClick = { onNavigateToPin(pinAction) }
         ),
         ListItemModel(
@@ -85,6 +88,7 @@ fun SettingsScreen(
                 text = uiState.currentSyncFrequencyName
             ),
             showTrailingArrow = true,
+            trailingArrowIconRes = R.drawable.ic_settings_arrow,
             onClick = onNavigateToSyncFrequency
         ),
         ListItemModel(
@@ -95,6 +99,7 @@ fun SettingsScreen(
                 text = uiState.currentLanguageName
             ),
             showTrailingArrow = true,
+            trailingArrowIconRes = R.drawable.ic_settings_arrow,
             onClick = onNavigateToLanguage
         ),
         ListItemModel(
@@ -102,7 +107,8 @@ fun SettingsScreen(
             type = ItemType.SETTING,
             title = stringResource(id = R.string.about),
             trailingContent = TrailingContent.ArrowOnly(customIconRes = R.drawable.ic_settings_arrow),
-            showTrailingArrow = false
+            showTrailingArrow = false,
+            onClick = onNavigateToAbout
         )
     )
 
