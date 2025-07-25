@@ -36,13 +36,12 @@ abstract class BaseTransactionsViewModel<T, E : UiEvent>(
 
     protected fun startDataCollection() {
         collectDataFromDb()
-        refreshData(showLoading = !isContentState(_uiState.value))
 
         viewModelScope.launch {
             accountUpdateManager.accountUpdateFlow.collect {
                 emptyMessageShown = false
                 collectDataFromDb()
-                refreshData(showLoading = false)
+
             }
         }
 

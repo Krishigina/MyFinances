@@ -17,7 +17,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyFinances"
         android:localeConfig="@xml/locales_config"
-        tools:targetApi="tiramisu">
+        android:enableOnBackInvokedCallback="true"
+        tools:targetApi="33">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -33,7 +34,7 @@
 
         <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
-            android:enabled="false"
+            android:enabled="true"
             android:exported="false">
             <meta-data
                 android:name="autoStoreLocales"
