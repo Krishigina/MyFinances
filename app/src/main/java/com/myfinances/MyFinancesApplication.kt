@@ -18,7 +18,7 @@ import javax.inject.Inject
 open class MyFinancesApplication : Application() {
 
     lateinit var appComponent: AppComponent
-        private set
+        protected set
 
     @Inject
     lateinit var syncRepository: SyncRepository

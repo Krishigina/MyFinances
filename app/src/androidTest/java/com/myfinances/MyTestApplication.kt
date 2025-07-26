@@ -1,6 +1,7 @@
 package com.myfinances
 
 import android.util.Log
+import com.myfinances.di.DaggerAppComponent
 
 /**
  * Кастомный Application класс для использования в инструментальных тестах.
@@ -11,19 +12,25 @@ import android.util.Log
  */
 class MyTestApplication : MyFinancesApplication() {
     override fun onCreate() {
-        // Мы намеренно вызываем super.onCreate() ПОСЛЕ наших переопределений,
-        // но в данном случае лучше полностью контролировать процесс и не вызывать
-        // triggerInitialSync и setupPeriodicSync вообще.
-        // Поэтому мы скопируем логику из родительского onCreate, исключив лишнее.
         super.onCreate()
         Log.i("MyTestApplication", "Test application is running, sync is disabled.")
     }
 
+    /**
+     * Пересоздает Dagger AppComponent. Это необходимо для полной изоляции
+     * состояния между UI-тестами, так как сбрасываются все синглтоны.
+     */
+    fun resetAppComponent() {
+        appComponent = DaggerAppComponent.factory().create(this)
+        appComponent.inject(this)
+        Log.i("MyTestApplication", "Dagger AppComponent has been reset for a new test.")
+    }
+
     override fun triggerInitialSync() {
-        // Оставляем пустым, чтобы не запускать сетевую синхронизацию в тестах
+
     }
 
     override fun setupPeriodicSync() {
-        // Оставляем пустым, чтобы не настраивать WorkManager в тестах
+
     }
 }

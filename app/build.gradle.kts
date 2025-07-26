@@ -29,8 +29,6 @@ android {
 
         testInstrumentationRunner = "com.myfinances.MyTestRunner"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
         buildConfigField(
             "String",
             "API_KEY",

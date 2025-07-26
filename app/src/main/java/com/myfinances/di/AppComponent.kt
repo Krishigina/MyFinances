@@ -6,6 +6,7 @@ import com.myfinances.MyFinancesApplication
 import com.myfinances.data.manager.HapticFeedbackManager
 import com.myfinances.data.manager.SnackbarManager
 import com.myfinances.domain.usecase.IsPinSetUseCase
+import com.myfinances.domain.usecase.SavePinUseCase
 import com.myfinances.domain.usecase.SetupPeriodicSyncUseCase
 import dagger.BindsInstance
 import dagger.Component
@@ -38,6 +39,8 @@ interface AppComponent {
     fun provideHapticFeedbackManager(): HapticFeedbackManager
 
     fun isPinSetUseCase(): IsPinSetUseCase
+
+    fun savePinUseCase(): SavePinUseCase
 
     fun setupPeriodicSyncUseCase(): SetupPeriodicSyncUseCase
 
