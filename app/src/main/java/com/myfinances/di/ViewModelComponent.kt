@@ -4,7 +4,7 @@ import com.myfinances.di.scopes.ViewModelScope
 import dagger.Subcomponent
 
 @ViewModelScope
-@Subcomponent(modules = [ViewModelModule::class, DomainModule::class])
+@Subcomponent(modules = [ViewModelModule::class])
 interface ViewModelComponent {
 
     @Subcomponent.Factory

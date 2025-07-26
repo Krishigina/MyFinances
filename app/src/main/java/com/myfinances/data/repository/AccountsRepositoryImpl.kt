@@ -1,11 +1,18 @@
 package com.myfinances.data.repository
 
+import android.content.Context
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.myfinances.data.db.dao.AccountDao
 import com.myfinances.data.db.entity.toEntity
 import com.myfinances.data.network.ApiService
 import com.myfinances.data.network.ConnectivityManagerSource
 import com.myfinances.data.network.dto.UpdateAccountRequest
 import com.myfinances.data.network.dto.toDomainModel
+import com.myfinances.data.workers.SyncWorker
 import com.myfinances.domain.entity.Account
 import com.myfinances.domain.repository.AccountsRepository
 import com.myfinances.domain.util.Result
@@ -16,6 +23,7 @@ import java.io.IOException
 import javax.inject.Inject
 
 class AccountsRepositoryImpl @Inject constructor(
+    private val context: Context,
     private val apiService: ApiService,
     private val accountDao: AccountDao,
     private val connectivityManager: ConnectivityManagerSource
@@ -29,7 +37,7 @@ class AccountsRepositoryImpl @Inject constructor(
 
     override suspend fun refreshAccounts(): Result<Unit> {
         if (!connectivityManager.isNetworkAvailable.first()) {
-            return Result.NetworkError
+            return Result.Failure.NetworkError
         }
 
         return try {
@@ -37,19 +45,19 @@ class AccountsRepositoryImpl @Inject constructor(
             if (response.isSuccessful) {
                 val dtos = response.body()
                 if (dtos != null) {
-                    val entities = dtos.map { it.toDomainModel().toEntity() }
+                    val entities = dtos.map { it.toDomainModel().toEntity(isSynced = true) }
                     accountDao.upsertAll(entities)
                     Result.Success(Unit)
                 } else {
-                    Result.Error(Exception("Empty response body"))
+                    Result.Failure.GenericError(Exception("Empty response body"))
                 }
             } else {
-                Result.Error(Exception("API Error: ${response.code()} ${response.message()}"))
+                Result.Failure.ApiError(response.code(), response.message())
             }
         } catch (e: IOException) {
-            Result.NetworkError
+            Result.Failure.NetworkError
         } catch (e: Exception) {
-            Result.Error(e)
+            Result.Failure.GenericError(e)
         }
     }
 
@@ -59,31 +67,38 @@ class AccountsRepositoryImpl @Inject constructor(
         balance: Double,
         currency: String
     ): Result<Account> {
-        if (!connectivityManager.isNetworkAvailable.first()) {
-            // TODO: В будущем здесь нужно будет сохранять изменения локально
-            // и синхронизировать их позже. Пока просто возвращаем ошибку.
-            return Result.NetworkError
-        }
 
-        val request = UpdateAccountRequest(
-            name = name,
-            balance = balance.toString(),
-            currency = currency
-        )
+        try {
+            val currentAccount = getAccounts().first().find { it.id == accountId }
+            val updatedAccount = Account(
+                id = accountId,
+                name = name,
+                balance = balance,
+                currency = currency,
+                emoji = currentAccount?.emoji ?: "💰",
+                lastUpdatedAt = System.currentTimeMillis()
+            )
 
-        return try {
-            val response = apiService.updateAccount(accountId, request)
-            if (response.isSuccessful && response.body() != null) {
-                val updatedAccount = response.body()!!.toDomainModel()
-                accountDao.upsertAll(listOf(updatedAccount.toEntity()))
-                Result.Success(updatedAccount)
-            } else {
-                Result.Error(Exception("API Error: ${response.code()} ${response.message()}"))
-            }
-        } catch (e: IOException) {
-            Result.NetworkError
+            accountDao.upsertAll(listOf(updatedAccount.toEntity(isSynced = false)))
+
+            return Result.Success(updatedAccount)
         } catch (e: Exception) {
-            Result.Error(e)
+            return Result.Failure.GenericError(e)
         }
+    }
+
+    override fun scheduleSync() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+        val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            "one-time-sync",
+            ExistingWorkPolicy.KEEP,
+            syncRequest
+        )
     }
 }

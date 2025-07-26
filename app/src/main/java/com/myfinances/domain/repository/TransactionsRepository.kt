@@ -38,4 +38,6 @@ interface TransactionsRepository {
     ): Result<Transaction>
 
     suspend fun deleteTransaction(transactionId: Int): Result<Unit>
+
+    fun scheduleSync()
 }

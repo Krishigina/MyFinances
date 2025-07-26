@@ -6,42 +6,29 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.myfinances.R
 import com.myfinances.ui.components.ItemType
 import com.myfinances.ui.components.ListItem
 import com.myfinances.ui.components.ListItemModel
 import com.myfinances.ui.components.TrailingContent
+import com.myfinances.ui.navigation.PinMode
 
 @Composable
-fun SettingsScreenContent(
-    items: List<ListItemModel>
+fun SettingsScreen(
+    viewModel: SettingsViewModel,
+    onNavigateToColorPalette: () -> Unit,
+    onNavigateToHaptics: () -> Unit,
+    onNavigateToLanguage: () -> Unit,
+    onNavigateToPin: (PinMode) -> Unit,
+    onNavigateToSyncFrequency: () -> Unit,
+    onNavigateToAbout: () -> Unit
 ) {
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(
-            items = items,
-            key = { it.id }
-        ) { model ->
-            ListItem(model = model)
-            Divider()
-        }
-    }
-}
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-/**
- * Экран, предоставляющий пользователю доступ к различным настройкам приложения.
- * Здесь можно управлять темой оформления, звуками, кодом-доступа и другими параметрами.
- * На данный момент экран является самодостаточным и управляет своим состоянием локально
- * (например, состоянием переключателя темной темы).
- */
-@Composable
-fun SettingsScreen() {
-    var isDarkMode by remember { mutableStateOf(false) }
+    val pinAction = if (uiState.isPinSet) PinMode.DISABLE else PinMode.SETUP
 
     val settingsItems = listOf(
         ListItemModel(
@@ -49,67 +36,83 @@ fun SettingsScreen() {
             type = ItemType.SETTING,
             title = stringResource(id = R.string.dark_theme),
             trailingContent = TrailingContent.Switch(
-                isChecked = isDarkMode,
-                onToggle = { isDarkMode = it }
+                isChecked = uiState.isDarkMode,
+                onToggle = { isEnabled ->
+                    viewModel.onEvent(SettingsEvent.OnThemeToggled(isEnabled))
+                }
             ),
-            showTrailingArrow = false
+            showTrailingArrow = false,
+            trailingContentTestTag = "theme_switch"
         ),
         ListItemModel(
             id = "primary_color",
             type = ItemType.SETTING,
             title = stringResource(id = R.string.primary_color),
-            trailingContent = TrailingContent.ArrowOnly(customIconRes = R.drawable.ic_settings_arrow),
-            showTrailingArrow = false
-        ),
-        ListItemModel(
-            id = "sounds",
-            type = ItemType.SETTING,
-            title = stringResource(id = R.string.sounds),
-            trailingContent = TrailingContent.ArrowOnly(customIconRes = R.drawable.ic_settings_arrow),
-            showTrailingArrow = false
+            trailingContent = TrailingContent.TextWithArrow(
+                text = uiState.currentPaletteName
+            ),
+            showTrailingArrow = true,
+            trailingArrowIconRes = R.drawable.ic_settings_arrow,
+            onClick = onNavigateToColorPalette
         ),
         ListItemModel(
             id = "haptics",
             type = ItemType.SETTING,
             title = stringResource(id = R.string.haptics),
             trailingContent = TrailingContent.ArrowOnly(customIconRes = R.drawable.ic_settings_arrow),
-            showTrailingArrow = false
+            showTrailingArrow = false,
+            onClick = onNavigateToHaptics
         ),
         ListItemModel(
             id = "passcode",
             type = ItemType.SETTING,
             title = stringResource(id = R.string.passcode),
-            trailingContent = TrailingContent.ArrowOnly(customIconRes = R.drawable.ic_settings_arrow),
-            showTrailingArrow = false
+            trailingContent = TrailingContent.TextWithArrow(
+                text = if (uiState.isPinSet) stringResource(R.string.pin_status_on) else stringResource(R.string.pin_status_off)
+            ),
+            showTrailingArrow = true,
+            trailingArrowIconRes = R.drawable.ic_settings_arrow,
+            onClick = { onNavigateToPin(pinAction) }
         ),
         ListItemModel(
             id = "sync",
             type = ItemType.SETTING,
             title = stringResource(id = R.string.sync),
-            trailingContent = TrailingContent.ArrowOnly(customIconRes = R.drawable.ic_settings_arrow),
-            showTrailingArrow = false
+            trailingContent = TrailingContent.TextWithArrow(
+                text = uiState.currentSyncFrequencyName
+            ),
+            showTrailingArrow = true,
+            trailingArrowIconRes = R.drawable.ic_settings_arrow,
+            onClick = onNavigateToSyncFrequency
         ),
         ListItemModel(
             id = "language",
             type = ItemType.SETTING,
             title = stringResource(id = R.string.language),
-            trailingContent = TrailingContent.ArrowOnly(customIconRes = R.drawable.ic_settings_arrow),
-            showTrailingArrow = false
+            trailingContent = TrailingContent.TextWithArrow(
+                text = uiState.currentLanguageName
+            ),
+            showTrailingArrow = true,
+            trailingArrowIconRes = R.drawable.ic_settings_arrow,
+            onClick = onNavigateToLanguage
         ),
         ListItemModel(
             id = "about",
             type = ItemType.SETTING,
             title = stringResource(id = R.string.about),
             trailingContent = TrailingContent.ArrowOnly(customIconRes = R.drawable.ic_settings_arrow),
-            showTrailingArrow = false
+            showTrailingArrow = false,
+            onClick = onNavigateToAbout
         )
     )
 
-    SettingsScreenContent(items = settingsItems)
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SettingsScreenPreview() {
-    SettingsScreen()
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+        items(
+            items = settingsItems,
+            key = { it.id }
+        ) { model ->
+            ListItem(model = model)
+            Divider()
+        }
+    }
 }

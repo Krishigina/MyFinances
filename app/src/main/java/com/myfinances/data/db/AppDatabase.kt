@@ -16,7 +16,7 @@ import com.myfinances.data.db.entity.TransactionEntity
         CategoryEntity::class,
         TransactionEntity::class
     ],
-    version = 1,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

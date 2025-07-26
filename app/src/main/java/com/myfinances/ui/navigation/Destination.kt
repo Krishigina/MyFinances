@@ -5,10 +5,6 @@ import androidx.annotation.StringRes
 import com.myfinances.R
 import com.myfinances.domain.entity.TransactionTypeFilter
 
-/**
- * Герметичный класс, определяющий все возможные экраны и навигационные графы в приложении.
- * Инкапсулирует маршрут (route), заголовок и иконку для каждого пункта назначения.
- */
 sealed class Destination(
     val route: String,
     @StringRes val title: Int? = null,
@@ -42,6 +38,18 @@ sealed class Destination(
         title = R.string.botton_nav_label_settings,
         icon = R.drawable.ic_bottom_nav_settings
     )
+
+    data object ColorPaletteSelection : Destination(route = "color_palette_selection")
+    data object Haptics : Destination(route = "haptics")
+    data object LanguageSelection : Destination(route = "language_selection")
+    data object SyncFrequencySelection : Destination(route = "sync_frequency_selection")
+    data object About : Destination(route = "about")
+
+    data object PinScreen : Destination(route = "pin/{mode}") {
+        fun createRoute(mode: PinMode): String {
+            return "pin/${mode.name}"
+        }
+    }
 
     data object History : Destination(route = "history/{transactionType}/{parentRoute}") {
         fun createRoute(filter: TransactionTypeFilter, parentRoute: String): String {

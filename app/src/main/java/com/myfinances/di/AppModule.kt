@@ -1,9 +1,14 @@
 package com.myfinances.di
 
+import android.content.Context
 import com.myfinances.BuildConfig
 import com.myfinances.data.manager.AccountUpdateManager
+import com.myfinances.data.manager.HapticFeedbackManager
+import com.myfinances.data.manager.LocaleManager
+import com.myfinances.data.manager.SnackbarManager
 import com.myfinances.data.manager.SyncUpdateManager
 import com.myfinances.data.network.RetryInterceptor
+import com.myfinances.domain.repository.SessionRepository
 import com.myfinances.ui.util.ResourceProvider
 import dagger.Module
 import dagger.Provides
@@ -57,13 +62,34 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideResourceProvider(context: android.content.Context): ResourceProvider {
+    fun provideResourceProvider(context: Context): ResourceProvider {
         return ResourceProvider(context)
     }
 
     @Provides
     @Singleton
-    fun provideSyncUpdateManager(sessionRepository: com.myfinances.domain.repository.SessionRepository): SyncUpdateManager {
+    fun provideSyncUpdateManager(sessionRepository: SessionRepository): SyncUpdateManager {
         return SyncUpdateManager(sessionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSnackbarManager(): SnackbarManager {
+        return SnackbarManager()
+    }
+
+    @Provides
+    @Singleton
+    fun provideHapticFeedbackManager(
+        context: Context,
+        sessionRepository: SessionRepository
+    ): HapticFeedbackManager {
+        return HapticFeedbackManager(context, sessionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLocaleManager(): LocaleManager {
+        return LocaleManager()
     }
 }

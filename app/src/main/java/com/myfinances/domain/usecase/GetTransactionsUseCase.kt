@@ -24,25 +24,23 @@ class GetTransactionsUseCase(
         endDate: Date,
         filter: TransactionTypeFilter = TransactionTypeFilter.ALL
     ): Flow<Result<TransactionData>> {
-        // Создаем поток, который один раз эмитит ID активного счета или выбрасывает ошибку
         val activeAccountIdFlow = flow {
             when (val result = getActiveAccountIdUseCase()) {
                 is Result.Success -> emit(result.data)
-                is Result.Error -> throw result.exception
-                is Result.NetworkError -> throw IllegalStateException("Network error during account ID fetch")
+                is Result.Failure.GenericError -> throw result.exception
+                is Result.Failure.NetworkError -> throw IllegalStateException("Network error during account ID fetch")
+                is Result.Failure.ApiError -> throw IllegalStateException("API error during account ID fetch")
             }
         }
 
-        // Используем flatMapLatest, чтобы при получении accountId создать новый комбинированный поток
         return activeAccountIdFlow.flatMapLatest { accountId ->
             val transactionsFlow = transactionsRepository.getTransactions(accountId, startDate, endDate)
             val categoriesFlow = categoriesRepository.getCategories()
             val accountsFlow = accountsRepository.getAccounts()
 
-            // Теперь комбинируем все нужные потоки
             combine(transactionsFlow, categoriesFlow, accountsFlow) { transactions, categories, accounts ->
                 val account = accounts.find { it.id == accountId }
-                    ?: return@combine Result.Error(Exception("Активный счет не найден"))
+                    ?: return@combine Result.Failure.GenericError(Exception("Активный счет не найден"))
 
                 val categoryMap = categories.associateBy { it.id }
 
@@ -70,16 +68,14 @@ class GetTransactionsUseCase(
                 )
             }
         }.catch { e ->
-            // Отлавливаем исключения из activeAccountIdFlow
-            emit(Result.Error(e))
+            emit(Result.Failure.GenericError(e))
         }
     }
 
     suspend fun refresh(startDate: Date, endDate: Date): Result<Unit> {
-        // Получаем ID счета для обновления
         val accountIdResult = getActiveAccountIdUseCase()
         if (accountIdResult !is Result.Success) {
-            return Result.Error(Exception("Active account could not be determined for refresh."))
+            return Result.Failure.GenericError(Exception("Active account could not be determined for refresh."))
         }
         val accountId = accountIdResult.data
 
@@ -87,14 +83,13 @@ class GetTransactionsUseCase(
         val categoryResult = categoriesRepository.refreshCategories()
         val accountResult = accountsRepository.refreshAccounts()
 
-        // Проверяем результаты на ошибки
-        val errors = listOf(transactionResult, categoryResult, accountResult).filterIsInstance<Result.Error>()
+        val errors = listOf(transactionResult, categoryResult, accountResult).filterIsInstance<Result.Failure.GenericError>()
         if (errors.isNotEmpty()) {
-            return Result.Error(errors.first().exception)
+            return Result.Failure.GenericError(errors.first().exception)
         }
-        val networkError = listOf(transactionResult, categoryResult, accountResult).filterIsInstance<Result.NetworkError>()
+        val networkError = listOf(transactionResult, categoryResult, accountResult).filterIsInstance<Result.Failure.NetworkError>()
         if (networkError.isNotEmpty()) {
-            return Result.NetworkError
+            return Result.Failure.NetworkError
         }
 
         return Result.Success(Unit)

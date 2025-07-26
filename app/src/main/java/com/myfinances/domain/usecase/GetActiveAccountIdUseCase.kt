@@ -16,10 +16,6 @@ class GetActiveAccountIdUseCase @Inject constructor(
             return Result.Success(cachedAccountId)
         }
 
-        // Пытаемся обновить данные с сервера
-        repository.refreshAccounts()
-
-        // Читаем из базы (уже обновленные, если был интернет)
         val accountsFromDb = repository.getAccounts().first()
         val firstAccountId = accountsFromDb.firstOrNull()?.id
 
@@ -27,8 +23,19 @@ class GetActiveAccountIdUseCase @Inject constructor(
             sessionRepository.setActiveAccountId(firstAccountId)
             Result.Success(firstAccountId)
         } else {
-            // Если и после обновления счетов нет, значит их действительно нет
-            Result.Error(Exception("У пользователя нет счетов"))
+            val refreshResult = repository.refreshAccounts()
+            if (refreshResult is Result.Success) {
+                val accountsAfterRefresh = repository.getAccounts().first()
+                val newFirstAccountId = accountsAfterRefresh.firstOrNull()?.id
+                if (newFirstAccountId != null) {
+                    sessionRepository.setActiveAccountId(newFirstAccountId)
+                    Result.Success(newFirstAccountId)
+                } else {
+                    Result.Failure.GenericError(Exception("У пользователя нет счетов после обновления"))
+                }
+            } else {
+                Result.Failure.GenericError(Exception("Не удалось получить аккаунты ни локально, ни с сервера"))
+            }
         }
     }
 }

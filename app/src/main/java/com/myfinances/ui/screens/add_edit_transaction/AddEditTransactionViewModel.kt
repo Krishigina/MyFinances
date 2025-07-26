@@ -87,7 +87,7 @@ class AddEditTransactionViewModel @Inject constructor(
                     actions = listOf(
                         TopBarAction(
                             id = "save",
-                            isEnabled = successState?.let { it.selectedCategory != null && it.amount.isNotBlank() } ?: false,
+                            isEnabled = successState?.let { it.selectedCategory != null && it.amount.isNotBlank() && !it.isSaving } ?: false,
                             onAction = { onEvent(AddEditTransactionEvent.SaveTransaction) },
                             content = {
                                 if (successState?.isSaving == true) {
@@ -114,46 +114,43 @@ class AddEditTransactionViewModel @Inject constructor(
     }
 
     fun onEvent(event: AddEditTransactionEvent) {
-        val successState = _uiState.value as? AddEditTransactionUiState.Success
-
-        if (successState == null) {
+        val currentState = _uiState.value
+        if (currentState !is AddEditTransactionUiState.Success) {
             if (event is AddEditTransactionEvent.NavigateBack) {
-                // Позволяем навигации назад работать даже если экран в состоянии загрузки
-                val state = _uiState.value
-                if (state is AddEditTransactionUiState.Success) {
-                    _uiState.update { state.copy(closeScreen = true) }
+                _uiState.update {
+                    if (it is AddEditTransactionUiState.Success) it.copy(closeScreen = true) else it
                 }
             }
             return
         }
 
         when (event) {
-            is AddEditTransactionEvent.AmountChanged -> _uiState.update { successState.copy(amount = event.amount) }
-            is AddEditTransactionEvent.CommentChanged -> _uiState.update { successState.copy(comment = event.comment) }
+            is AddEditTransactionEvent.AmountChanged -> _uiState.update { currentState.copy(amount = event.amount) }
+            is AddEditTransactionEvent.CommentChanged -> _uiState.update { currentState.copy(comment = event.comment) }
             is AddEditTransactionEvent.CategorySelected -> _uiState.update {
-                successState.copy(
+                currentState.copy(
                     selectedCategory = event.category,
                     showCategoryPicker = false
                 )
             }
             is AddEditTransactionEvent.DateSelected -> {
-                val calendar = Calendar.getInstance().apply { time = successState.date }
+                val calendar = Calendar.getInstance().apply { time = currentState.date }
                 val newDateCalendar = Calendar.getInstance().apply { time = event.date }
                 newDateCalendar.set(Calendar.HOUR_OF_DAY, calendar.get(Calendar.HOUR_OF_DAY))
                 newDateCalendar.set(Calendar.MINUTE, calendar.get(Calendar.MINUTE))
                 _uiState.update {
-                    successState.copy(
+                    currentState.copy(
                         date = newDateCalendar.time,
                         showDatePicker = false
                     )
                 }
             }
             is AddEditTransactionEvent.TimeChanged -> {
-                val calendar = Calendar.getInstance().apply { time = successState.date }
+                val calendar = Calendar.getInstance().apply { time = currentState.date }
                 calendar.set(Calendar.HOUR_OF_DAY, event.hour)
                 calendar.set(Calendar.MINUTE, event.minute)
                 _uiState.update {
-                    successState.copy(
+                    currentState.copy(
                         date = calendar.time,
                         showTimePicker = false
                     )
@@ -161,19 +158,19 @@ class AddEditTransactionViewModel @Inject constructor(
             }
             AddEditTransactionEvent.SaveTransaction -> saveTransaction()
             AddEditTransactionEvent.DeleteTransaction -> {
-                _uiState.update { successState.copy(showDeleteConfirmation = false) }
+                _uiState.update { currentState.copy(showDeleteConfirmation = false) }
                 deleteTransaction()
             }
-            AddEditTransactionEvent.DismissErrorDialog -> _uiState.update { successState.copy(error = null) }
-            AddEditTransactionEvent.ShowDeleteConfirmation -> _uiState.update { successState.copy(showDeleteConfirmation = true) }
-            AddEditTransactionEvent.HideDeleteConfirmation -> _uiState.update { successState.copy(showDeleteConfirmation = false) }
-            AddEditTransactionEvent.NavigateBack -> _uiState.update { successState.copy(closeScreen = true) }
-            AddEditTransactionEvent.ShowDatePicker -> _uiState.update { successState.copy(showDatePicker = true) }
-            AddEditTransactionEvent.HideDatePicker -> _uiState.update { successState.copy(showDatePicker = false) }
-            AddEditTransactionEvent.ShowTimePicker -> _uiState.update { successState.copy(showTimePicker = true) }
-            AddEditTransactionEvent.HideTimePicker -> _uiState.update { successState.copy(showTimePicker = false) }
-            AddEditTransactionEvent.ShowCategoryPicker -> _uiState.update { successState.copy(showCategoryPicker = true) }
-            AddEditTransactionEvent.HideCategoryPicker -> _uiState.update { successState.copy(showCategoryPicker = false) }
+            AddEditTransactionEvent.DismissErrorDialog -> _uiState.update { currentState.copy(error = null) }
+            AddEditTransactionEvent.ShowDeleteConfirmation -> _uiState.update { currentState.copy(showDeleteConfirmation = true) }
+            AddEditTransactionEvent.HideDeleteConfirmation -> _uiState.update { currentState.copy(showDeleteConfirmation = false) }
+            AddEditTransactionEvent.NavigateBack -> _uiState.update { currentState.copy(closeScreen = true) }
+            AddEditTransactionEvent.ShowDatePicker -> _uiState.update { currentState.copy(showDatePicker = true) }
+            AddEditTransactionEvent.HideDatePicker -> _uiState.update { currentState.copy(showDatePicker = false) }
+            AddEditTransactionEvent.ShowTimePicker -> _uiState.update { currentState.copy(showTimePicker = true) }
+            AddEditTransactionEvent.HideTimePicker -> _uiState.update { currentState.copy(showTimePicker = false) }
+            AddEditTransactionEvent.ShowCategoryPicker -> _uiState.update { currentState.copy(showCategoryPicker = true) }
+            AddEditTransactionEvent.HideCategoryPicker -> _uiState.update { currentState.copy(showCategoryPicker = false) }
         }
     }
 
@@ -182,7 +179,6 @@ class AddEditTransactionViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = AddEditTransactionUiState.Loading
 
-            // Получаем Flow и берем первое значение
             val accountResultDeferred = async { getAccountUseCase().first() }
             val categoriesResultDeferred = async { getCategoriesUseCase(transactionType).first() }
             val transactionDeferred = if (isEditMode) {
@@ -191,22 +187,21 @@ class AddEditTransactionViewModel @Inject constructor(
                 null
             }
 
-            val accountResult: Result<Account> = accountResultDeferred.await()
-            val categories: List<Category> = categoriesResultDeferred.await()
-            val transactionResult: Result<Transaction>? = transactionDeferred?.await()
+            val accountResult = accountResultDeferred.await()
+            val categories = categoriesResultDeferred.await()
+            val transactionResult = transactionDeferred?.await()
 
-            // Проверяем ошибки
-            val firstError = listOfNotNull(accountResult, transactionResult).filterIsInstance<Result.Error>().firstOrNull()
-            val isNetworkError = listOfNotNull(accountResult, transactionResult).any { it is Result.NetworkError }
+            val firstFailure = listOfNotNull(accountResult, transactionResult)
+                .filterIsInstance<Result.Failure>()
+                .firstOrNull()
 
-            if (isNetworkError) {
-                showErrorDialog("Ошибка сети. Проверьте подключение.") { loadInitialData() }
-                return@launch
-            }
-            if (firstError != null) {
-                showErrorDialog(
-                    firstError.exception.message ?: "Неизвестная ошибка"
-                ) { loadInitialData() }
+            if (firstFailure != null) {
+                val (message, retryAction) = when (firstFailure) {
+                    is Result.Failure.NetworkError -> resourceProvider.getString(R.string.snackbar_network_error_check_connection) to { loadInitialData() }
+                    is Result.Failure.ApiError -> resourceProvider.getString(R.string.error_api_code, firstFailure.code) to { loadInitialData() }
+                    is Result.Failure.GenericError -> (firstFailure.exception.message ?: resourceProvider.getString(R.string.error_unknown)) to { loadInitialData() }
+                }
+                showErrorDialog(message, retryAction)
                 return@launch
             }
 
@@ -245,14 +240,16 @@ class AddEditTransactionViewModel @Inject constructor(
         val currentState = _uiState.value as? AddEditTransactionUiState.Success ?: return
 
         if (currentState.selectedCategory == null) {
-            showErrorDialog("Необходимо выбрать категорию", onRetry = {
-                _uiState.update { currentState.copy(error = null) }
-            })
+            showErrorDialog(resourceProvider.getString(R.string.error_category_not_selected)) {
+                _uiState.update { state ->
+                    if (state is AddEditTransactionUiState.Success) state.copy(error = null) else state
+                }
+            }
             return
         }
 
         viewModelScope.launch {
-            _uiState.update { currentState.copy(isSaving = true, error = null) }
+            _uiState.update { if (it is AddEditTransactionUiState.Success) it.copy(isSaving = true, error = null) else it }
 
             val result: Result<Transaction> = if (!isEditMode) {
                 createTransactionUseCase(
@@ -280,25 +277,18 @@ class AddEditTransactionViewModel @Inject constructor(
                         } else state
                     }
                 }
-
-                is Result.Error -> {
+                is Result.Failure -> {
                     _uiState.update { state ->
                         if (state is AddEditTransactionUiState.Success) {
                             state.copy(isSaving = false)
                         } else state
                     }
-                    showErrorDialog(
-                        result.exception.message ?: "Ошибка сохранения"
-                    ) { saveTransaction() }
-                }
-
-                is Result.NetworkError -> {
-                    _uiState.update { state ->
-                        if (state is AddEditTransactionUiState.Success) {
-                            state.copy(isSaving = false)
-                        } else state
+                    val (message, retryAction) = when (result) {
+                        is Result.Failure.NetworkError -> resourceProvider.getString(R.string.snackbar_network_error_check_connection) to { saveTransaction() }
+                        is Result.Failure.ApiError -> resourceProvider.getString(R.string.error_api_message, result.message) to { saveTransaction() }
+                        is Result.Failure.GenericError -> (result.exception.message ?: resourceProvider.getString(R.string.error_failed_to_save)) to { saveTransaction() }
                     }
-                    showErrorDialog("Ошибка сети. Проверьте подключение.") { saveTransaction() }
+                    showErrorDialog(message, retryAction)
                 }
             }
         }
@@ -309,9 +299,7 @@ class AddEditTransactionViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.update { state ->
-                if (state is AddEditTransactionUiState.Success) {
-                    state.copy(isSaving = true, error = null)
-                } else state
+                if (state is AddEditTransactionUiState.Success) state.copy(isSaving = true, error = null) else state
             }
 
             when (val result = deleteTransactionUseCase(transactionId)) {
@@ -322,25 +310,16 @@ class AddEditTransactionViewModel @Inject constructor(
                         } else state
                     }
                 }
-
-                is Result.Error -> {
+                is Result.Failure -> {
                     _uiState.update { state ->
-                        if (state is AddEditTransactionUiState.Success) {
-                            state.copy(isSaving = false)
-                        } else state
+                        if (state is AddEditTransactionUiState.Success) state.copy(isSaving = false) else state
                     }
-                    showErrorDialog(
-                        result.exception.message ?: "Ошибка удаления"
-                    ) { deleteTransaction() }
-                }
-
-                is Result.NetworkError -> {
-                    _uiState.update { state ->
-                        if (state is AddEditTransactionUiState.Success) {
-                            state.copy(isSaving = false)
-                        } else state
+                    val (message, retryAction) = when (result) {
+                        is Result.Failure.NetworkError -> resourceProvider.getString(R.string.snackbar_network_error_check_connection) to { deleteTransaction() }
+                        is Result.Failure.ApiError -> resourceProvider.getString(R.string.error_api_message, result.message) to { deleteTransaction() }
+                        is Result.Failure.GenericError -> (result.exception.message ?: resourceProvider.getString(R.string.error_failed_to_delete)) to { deleteTransaction() }
                     }
-                    showErrorDialog("Ошибка сети. Проверьте подключение.") { deleteTransaction() }
+                    showErrorDialog(message, retryAction)
                 }
             }
         }

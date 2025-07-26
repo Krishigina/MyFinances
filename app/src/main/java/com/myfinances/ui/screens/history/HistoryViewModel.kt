@@ -1,10 +1,10 @@
 package com.myfinances.ui.screens.history
 
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.myfinances.R
 import com.myfinances.data.manager.AccountUpdateManager
+import com.myfinances.data.manager.SnackbarManager
 import com.myfinances.data.manager.SyncUpdateManager
 import com.myfinances.domain.entity.TransactionData
 import com.myfinances.domain.entity.TransactionTypeFilter
@@ -13,8 +13,9 @@ import com.myfinances.domain.util.Result
 import com.myfinances.domain.util.withTimeAtStartOfDay
 import com.myfinances.ui.mappers.TransactionDomainToUiMapper
 import com.myfinances.ui.model.HistoryUiModel
-import com.myfinances.ui.navigation.Destination
+import com.myfinances.ui.util.ResourceProvider
 import com.myfinances.ui.util.formatSyncTime
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -28,7 +29,9 @@ class HistoryViewModel @Inject constructor(
     private val getTransactionsUseCase: GetTransactionsUseCase,
     private val accountUpdateManager: AccountUpdateManager,
     private val syncUpdateManager: SyncUpdateManager,
-    private val mapper: TransactionDomainToUiMapper
+    private val snackbarManager: SnackbarManager,
+    private val mapper: TransactionDomainToUiMapper,
+    private val resourceProvider: ResourceProvider
 ) : ViewModel() {
 
     private lateinit var transactionType: TransactionTypeFilter
@@ -37,7 +40,7 @@ class HistoryViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<HistoryUiState>(HistoryUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
-    val snackbarHostState = SnackbarHostState()
+    private var dataCollectionJob: Job? = null
 
     fun initialize(filter: TransactionTypeFilter, parent: String) {
         if (this::transactionType.isInitialized) return
@@ -55,6 +58,13 @@ class HistoryViewModel @Inject constructor(
                 (_uiState.value as? HistoryUiState.Content)?.let {
                     loadData(it.uiModel.startDate, it.uiModel.endDate)
                 }
+            }
+        }
+
+        viewModelScope.launch {
+            syncUpdateManager.syncCompletedFlow.collect { syncTime ->
+                val timeString = formatSyncTime(syncTime, resourceProvider)
+                snackbarManager.showMessage(resourceProvider.getString(R.string.snackbar_sync_complete, timeString))
             }
         }
     }
@@ -79,26 +89,22 @@ class HistoryViewModel @Inject constructor(
     }
 
     private fun loadData(startDate: Date, endDate: Date) {
-        viewModelScope.launch {
-            accountUpdateManager.accountUpdateFlow.collect {
-                (_uiState.value as? HistoryUiState.Content)?.let {
-                    loadData(it.uiModel.startDate, it.uiModel.endDate)
-                }
-            }
-        }
-
-        viewModelScope.launch {
-            syncUpdateManager.syncCompletedFlow.collect { syncTime ->
-                showInfo("Синхронизация завершена: ${formatSyncTime(syncTime)}")
-            }
-        }
-
-        getTransactionsUseCase(startDate, endDate, transactionType)
+        dataCollectionJob?.cancel()
+        dataCollectionJob = getTransactionsUseCase(startDate, endDate, transactionType)
             .onEach { result ->
                 when (result) {
                     is Result.Success -> processSuccess(result.data)
-                    is Result.Error -> showError(result.exception.message ?: "Неизвестная ошибка")
-                    is Result.NetworkError -> showError("Ошибка сети. Проверьте подключение.")
+                    is Result.Failure -> {
+                        val message = when(result) {
+                            is Result.Failure.ApiError -> resourceProvider.getString(R.string.error_api_code, result.code)
+                            is Result.Failure.GenericError -> result.exception.message ?: resourceProvider.getString(R.string.error_unknown)
+                            is Result.Failure.NetworkError -> resourceProvider.getString(R.string.snackbar_network_error_check_connection)
+                        }
+                        snackbarManager.showMessage(message)
+                        if (_uiState.value is HistoryUiState.Loading) {
+                            _uiState.value = createEmptyContentState(startDate, endDate)
+                        }
+                    }
                 }
             }.launchIn(viewModelScope)
     }
@@ -117,34 +123,15 @@ class HistoryViewModel @Inject constructor(
         )
 
         _uiState.value = HistoryUiState.Content(historyUiModel, transactionType, parentRoute)
-
-        if (items.isEmpty()) {
-            showInfo("Нет транзакций за выбранный период")
-        }
     }
 
-    private fun showError(message: String) {
-        viewModelScope.launch {
-            snackbarHostState.showSnackbar(message)
-        }
-        if (_uiState.value is HistoryUiState.Loading) {
-            val calendar = Calendar.getInstance()
-            val endDate = calendar.time
-            calendar.set(Calendar.DAY_OF_MONTH, 1)
-            val startDate = calendar.withTimeAtStartOfDay().time
-            _uiState.value = HistoryUiState.Content(
-                HistoryUiModel(
-                    emptyList(), 0.0, "₽", startDate, endDate
-                ),
-                transactionType,
-                parentRoute
-            )
-        }
-    }
-
-    private fun showInfo(message: String) {
-        viewModelScope.launch {
-            snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
-        }
+    private fun createEmptyContentState(startDate: Date, endDate: Date): HistoryUiState.Content {
+        return HistoryUiState.Content(
+            HistoryUiModel(
+                emptyList(), 0.0, "₽", startDate, endDate
+            ),
+            transactionType,
+            parentRoute
+        )
     }
 }

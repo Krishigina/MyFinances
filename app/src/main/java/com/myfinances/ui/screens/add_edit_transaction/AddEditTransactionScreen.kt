@@ -35,7 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -197,14 +196,12 @@ private fun AmountItem(
     onAmountChange: (String) -> Unit
 ) {
     val dimensions = LocalDimensions.current
-    // 1. Создаем FocusRequester
     val focusRequester = remember { FocusRequester() }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(dimensions.listItem.heightTotal)
-            // 2. Делаем всю строку кликабельной, чтобы запросить фокус
             .clickable { focusRequester.requestFocus() }
             .padding(horizontal = dimensions.spacing.paddingLarge),
         verticalAlignment = Alignment.CenterVertically,
@@ -218,7 +215,6 @@ private fun AmountItem(
             BasicTextField(
                 value = amount,
                 onValueChange = onAmountChange,
-                // 3. Привязываем FocusRequester и добавляем исходные модификаторы
                 modifier = Modifier
                     .width(140.dp)
                     .focusRequester(focusRequester),
@@ -244,14 +240,12 @@ private fun AmountItem(
 @Composable
 private fun CommentItem(comment: String, onCommentChange: (String) -> Unit) {
     val dimensions = LocalDimensions.current
-    // 1. Создаем FocusRequester
     val focusRequester = remember { FocusRequester() }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(dimensions.listItem.heightTotal)
-            // 2. Делаем Box кликабельным, чтобы запросить фокус
             .clickable { focusRequester.requestFocus() }
             .padding(horizontal = dimensions.spacing.paddingLarge),
         contentAlignment = Alignment.CenterStart
@@ -259,7 +253,6 @@ private fun CommentItem(comment: String, onCommentChange: (String) -> Unit) {
         BasicTextField(
             value = comment,
             onValueChange = onCommentChange,
-            // 3. Привязываем FocusRequester и добавляем исходные модификаторы
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(focusRequester),
@@ -294,8 +287,8 @@ private fun DeleteButton(transactionType: TransactionTypeFilter, onClick: () -> 
             .fillMaxWidth()
             .padding(16.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFFE46962),
-            contentColor = Color.White
+            containerColor = MaterialTheme.colorScheme.error,
+            contentColor = MaterialTheme.colorScheme.onError
         )
     ) {
         Text(

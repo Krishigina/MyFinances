@@ -1,13 +1,20 @@
 package com.myfinances.di
 
 import androidx.lifecycle.ViewModel
+import com.myfinances.ui.screens.about.AboutViewModel
 import com.myfinances.ui.screens.account.AccountViewModel
 import com.myfinances.ui.screens.add_edit_transaction.AddEditTransactionViewModel
 import com.myfinances.ui.screens.analysis.AnalysisViewModel
 import com.myfinances.ui.screens.articles.ArticlesViewModel
+import com.myfinances.ui.screens.color_palette.ColorPaletteViewModel
 import com.myfinances.ui.screens.expenses.ExpensesViewModel
+import com.myfinances.ui.screens.haptics.HapticsScreenViewModel
 import com.myfinances.ui.screens.history.HistoryViewModel
 import com.myfinances.ui.screens.income.IncomeViewModel
+import com.myfinances.ui.screens.language.LanguageScreenViewModel
+import com.myfinances.ui.screens.pin.PinScreenViewModel
+import com.myfinances.ui.screens.settings.SettingsViewModel
+import com.myfinances.ui.screens.sync_frequency.SyncFrequencyViewModel
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
@@ -49,4 +56,39 @@ abstract class ViewModelModule {
     @IntoMap
     @ViewModelKey(AnalysisViewModel::class)
     abstract fun bindAnalysisViewModel(viewModel: AnalysisViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(SettingsViewModel::class)
+    abstract fun bindSettingsViewModel(viewModel: SettingsViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(ColorPaletteViewModel::class)
+    abstract fun bindColorPaletteViewModel(viewModel: ColorPaletteViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(HapticsScreenViewModel::class)
+    abstract fun bindHapticsScreenViewModel(viewModel: HapticsScreenViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(LanguageScreenViewModel::class)
+    abstract fun bindLanguageScreenViewModel(viewModel: LanguageScreenViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(PinScreenViewModel::class)
+    abstract fun bindPinScreenViewModel(viewModel: PinScreenViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(SyncFrequencyViewModel::class)
+    abstract fun bindSyncFrequencyViewModel(viewModel: SyncFrequencyViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(AboutViewModel::class)
+    abstract fun bindAboutViewModel(viewModel: AboutViewModel): ViewModel
 }

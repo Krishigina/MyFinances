@@ -19,7 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -27,9 +26,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import com.myfinances.ui.theme.LocalDimensions
 
-/**
- * Универсальный Composable, который рендерит ListItem, но делает его поля редактируемыми.
- */
 @Composable
 fun EditableListItem(
     model: ListItemModel,
@@ -98,7 +94,7 @@ fun EditableListItem(
             decorationBox = { innerTextField ->
                 Box(contentAlignment = if (textAlign == TextAlign.End) Alignment.CenterEnd else Alignment.CenterStart) {
                     if (value.isEmpty() && placeholder.isNotEmpty()) {
-                        Text(placeholder, color = Color.Gray, style = textStyle)
+                        Text(placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant, style = textStyle)
                     }
                     innerTextField()
                 }

@@ -24,12 +24,12 @@ class CreateTransactionUseCase @Inject constructor(
     ): Result<Transaction> {
         val accountIdResult = getActiveAccountIdUseCase()
         if (accountIdResult !is Result.Success) {
-            return Result.Error(Exception("Не удалось определить активный счет"))
+            return Result.Failure.GenericError(Exception("Не удалось определить активный счет"))
         }
 
         val amountAsDouble = amount.replace(',', '.').toDoubleOrNull()
         if (amountAsDouble == null || amountAsDouble <= 0) {
-            return Result.Error(IllegalArgumentException("Сумма должна быть положительным числом"))
+            return Result.Failure.GenericError(IllegalArgumentException("Сумма должна быть положительным числом"))
         }
 
         val result = transactionsRepository.createTransaction(
@@ -42,6 +42,7 @@ class CreateTransactionUseCase @Inject constructor(
 
         if (result is Result.Success) {
             accountUpdateManager.notifyAccountUpdated()
+            transactionsRepository.scheduleSync()
         }
 
         return result

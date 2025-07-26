@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,6 +35,16 @@ fun DonutChart(
     if (totalSum == 0f) return
 
     val animatedProgress = remember { Animatable(0f) }
+
+    val chartColors = listOf(
+        MaterialTheme.colorScheme.primary,
+        MaterialTheme.colorScheme.tertiary,
+        MaterialTheme.colorScheme.secondary,
+        MaterialTheme.colorScheme.primaryContainer,
+        MaterialTheme.colorScheme.tertiaryContainer,
+        MaterialTheme.colorScheme.secondaryContainer,
+        MaterialTheme.colorScheme.inversePrimary,
+    )
 
     LaunchedEffect(items) {
         animatedProgress.snapTo(0f)
@@ -61,7 +72,7 @@ fun DonutChart(
             var startAngle = -90f
             for (i in items.indices) {
                 drawArc(
-                    color = items[i].color,
+                    color = chartColors[i % chartColors.size],
                     startAngle = startAngle,
                     sweepAngle = sweepAngles[i] * animatedProgress.value,
                     useCenter = false,
@@ -75,12 +86,12 @@ fun DonutChart(
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
-            items.forEach { item ->
+            items.forEachIndexed { index, item ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(
                         modifier = Modifier.size(5.dp),
                         shape = CircleShape,
-                        color = item.color
+                        color = chartColors[index % chartColors.size]
                     ) {}
                     Spacer(Modifier.width(4.dp))
                     Text(

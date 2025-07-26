@@ -44,6 +44,7 @@
     <string name="history_date_from">С</string>
     <string name="history_date_to">По</string>
     <string name="total_for_period">Итого за период</string>
+    <string name="no_transactions_for_period">Нет транзакций за этот период</string>
 
     <!-- Articles Screen -->
     <string name="search">Поиск</string>
@@ -54,11 +55,31 @@
     <string name="dark_theme">Темная тема</string>
     <string name="primary_color">Основной цвет</string>
     <string name="sounds">Звуки</string>
-    <string name="haptics">Виброотклик</string>
+    <string name="haptics">Хаптики</string>
     <string name="passcode">Код-пароль</string>
     <string name="sync">Синхронизация</string>
     <string name="language">Язык</string>
     <string name="about">О приложении</string>
+    <string name="settings_theme">Тема оформления</string>
+    <string name="theme_dialog_title">Выберите тему</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Темная</string>
+    <string name="top_bar_color_palette_title">Основной цвет</string>
+    <string name="palette_green">Зелёный (по умолч.)</string>
+    <string name="palette_pink">Розовый</string>
+    <string name="palette_blue">Голубой</string>
+    <string name="palette_beige">Бежевый</string>
+    <string name="top_bar_haptics_title">Хаптики</string>
+    <string name="haptics_enable">Включить хаптики</string>
+    <string name="haptic_effect_title">Эффект вибрации</string>
+    <string name="haptic_effect_click">Клик</string>
+    <string name="haptic_effect_double_click">Двойной клик</string>
+    <string name="haptic_effect_tick">Тик</string>
+    <string name="haptic_effect_selected">Выбрано</string>
+
+    <string name="language_russian">Русский</string>
+    <string name="language_english">English</string>
+    <string name="top_bar_language_title">Язык</string>
 
     <!-- Transaction Summary -->
     <string name="total_amount_card">Итого</string>
@@ -90,5 +111,55 @@
     <string name="period_start_date_analysis">Период: начало</string>
     <string name="period_end_date_analysis">Период: конец</string>
     <string name="top_bar_analysis_title">Анализ</string>
+
+    <string name="pin_status_on">Включен</string>
+    <string name="pin_status_off">Выключен</string>
+    <string name="pin_enter_title">Придумайте пин-код</string>
+    <string name="pin_confirm_title">Подтвердите пин-код</string>
+    <string name="pin_verify_title">Введите пин-код</string>
+    <string name="pin_disable_title">Введите пин-код для отключения</string>
+    <string name="pin_error_mismatch">Пин-коды не совпадают</string>
+    <string name="pin_error_incorrect">Неверный пин-код</string>
+
+    <string name="top_bar_sync_frequency_title">Частота синхронизации</string>
+    <string name="sync_frequency_3h">Каждые 3 часа</string>
+    <string name="sync_frequency_6h">Каждые 6 часов</string>
+    <string name="sync_frequency_12h">Каждые 12 часов</string>
+    <string name="sync_frequency_24h">Каждый день</string>
+    <string name="sync_frequency_never">Никогда</string>
+    <string name="sync_frequency_description">Автоматическая синхронизация данных с сервером. Более частая синхронизация может увеличить расход батареи.</string>
+
+    <string name="top_bar_about_title">О приложении</string>
+    <string name="about_app_version">Версия приложения</string>
+    <string name="about_last_updated">Последнее обновление</string>
+
+    <!-- Snackbar Messages -->
+    <string name="snackbar_sync_complete">Синхронизация завершена: %1$s</string>
+    <string name="snackbar_no_expenses_today">За сегодня еще не было расходов</string>
+    <string name="snackbar_no_income_today">За сегодня еще не было доходов</string>
+    <string name="snackbar_saved_successfully">Счет успешно сохранен</string>
+    <string name="snackbar_network_error_cached_data">Нет сети, показаны сохраненные данные</string>
+    <string name="snackbar_update_error">Ошибка обновления</string>
+    <string name="snackbar_network_error_check_connection">Ошибка сети. Проверьте подключение.</string>
+
+    <!-- Error Messages -->
+    <string name="error_api_code">Ошибка API: %1$d</string>
+    <string name="error_api_message">Ошибка API: %1$s</string>
+    <string name="error_generic_message">Ошибка: %1$s</string>
+    <string name="error_unknown">Неизвестная ошибка</string>
+    <string name="error_category_not_selected">Необходимо выбрать категорию</string>
+    <string name="error_failed_to_load_account">Не удалось загрузить счет</string>
+    <string name="error_failed_to_save">Ошибка сохранения</string>
+    <string name="error_failed_to_delete">Ошибка удаления</string>
+    <string name="error_failed_to_load_categories">Не удалось загрузить категории</string>
+
+    <!-- Time formatting -->
+    <string name="time_never">Никогда</string>
+    <string name="time_just_now">Только что</string>
+    <string name="time_today_at">Сегодня, %1$s</string>
+
+    <!-- UI Placeholders & Titles -->
+    <string name="time_picker_title">Выберите время</string>
+    <string name="analysis_chart_placeholder">График будет здесь</string>
 
 </resources>

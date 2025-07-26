@@ -1,399 +1,136 @@
 package com.myfinances.ui.navigation
 
-import android.os.Build
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
-import androidx.navigation.navigation
-import com.myfinances.R
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.myfinances.data.manager.HapticFeedbackManager
+import com.myfinances.data.manager.SnackbarManager
 import com.myfinances.di.ViewModelFactory
 import com.myfinances.domain.entity.TransactionTypeFilter
-import com.myfinances.ui.screens.account.AccountEvent
-import com.myfinances.ui.screens.account.AccountScreen
-import com.myfinances.ui.screens.account.AccountUiState
-import com.myfinances.ui.screens.account.AccountViewModel
-import com.myfinances.ui.screens.add_edit_transaction.AddEditTransactionScreen
-import com.myfinances.ui.screens.add_edit_transaction.AddEditTransactionViewModel
-import com.myfinances.ui.screens.analysis.AnalysisScreen
-import com.myfinances.ui.screens.analysis.AnalysisViewModel
-import com.myfinances.ui.screens.articles.ArticlesScreen
-import com.myfinances.ui.screens.articles.ArticlesViewModel
-import com.myfinances.ui.screens.expenses.ExpensesScreen
-import com.myfinances.ui.screens.expenses.ExpensesViewModel
-import com.myfinances.ui.screens.history.HistoryScreen
-import com.myfinances.ui.screens.history.HistoryViewModel
-import com.myfinances.ui.screens.income.IncomeScreen
-import com.myfinances.ui.screens.income.IncomeViewModel
-import com.myfinances.ui.screens.settings.SettingsScreen
+import com.myfinances.ui.components.AppSnackbar
+import com.myfinances.ui.components.BottomNavigationBar
+import com.myfinances.ui.components.MainFloatingActionButton
+import com.myfinances.ui.components.MainTopBar
+import com.myfinances.ui.navigation.graph.AppNavHost
 import com.myfinances.ui.viewmodel.ScaffoldState
-import com.myfinances.ui.viewmodel.TopBarState
+import kotlinx.coroutines.flow.collectLatest
 
-/**
- * Определяет навигационный граф для основных экранов приложения,
- * которые переключаются через BottomNavigationBar.
- *
- * @param navController Контроллер навигации, управляющий стеком экранов.
- */
 @Composable
 fun NavigationGraph(
     navController: NavHostController,
-    modifier: Modifier = Modifier,
     viewModelFactory: ViewModelFactory,
-    onScaffoldStateChanged: (ScaffoldState) -> Unit
+    snackbarManager: SnackbarManager,
+    hapticFeedbackManager: HapticFeedbackManager
 ) {
-    NavHost(
-        navController = navController,
-        startDestination = "main_graph",
-        modifier = modifier
-    ) {
-        navigation(
-            startDestination = Destination.Expenses.route,
-            route = "main_graph"
-        ) {
-            composable(Destination.Expenses.route) {
-                val viewModel: ExpensesViewModel = viewModel(factory = viewModelFactory)
-                LaunchedEffect(Unit) {
-                    onScaffoldStateChanged(
-                        ScaffoldState(
-                            topBarState = TopBarState(
-                                title = navController.context.getString(R.string.top_bar_expenses_today_title),
-                                actions = listOf(
-                                    com.myfinances.ui.viewmodel.TopBarAction(
-                                        id = "history",
-                                        onAction = {
-                                            navController.navigate(
-                                                Destination.History.createRoute(
-                                                    filter = TransactionTypeFilter.EXPENSE,
-                                                    parentRoute = Destination.Expenses.route
-                                                )
-                                            )
-                                        },
-                                        content = {
-                                            Icon(
-                                                painterResource(R.drawable.ic_top_bar_history),
-                                                contentDescription = stringResource(id = R.string.top_bar_icon_history)
-                                            )
-                                        }
-                                    )
-                                )
-                            ),
-                            snackbarHostState = viewModel.snackbarHostState,
-                            isFabVisible = true,
-                            isBottomBarVisible = true
-                        )
-                    )
-                }
-                ExpensesScreen(navController = navController, viewModel = viewModel)
-            }
-            composable(Destination.Income.route) {
-                val viewModel: IncomeViewModel = viewModel(factory = viewModelFactory)
+    var scaffoldState by remember { mutableStateOf(ScaffoldState()) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
-                LaunchedEffect(Unit) {
-                    onScaffoldStateChanged(
-                        ScaffoldState(
-                            topBarState = TopBarState(
-                                title = navController.context.getString(R.string.top_bar_income_today_title),
-                                actions = listOf(
-                                    com.myfinances.ui.viewmodel.TopBarAction(
-                                        id = "history",
-                                        onAction = {
-                                            navController.navigate(
-                                                Destination.History.createRoute(
-                                                    filter = TransactionTypeFilter.INCOME,
-                                                    parentRoute = Destination.Income.route
-                                                )
-                                            )
-                                        },
-                                        content = {
-                                            Icon(
-                                                painterResource(R.drawable.ic_top_bar_history),
-                                                contentDescription = stringResource(id = R.string.top_bar_icon_history)
-                                            )
-                                        }
-                                    )
-                                )
-                            ),
-                            snackbarHostState = viewModel.snackbarHostState,
-                            isFabVisible = true,
-                            isBottomBarVisible = true
-                        )
-                    )
-                }
-                IncomeScreen(navController = navController, viewModel = viewModel)
-            }
-            composable(Destination.Account.route) {
-                val viewModel: AccountViewModel = viewModel(factory = viewModelFactory)
-                val accountState by viewModel.uiState.collectAsStateWithLifecycle()
-
-                LaunchedEffect(accountState) {
-                    val successState = accountState as? AccountUiState.Success
-                    val isEditMode = successState?.isEditMode == true
-                    val isSaving = successState?.isSaving == true
-
-                    onScaffoldStateChanged(
-                        ScaffoldState(
-                            topBarState = TopBarState(
-                                title = navController.context.getString(R.string.top_bar_my_account_title),
-                                navigationAction = if (isEditMode) com.myfinances.ui.viewmodel.TopBarAction(
-                                    id = "back",
-                                    onAction = { viewModel.onEvent(AccountEvent.EditModeToggled) },
-                                    content = {
-                                        Icon(
-                                            Icons.Default.ArrowBack,
-                                            contentDescription = stringResource(R.string.action_cancel)
-                                        )
-                                    }
-                                ) else null,
-                                actions = listOf(
-                                    com.myfinances.ui.viewmodel.TopBarAction(
-                                        id = "edit_save",
-                                        isEnabled = !isSaving,
-                                        onAction = {
-                                            val event = if (isEditMode) AccountEvent.SaveChanges else AccountEvent.EditModeToggled
-                                            viewModel.onEvent(event)
-                                        },
-                                        content = {
-                                            when {
-                                                isSaving -> CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                                                isEditMode -> Icon(Icons.Default.Check, contentDescription = stringResource(R.string.action_save))
-                                                else -> Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.top_bar_icon_edit))
-                                            }
-                                        }
-                                    )
-                                )
-                            ),
-                            snackbarHostState = viewModel.snackbarHostState,
-                            isBottomBarVisible = true
-                        )
-                    )
-                }
-                AccountScreen(navController = navController, viewModel = viewModel)
-            }
-            composable(Destination.Articles.route) {
-                val viewModel: ArticlesViewModel = viewModel(factory = viewModelFactory)
-                LaunchedEffect(Unit) {
-                    onScaffoldStateChanged(
-                        ScaffoldState(
-                            topBarState = TopBarState(title = navController.context.getString(R.string.top_bar_my_articles_title)),
-                            isBottomBarVisible = true
-                        )
-                    )
-                }
-                ArticlesScreen(viewModel = viewModel)
-            }
-            composable(Destination.Settings.route) {
-                LaunchedEffect(Unit) {
-                    onScaffoldStateChanged(
-                        ScaffoldState(
-                            topBarState = TopBarState(title = navController.context.getString(R.string.top_bar_settings_title)),
-                            isBottomBarVisible = true
-                        )
-                    )
-                }
-                SettingsScreen()
+    LaunchedEffect(snackbarManager) {
+        snackbarManager.messages.collectLatest { messages ->
+            messages.firstOrNull()?.let { message ->
+                snackbarHostState.showSnackbar(message.message)
+                snackbarManager.setMessageShown(message.id)
             }
         }
-        composable(
-            route = Destination.History.route,
-            arguments = listOf(
-                navArgument("transactionType") {
-                    type = NavType.EnumType(TransactionTypeFilter::class.java)
-                },
-                navArgument("parentRoute") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val viewModel: HistoryViewModel = viewModel(factory = viewModelFactory)
+    }
 
-            @Suppress("DEPRECATION")
-            val transactionType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                backStackEntry.arguments?.getSerializable("transactionType", TransactionTypeFilter::class.java)
-            } else {
-                backStackEntry.arguments?.getSerializable("transactionType") as? TransactionTypeFilter
-            } ?: TransactionTypeFilter.ALL
-            val parentRoute = backStackEntry.arguments?.getString("parentRoute") ?: Destination.Expenses.route
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
-
-            LaunchedEffect(key1 = viewModel) {
-                viewModel.initialize(transactionType, parentRoute)
-                onScaffoldStateChanged(
-                    ScaffoldState(
-                        topBarState = TopBarState(
-                            title = navController.context.getString(R.string.top_bar_history_title),
-                            navigationAction = com.myfinances.ui.viewmodel.TopBarAction(
-                                id = "back",
-                                onAction = { navController.popBackStack() },
-                                content = {
-                                    Icon(
-                                        Icons.Default.ArrowBack,
-                                        contentDescription = stringResource(id = R.string.action_back)
-                                    )
-                                }
-                            ),
-                            actions = listOf(
-                                com.myfinances.ui.viewmodel.TopBarAction(
-                                    id = "analysis",
-                                    onAction = {
-                                        navController.navigate(
-                                            Destination.Analysis.createRoute(
-                                                filter = transactionType,
-                                                parentRoute = parentRoute
-                                            )
-                                        ) {
-                                            popUpTo(backStackEntry.destination.id) { inclusive = true }
-                                        }
-                                    },
-                                    content = {
-                                        Icon(
-                                            painterResource(R.drawable.ic_history_analysis),
-                                            contentDescription = stringResource(id = R.string.top_bar_analysis_title)
-                                        )
-                                    }
-                                )
-                            )
-                        ),
-                        snackbarHostState = viewModel.snackbarHostState,
-                        isBottomBarVisible = true,
-                        isFabVisible = false
-                    )
-                )
-            }
-            HistoryScreen(
-                navController = navController,
-                viewModel = viewModel
-            )
+    val isBottomBarVisible = remember(currentRoute) {
+        when (currentRoute) {
+            Destination.Expenses.route,
+            Destination.Income.route,
+            Destination.Account.route,
+            Destination.Articles.route,
+            Destination.Settings.route -> true
+            else -> currentRoute?.startsWith("history") == true ||
+                    currentRoute?.startsWith("analysis") == true
         }
-        composable(
-            route = Destination.Analysis.route,
-            arguments = listOf(
-                navArgument("transactionType") {
-                    type = NavType.EnumType(TransactionTypeFilter::class.java)
-                },
-                navArgument("parentRoute") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val viewModel: AnalysisViewModel = viewModel(factory = viewModelFactory)
+    }
 
-            @Suppress("DEPRECATION")
-            val transactionType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                backStackEntry.arguments?.getSerializable("transactionType", TransactionTypeFilter::class.java)
-            } else {
-                backStackEntry.arguments?.getSerializable("transactionType") as? TransactionTypeFilter
-            } ?: TransactionTypeFilter.ALL
-            val parentRoute = backStackEntry.arguments?.getString("parentRoute") ?: Destination.Expenses.route
-
-
-            LaunchedEffect(key1 = viewModel) {
-                viewModel.initialize(transactionType, parentRoute)
-                onScaffoldStateChanged(
-                    ScaffoldState(
-                        topBarState = TopBarState(
-                            title = navController.context.getString(R.string.top_bar_analysis_title),
-                            navigationAction = com.myfinances.ui.viewmodel.TopBarAction(
-                                id = "back",
-                                onAction = { navController.popBackStack() },
-                                content = {
-                                    Icon(
-                                        Icons.Default.ArrowBack,
-                                        contentDescription = stringResource(id = R.string.action_back)
-                                    )
-                                }
-                            ),
-                            actions = listOf(
-                                com.myfinances.ui.viewmodel.TopBarAction(
-                                    id = "history",
-                                    onAction = {
-                                        navController.navigate(
-                                            Destination.History.createRoute(
-                                                filter = transactionType,
-                                                parentRoute = parentRoute
-                                            )
-                                        ) {
-                                            popUpTo(backStackEntry.destination.id) { inclusive = true }
-                                        }
-                                    },
-                                    content = {
-                                        Icon(
-                                            painterResource(R.drawable.ic_top_bar_history),
-                                            contentDescription = stringResource(id = R.string.top_bar_icon_history)
-                                        )
-                                    }
-                                )
-                            )
-                        ),
-                        snackbarHostState = viewModel.snackbarHostState,
-                        isBottomBarVisible = true,
-                        isFabVisible = false
-                    )
-                )
-            }
-            AnalysisScreen(
-                navController = navController,
-                viewModel = viewModel
-            )
-        }
-        composable(
-            route = Destination.AddEditTransaction.route,
-            arguments = listOf(
-                navArgument("transactionId") {
-                    type = NavType.IntType
-                    defaultValue = -1
+    Scaffold(
+        topBar = {
+            MainTopBar(
+                title = scaffoldState.topBarState.title,
+                navigationIcon = {
+                    scaffoldState.topBarState.navigationAction?.let { action ->
+                        IconButton(onClick = action.onAction, enabled = action.isEnabled) {
+                            action.content()
+                        }
+                    }
                 },
-                navArgument("transactionType") {
-                    type = NavType.EnumType(TransactionTypeFilter::class.java)
-                },
-                navArgument("parentRoute") {
-                    type = NavType.StringType
+                actions = {
+                    scaffoldState.topBarState.actions.forEach { action ->
+                        IconButton(onClick = action.onAction, enabled = action.isEnabled) {
+                            action.content()
+                        }
+                    }
                 }
             )
-        ) { backStackEntry ->
-            val viewModel: AddEditTransactionViewModel = viewModel(factory = viewModelFactory)
-            val topBarState by viewModel.uiState.collectAsStateWithLifecycle()
-
-            val transactionId = backStackEntry.arguments?.getInt("transactionId") ?: -1
-
-            @Suppress("DEPRECATION")
-            val transactionType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                backStackEntry.arguments?.getSerializable("transactionType", TransactionTypeFilter::class.java)
-            } else {
-                backStackEntry.arguments?.getSerializable("transactionType") as? TransactionTypeFilter
-            } ?: TransactionTypeFilter.EXPENSE
-
-            LaunchedEffect(key1 = viewModel) {
-                viewModel.initialize(transactionId, transactionType)
-            }
-
-            LaunchedEffect(topBarState) {
-                onScaffoldStateChanged(
-                    ScaffoldState(
-                        topBarState = viewModel.topBarState.value,
-                        isBottomBarVisible = true,
-                        isFabVisible = false
-                    )
+        },
+        bottomBar = {
+            if (isBottomBarVisible) {
+                BottomNavigationBar(
+                    navController = navController,
+                    hapticFeedbackManager = hapticFeedbackManager,
+                    modifier = Modifier.navigationBarsPadding()
                 )
             }
-
-            AddEditTransactionScreen(
+        },
+        floatingActionButton = {
+            if (scaffoldState.isFabVisible) {
+                MainFloatingActionButton {
+                    hapticFeedbackManager.performHapticFeedback()
+                    val type = if (currentRoute == Destination.Expenses.route) {
+                        TransactionTypeFilter.EXPENSE
+                    } else {
+                        TransactionTypeFilter.INCOME
+                    }
+                    navController.navigate(
+                        Destination.AddEditTransaction.createRoute(
+                            transactionType = type,
+                            parentRoute = currentRoute ?: Destination.Expenses.route
+                        )
+                    )
+                }
+            }
+        },
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier
+                    .imePadding()
+                    .padding(horizontal = 16.dp)
+            ) { data ->
+                AppSnackbar(snackbarData = data)
+            }
+        }
+    ) { paddingValues ->
+        Box(modifier = Modifier.fillMaxSize()) {
+            AppNavHost(
                 navController = navController,
-                viewModel = viewModel
+                modifier = Modifier.padding(paddingValues),
+                viewModelFactory = viewModelFactory,
+                onScaffoldStateChanged = { newState ->
+                    scaffoldState = newState
+                }
             )
         }
     }

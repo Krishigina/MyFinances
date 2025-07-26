@@ -27,13 +27,19 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.myfinances.MyTestRunner"
 
         buildConfigField(
             "String",
             "API_KEY",
             "\"${localProperties.getProperty("FINANCES_API_KEY")}\""
         )
+
+        buildConfigField("long", "BUILD_TIME", "${System.currentTimeMillis()}L")
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {
@@ -105,6 +111,19 @@ dependencies {
 
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.startup.runtime)
+
+    implementation(libs.androidx.appcompat)
+
+    implementation(libs.material)
+
+    implementation(libs.androidx.security.crypto)
+
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }
 
 detekt {

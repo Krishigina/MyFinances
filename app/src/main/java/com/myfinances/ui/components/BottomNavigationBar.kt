@@ -13,11 +13,13 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.myfinances.data.manager.HapticFeedbackManager
 import com.myfinances.ui.navigation.Destination
 
 @Composable
 fun BottomNavigationBar(
     navController: NavHostController,
+    hapticFeedbackManager: HapticFeedbackManager,
     modifier: Modifier = Modifier
 ) {
     val destinations = listOf(
@@ -55,6 +57,8 @@ fun BottomNavigationBar(
                     },
                     selected = selected,
                     onClick = {
+                        hapticFeedbackManager.performHapticFeedback()
+
                         if (currentDestination?.route?.startsWith("history") == true && !selected) {
                             navController.popBackStack()
                         }

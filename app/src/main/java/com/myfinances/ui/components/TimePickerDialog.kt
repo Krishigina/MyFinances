@@ -26,9 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.myfinances.R
-import com.myfinances.ui.theme.BrightBlack
-import com.myfinances.ui.theme.BrightGreen
-import com.myfinances.ui.theme.PastelGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,20 +41,21 @@ fun TimePickerDialog(
         is24Hour = true
     )
 
+    // Используем цвета из MaterialTheme
     val timePickerColors = TimePickerDefaults.colors(
-        clockDialColor = PastelGreen,
-        clockDialSelectedContentColor = BrightBlack,
-        clockDialUnselectedContentColor = BrightBlack,
-        selectorColor = BrightGreen,
-        periodSelectorBorderColor = BrightGreen,
-        periodSelectorSelectedContainerColor = BrightGreen,
-        periodSelectorUnselectedContainerColor = PastelGreen,
-        periodSelectorSelectedContentColor = BrightBlack,
-        periodSelectorUnselectedContentColor = BrightBlack,
-        timeSelectorSelectedContainerColor = BrightGreen,
-        timeSelectorUnselectedContainerColor = PastelGreen,
-        timeSelectorSelectedContentColor = BrightBlack,
-        timeSelectorUnselectedContentColor = BrightBlack
+        clockDialColor = MaterialTheme.colorScheme.surfaceContainer,
+        clockDialSelectedContentColor = MaterialTheme.colorScheme.onPrimary,
+        clockDialUnselectedContentColor = MaterialTheme.colorScheme.onSurface,
+        selectorColor = MaterialTheme.colorScheme.primary,
+        periodSelectorBorderColor = MaterialTheme.colorScheme.primary,
+        periodSelectorSelectedContainerColor = MaterialTheme.colorScheme.primary,
+        periodSelectorUnselectedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+        periodSelectorSelectedContentColor = MaterialTheme.colorScheme.onPrimary,
+        periodSelectorUnselectedContentColor = MaterialTheme.colorScheme.onSurface,
+        timeSelectorSelectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+        timeSelectorUnselectedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+        timeSelectorSelectedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        timeSelectorUnselectedContentColor = MaterialTheme.colorScheme.onSurface
     )
 
     Dialog(
@@ -77,7 +75,7 @@ fun TimePickerDialog(
         ) {
             Column(
                 modifier = Modifier
-                    .background(PastelGreen)
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -85,9 +83,8 @@ fun TimePickerDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 20.dp),
-                    text = "Выберите время",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = BrightBlack
+                    text = stringResource(id = R.string.time_picker_title),
+                    style = MaterialTheme.typography.bodyMedium
                 )
                 TimePicker(state = timePickerState, colors = timePickerColors)
                 Row(
@@ -97,16 +94,14 @@ fun TimePickerDialog(
                 ) {
                     Spacer(modifier = Modifier.weight(1f))
                     TextButton(
-                        onClick = onDismiss,
-                        colors = ButtonDefaults.textButtonColors(contentColor = BrightBlack)
+                        onClick = onDismiss
                     ) {
                         Text(stringResource(id = R.string.action_cancel))
                     }
                     TextButton(
                         onClick = {
                             onConfirm(timePickerState.hour, timePickerState.minute)
-                        },
-                        colors = ButtonDefaults.textButtonColors(contentColor = BrightBlack)
+                        }
                     ) {
                         Text(stringResource(id = R.string.action_ok))
                     }

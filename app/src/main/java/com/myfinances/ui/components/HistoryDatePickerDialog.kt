@@ -1,3 +1,5 @@
+// app/src/main/java/com/myfinances/ui/components/HistoryDatePickerDialog.kt
+
 package com.myfinances.ui.components
 
 import androidx.compose.foundation.layout.Row
@@ -10,18 +12,15 @@ import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.myfinances.R
-import com.myfinances.ui.theme.BrightBlack
-import com.myfinances.ui.theme.BrightGreen
-import com.myfinances.ui.theme.PastelGreen
 
 /**
  * Кастомизированный диалог для выбора даты с определенной цветовой схемой.
@@ -37,19 +36,21 @@ fun HistoryDatePickerDialog(
     onDismissRequest: () -> Unit,
     onConfirm: (Long?) -> Unit
 ) {
-    val greenDatePickerColors = DatePickerDefaults.colors(
-        containerColor = PastelGreen,
-        selectedDayContainerColor = BrightGreen,
-        selectedDayContentColor = BrightBlack,
-        todayDateBorderColor = Color.Transparent,
-        todayContentColor = BrightBlack,
-        dayContentColor = BrightBlack,
-        weekdayContentColor = BrightBlack,
-        subheadContentColor = BrightBlack,
-        yearContentColor = BrightBlack,
-        currentYearContentColor = BrightGreen,
-        selectedYearContainerColor = BrightGreen,
-        selectedYearContentColor = BrightBlack
+    val datePickerColors = DatePickerDefaults.colors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        selectedDayContainerColor = MaterialTheme.colorScheme.primary,
+        selectedDayContentColor = MaterialTheme.colorScheme.onPrimary,
+        todayDateBorderColor = MaterialTheme.colorScheme.primary,
+        todayContentColor = MaterialTheme.colorScheme.primary,
+        dayContentColor = MaterialTheme.colorScheme.onSurface,
+        weekdayContentColor = MaterialTheme.colorScheme.onSurface,
+        subheadContentColor = MaterialTheme.colorScheme.onSurface,
+        yearContentColor = MaterialTheme.colorScheme.onSurface,
+        currentYearContentColor = MaterialTheme.colorScheme.primary,
+        selectedYearContainerColor = MaterialTheme.colorScheme.primary,
+        selectedYearContentColor = MaterialTheme.colorScheme.onPrimary,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        headlineContentColor = MaterialTheme.colorScheme.onSurface
     )
 
     DatePickerDialog(
@@ -65,11 +66,11 @@ fun HistoryDatePickerDialog(
             )
         },
         dismissButton = null,
-        colors = greenDatePickerColors
+        colors = datePickerColors
     ) {
         DatePicker(
             state = datePickerState,
-            colors = greenDatePickerColors,
+            colors = datePickerColors,
             title = null,
             headline = null,
             showModeToggle = false
@@ -94,7 +95,7 @@ private fun DatePickerDialogButtons(
     ) {
         TextButton(
             onClick = onClear,
-            colors = ButtonDefaults.textButtonColors(contentColor = BrightBlack)
+            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
         ) {
             Text(stringResource(id = R.string.action_clear))
         }
@@ -102,13 +103,13 @@ private fun DatePickerDialogButtons(
         Row {
             TextButton(
                 onClick = onDismiss,
-                colors = ButtonDefaults.textButtonColors(contentColor = BrightBlack)
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
             ) {
                 Text(stringResource(id = R.string.action_cancel))
             }
             TextButton(
                 onClick = onConfirm,
-                colors = ButtonDefaults.textButtonColors(contentColor = BrightBlack)
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
             ) {
                 Text(stringResource(id = R.string.action_ok))
             }
