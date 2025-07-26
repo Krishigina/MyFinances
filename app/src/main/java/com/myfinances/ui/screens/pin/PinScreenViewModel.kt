@@ -149,7 +149,7 @@ open class PinScreenViewModel @Inject constructor(
             _uiState.update {
                 if (it is PinScreenUiState.Success) it.copy(error = it.pinMode.name) else it
             }
-            delay(500)
+//            delay(500)
             _uiState.update {
                 if (it is PinScreenUiState.Success) {
                     it.copy(

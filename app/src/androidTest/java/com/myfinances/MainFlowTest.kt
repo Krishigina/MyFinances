@@ -1,3 +1,4 @@
+// app/src/androidTest/java/com/myfinances/MainFlowTest.kt
 package com.myfinances
 
 import androidx.compose.ui.test.assertIsOff
@@ -17,7 +18,7 @@ import java.io.File
 
 /**
  * UI-тесты для основных пользовательских сценариев в приложении.
- * Проверяют полный сценарий: настройку ПИН-кода и смену темы.
+ * Каждый тест проверяет один изолированный сценарий.
  */
 @RunWith(AndroidJUnit4::class)
 class MainFlowTest {
@@ -46,28 +47,27 @@ class MainFlowTest {
         confirmPinTitle = context.getString(R.string.pin_confirm_title)
         themeSwitchTag = "theme_switch"
 
-        // Очистка состояния перед тестом
+        // Очистка состояния перед тестом для обеспечения изоляции
         context.filesDir.resolve("datastore").listFiles()?.forEach { it.delete() }
         context.cacheDir.parent?.let { parentDir ->
             File(parentDir, "shared_prefs").listFiles()?.forEach { it.delete() }
         }
     }
 
+    /**
+     * Проверяет полный сценарий установки PIN-кода.
+     * Сценарий:
+     * 1. Переход на экран настроек.
+     * 2. Начало установки PIN-кода.
+     * 3. Ввод и подтверждение PIN-кода.
+     * 4. Проверка, что статус PIN-кода на экране настроек изменился на "Включен".
+     */
     @Test
-    fun fullScenario_pinSetupAndThemeToggle() {
-        // Даем Compose-окружению "успокоиться" после всех стартовых инициализаций.
-        composeTestRule.waitForIdle()
+    fun pinSetup_succeedsAndUpdatesStatus() {
+        // Дожидаемся загрузки главного экрана
+        waitForMainScreen()
 
-        // ШАГ 0: Дождаться полной загрузки приложения после splash screen.
-        // Мы ждем появления текста "Расходы", т.к. это стартовый экран.
-        // Таймаут увеличен для медленных эмуляторов.
-        composeTestRule.waitUntil(timeoutMillis = 15_000) {
-            composeTestRule.onAllNodesWithText(expensesText).fetchSemanticsNodes().isNotEmpty()
-        }
-
-        // --- ЧАСТЬ 1: НАСТРОЙКА PIN-КОДА ---
-
-        // 1. Переходим на экран Настроек, кликая по текстовой метке
+        // 1. Переходим на экран Настроек
         composeTestRule.onNodeWithText(settingsText).performClick()
 
         // 2. Нажимаем на пункт "Код-пароль"
@@ -86,23 +86,49 @@ class MainFlowTest {
         // 6. Повторно вводим пин-код "1234" для подтверждения
         enterPin("1234")
 
+        // Явно ждем завершения всех асинхронных операций (навигация, рекомпозиция)
+        composeTestRule.waitForIdle()
+
         // 7. Убеждаемся, что мы вернулись на экран Настроек и статус пин-кода "Включен"
         composeTestRule.onNodeWithText(passcodeText).assertExists()
         composeTestRule.onNodeWithText(pinStatusOnText).assertExists()
+    }
 
-        // --- ЧАСТЬ 2: ПЕРЕКЛЮЧЕНИЕ ТЕМЫ ---
+    /**
+     * Проверяет, что переключатель темы корректно изменяет свое состояние.
+     * Сценарий:
+     * 1. Переход на экран настроек.
+     * 2. Проверка начального состояния переключателя (выключен).
+     * 3. Клик по переключателю и проверка, что он включился.
+     * 4. Повторный клик и проверка, что он снова выключился.
+     */
+    @Test
+    fun themeToggle_changesStateCorrectly() {
+        // Дожидаемся загрузки главного экрана
+        waitForMainScreen()
 
-        // 8. Находим переключатель темы и проверяем, что он выключен
+        // 1. Переходим на экран Настроек
+        composeTestRule.onNodeWithText(settingsText).performClick()
+
+        // 2. Находим переключатель темы и проверяем, что он выключен
         val themeSwitch = composeTestRule.onNodeWithTag(themeSwitchTag)
+        themeSwitch.assertExists()
         themeSwitch.assertIsOff()
 
-        // 9. Включаем темную тему
+        // 3. Включаем темную тему
         themeSwitch.performClick()
         themeSwitch.assertIsOn()
 
-        // 10. Выключаем темную тему
+        // 4. Выключаем темную тему
         themeSwitch.performClick()
         themeSwitch.assertIsOff()
+    }
+
+    private fun waitForMainScreen() {
+        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(timeoutMillis = 15_000) {
+            composeTestRule.onAllNodesWithText(expensesText).fetchSemanticsNodes().isNotEmpty()
+        }
     }
 
     private fun enterPin(pin: String) {

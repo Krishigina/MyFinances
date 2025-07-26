@@ -47,7 +47,7 @@ class PinRepositoryImpl @Inject constructor(
         sharedPreferences.edit()
             .putString(PIN_HASH_KEY, hash)
             .putString(PIN_SALT_KEY, saltString)
-            .apply()
+            .commit()
 
         pinStateFlow.value = true
     }
@@ -68,7 +68,7 @@ class PinRepositoryImpl @Inject constructor(
         sharedPreferences.edit()
             .remove(PIN_HASH_KEY)
             .remove(PIN_SALT_KEY)
-            .apply()
+            .commit()
         pinStateFlow.value = false
     }
 
