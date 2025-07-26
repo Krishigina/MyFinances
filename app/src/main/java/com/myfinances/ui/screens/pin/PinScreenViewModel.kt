@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class PinScreenViewModel @Inject constructor(
+open class PinScreenViewModel @Inject constructor(
     private val savePinUseCase: SavePinUseCase,
     private val verifyPinUseCase: VerifyPinUseCase,
     private val deletePinUseCase: DeletePinUseCase
@@ -35,7 +35,7 @@ class PinScreenViewModel @Inject constructor(
         )
     }
 
-    fun onEvent(event: PinScreenEvent) {
+    open fun onEvent(event: PinScreenEvent) {
         val currentState = _uiState.value
         if (currentState !is PinScreenUiState.Success || currentState.isLocked) return
 

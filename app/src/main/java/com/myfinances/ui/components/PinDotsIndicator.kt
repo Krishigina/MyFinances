@@ -12,7 +12,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+
+const val PIN_DOT_FILLED_TAG = "PinDot_Filled"
+const val PIN_DOT_EMPTY_TAG = "PinDot_Empty"
 
 @Composable
 fun PinDotsIndicator(
@@ -36,6 +40,7 @@ fun PinDotsIndicator(
                         color = MaterialTheme.colorScheme.primary,
                         shape = CircleShape
                     )
+                    .testTag(if (isFilled) PIN_DOT_FILLED_TAG else PIN_DOT_EMPTY_TAG)
             )
         }
     }

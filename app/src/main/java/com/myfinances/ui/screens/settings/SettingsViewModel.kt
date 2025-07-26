@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-class SettingsViewModel @Inject constructor(
+open class SettingsViewModel @Inject constructor(
     getThemeUseCase: GetThemeUseCase,
     private val saveThemeUseCase: SaveThemeUseCase,
     getColorPaletteUseCase: GetColorPaletteUseCase,
@@ -60,7 +60,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun onEvent(event: SettingsEvent) {
+    open fun onEvent(event: SettingsEvent) {
         when (event) {
             is SettingsEvent.OnThemeToggled -> {
                 viewModelScope.launch {
