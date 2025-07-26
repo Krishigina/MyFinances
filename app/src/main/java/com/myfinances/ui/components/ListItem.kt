@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
@@ -132,10 +133,17 @@ fun ListItem(model: ListItemModel) {
                             }
                         }
                     }
-                    is TrailingContent.Switch -> Switch(
-                        checked = content.isChecked,
-                        onCheckedChange = content.onToggle
-                    )
+                    is TrailingContent.Switch -> {
+                        val switchModifier = model.trailingContentTestTag?.let {
+                            Modifier.testTag(it)
+                        } ?: Modifier
+
+                        Switch(
+                            checked = content.isChecked,
+                            onCheckedChange = content.onToggle,
+                            modifier = switchModifier
+                        )
+                    }
                     is TrailingContent.Custom -> {
                         content.content()
                     }

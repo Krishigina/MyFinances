@@ -1,3 +1,5 @@
+// Файл: app/src/main/java/com/myfinances/MyFinancesApplication.kt
+
 package com.myfinances
 
 import android.app.Application
@@ -13,7 +15,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class MyFinancesApplication : Application() {
+open class MyFinancesApplication : Application() {
 
     lateinit var appComponent: AppComponent
         private set
@@ -43,12 +45,12 @@ class MyFinancesApplication : Application() {
         setupPeriodicSync()
     }
 
-    private fun triggerInitialSync() {
+    open fun triggerInitialSync() {
         applicationScope.launch {
             syncRepository.syncData()
         }
     }
-    private fun setupPeriodicSync() {
+    open fun setupPeriodicSync() {
         applicationScope.launch {
             setupPeriodicSyncUseCase()
         }

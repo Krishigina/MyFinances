@@ -12,5 +12,6 @@ data class ListItemModel(
     val useWhiteIconBackground: Boolean = false,
     val showTrailingArrow: Boolean = true,
     @DrawableRes val trailingArrowIconRes: Int? = null,
-    val onClick: (() -> Unit)? = null
+    val onClick: (() -> Unit)? = null,
+    val trailingContentTestTag: String? = null
 )

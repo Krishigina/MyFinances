@@ -41,7 +41,8 @@ fun SettingsScreen(
                     viewModel.onEvent(SettingsEvent.OnThemeToggled(isEnabled))
                 }
             ),
-            showTrailingArrow = false
+            showTrailingArrow = false,
+            trailingContentTestTag = "theme_switch"
         ),
         ListItemModel(
             id = "primary_color",
